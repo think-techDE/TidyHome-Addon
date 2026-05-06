@@ -16,7 +16,11 @@ log_level = os.environ.get("LOG_LEVEL", "info").upper()
 logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
 logger = logging.getLogger("tidyhome")
 
-app = FastAPI(title="TidyHome", version="0.7.0")
+_admins_raw = os.environ.get("ADMINS", "")
+ADMINS: set[str] = {a.strip() for a in _admins_raw.split(",") if a.strip()}
+logger.info("Admins: %s", ADMINS or "(keine)")
+
+app = FastAPI(title="TidyHome", version="0.8.0")
 
 INTERVALS = {
     1: "Täglich",
@@ -120,6 +124,7 @@ HTML_BASE = """<!DOCTYPE html>
     <a href="new">+ Neu</a>
     <a href="scores">Punkte</a>
     <a href="settings">Einstellungen</a>
+    <a href="admin">Admin</a>
   </nav>
 </header>
 <main>
@@ -421,50 +426,45 @@ async def settings_form(request: Request):
     cards = ""
     for p in persons:
         cfg = get_person_settings(p)
-        services_val = ", ".join(cfg.get("services") or [])
         time_val = cfg.get("notify_time", "08:00")
         checked = "checked" if cfg.get("enabled") else ""
+        services = cfg.get("services") or []
+        services_info = (
+            f'<span style="font-size:0.8rem;color:#718096">'
+            f'Geräte: {", ".join(services)}</span>'
+            if services else
+            '<span style="font-size:0.8rem;color:#a0aec0">Keine Geräte konfiguriert (Admin erforderlich)</span>'
+        )
         cards += f"""
         <div class="card" style="margin-bottom:1rem">
           <form method="post" action="settings">
             <input type="hidden" name="person" value="{p}">
-            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.75rem">
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem">
               <span style="font-size:1.1rem;font-weight:600">{p}</span>
-              <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;font-weight:400;color:#4a5568;margin:0">
-                <input type="checkbox" name="enabled" value="1" {checked}>
-                Benachrichtigungen aktiv
-              </label>
+              {'<span style="font-size:0.75rem;background:#ebf8ff;color:#2b6cb0;padding:0.1rem 0.5rem;border-radius:999px">Admin</span>' if p in ADMINS else ''}
             </div>
+            <div style="margin-bottom:0.75rem">{services_info}</div>
             <div class="grid-2">
               <div class="form-group">
-                <label>HA-Services (kommagetrennt)</label>
-                <input name="services" placeholder="notify.mobile_app_iphone, notify.alexa_kueche"
-                       value="{services_val}">
-              </div>
-              <div class="form-group">
-                <label>Uhrzeit</label>
+                <label>Benachrichtigungszeit</label>
                 <input name="notify_time" type="time" value="{time_val}">
+              </div>
+              <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:0.1rem">
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;margin:0">
+                  <input type="checkbox" name="enabled" value="1" {checked}>
+                  Benachrichtigungen aktivieren
+                </label>
               </div>
             </div>
             <div style="display:flex;gap:0.5rem;align-items:center">
               <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
               <a class="btn btn-sm" href="notify-now/{p}"
-                 style="background:#edf2f7;color:#2d3748"
-                 title="Testbenachrichtigung jetzt senden">🔔 Testen</a>
+                 style="background:#edf2f7;color:#2d3748">🔔 Testen</a>
             </div>
           </form>
         </div>"""
 
-    hint = """
-    <div class="card" style="background:#ebf8ff;border:1px solid #bee3f8;margin-bottom:1rem">
-      <p style="font-size:0.85rem;color:#2b6cb0;margin:0">
-        <strong>Services finden:</strong> Entwicklerwerkzeuge → Dienste → nach <code>notify.</code> suchen.<br>
-        Mehrere Services kommagetrennt eingeben, z.B.:
-        <code>notify.mobile_app_iphone, notify.mobile_app_samsung</code>
-      </p>
-    </div>"""
-
-    content = f"<h2>Einstellungen</h2>{hint}{cards}"
+    content = f"<h2>Meine Einstellungen</h2>{cards}"
     return render(content, request)
 
 
@@ -472,18 +472,97 @@ async def settings_form(request: Request):
 async def settings_save(
     request: Request,
     person: str = Form(...),
-    services: str = Form(""),
     notify_time: str = Form("08:00"),
     enabled: str = Form(""),
 ):
-    service_list = [s.strip() for s in services.split(",") if s.strip()]
+    cfg = get_person_settings(person)
     save_person_settings(
         person=person,
-        services=service_list,
+        services=cfg.get("services") or [],
         notify_time=_parse_time(notify_time),
         enabled=(enabled == "1"),
     )
     return RedirectResponse(_base(request) + "settings", status_code=303)
+
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_form(request: Request):
+    if not ADMINS:
+        content = """
+        <h2>Admin</h2>
+        <div class="card" style="background:#fff5f5;border:1px solid #fed7d7">
+          <p style="color:#c53030;margin:0">
+            Keine Admins konfiguriert. Trage in der Add-on-Konfiguration unter
+            <strong>admins</strong> die gewünschten Personen ein (kommagetrennt).
+          </p>
+        </div>"""
+        return render(content, request)
+
+    persons = await get_persons()
+    hint = """
+    <div class="card" style="background:#ebf8ff;border:1px solid #bee3f8;margin-bottom:1.25rem">
+      <p style="font-size:0.85rem;color:#2b6cb0;margin:0">
+        <strong>Services finden:</strong> HA → Entwicklerwerkzeuge → Dienste → nach <code>notify.</code> suchen.<br>
+        Mehrere Services kommagetrennt, z.B. <code>notify.mobile_app_iphone, notify.alexa_kueche</code>
+      </p>
+    </div>"""
+
+    cards = ""
+    for p in persons:
+        cfg = get_person_settings(p)
+        services_val = ", ".join(cfg.get("services") or [])
+        admin_badge = (
+            '<span style="font-size:0.75rem;background:#ebf8ff;color:#2b6cb0;'
+            'padding:0.1rem 0.5rem;border-radius:999px">Admin</span>'
+            if p in ADMINS else ""
+        )
+        cards += f"""
+        <div class="card" style="margin-bottom:1rem">
+          <form method="post" action="admin">
+            <input type="hidden" name="person" value="{p}">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">
+              <span style="font-size:1.1rem;font-weight:600">{p}</span>
+              {admin_badge}
+            </div>
+            <div class="form-group">
+              <label>Notify-Services (kommagetrennt)</label>
+              <input name="services" placeholder="notify.mobile_app_iphone, notify.alexa_kueche"
+                     value="{services_val}">
+            </div>
+            <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
+          </form>
+        </div>"""
+
+    admin_list = ", ".join(sorted(ADMINS))
+    footer = f"""
+    <div class="card" style="background:#f7fafc;margin-top:1rem">
+      <p style="font-size:0.8rem;color:#718096;margin:0">
+        Aktuelle Admins: <strong>{admin_list}</strong> —
+        änderbar in der Add-on-Konfiguration unter <code>admins</code>.
+      </p>
+    </div>"""
+
+    content = f"<h2>Admin — Geräteverwaltung</h2>{hint}{cards}{footer}"
+    return render(content, request)
+
+
+@app.post("/admin")
+async def admin_save(
+    request: Request,
+    person: str = Form(...),
+    services: str = Form(""),
+):
+    if not ADMINS:
+        raise HTTPException(403, "Keine Admins konfiguriert")
+    service_list = [s.strip() for s in services.split(",") if s.strip()]
+    cfg = get_person_settings(person)
+    save_person_settings(
+        person=person,
+        services=service_list,
+        notify_time=cfg.get("notify_time", "08:00"),
+        enabled=cfg.get("enabled", False),
+    )
+    return RedirectResponse(_base(request) + "admin", status_code=303)
 
 
 @app.get("/notify-now/{person}")
@@ -494,7 +573,7 @@ async def notify_now(person: str, request: Request):
 
 @app.get("/healthz")
 async def health():
-    return {"status": "ok", "version": "0.7.0"}
+    return {"status": "ok", "version": "0.8.0"}
 
 
 if __name__ == "__main__":
