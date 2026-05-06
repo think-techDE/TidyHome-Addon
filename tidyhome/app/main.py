@@ -2,18 +2,17 @@ import os
 import logging
 from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 import uvicorn
 
-from models import Task, TaskCreate
-from storage import list_tasks, get_task, create_task, delete_task, mark_done, get_scores
+from models import Task
+from storage import list_tasks, create_task, delete_task, mark_done, get_scores
 from ha_client import get_areas, get_persons
 
 log_level = os.environ.get("LOG_LEVEL", "info").upper()
 logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
 logger = logging.getLogger("tidyhome")
 
-app = FastAPI(title="TidyHome", version="0.3.0")
+app = FastAPI(title="TidyHome", version="0.4.0")
 
 INTERVALS = {
     1: "Täglich",
@@ -41,12 +40,17 @@ def urgency_class(days: int) -> str:
     return "ok"
 
 
+def _base(request: Request) -> str:
+    path = request.headers.get("X-Ingress-Path", "").rstrip("/")
+    return path + "/"
+
+
 HTML_BASE = """<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<base href="{base_href}">
+<base href="{base}">
 <title>TidyHome</title>
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -120,27 +124,20 @@ HTML_BASE = """<!DOCTYPE html>
 </html>"""
 
 
-_ingress_path = os.environ.get("INGRESS_PATH", "").rstrip("/")
-
-
-def render(content: str) -> HTMLResponse:
-    base_href = _ingress_path + "/" if _ingress_path else "/"
-    return HTMLResponse(HTML_BASE.format(content=content, base_href=base_href))
+def render(content: str, request: Request) -> HTMLResponse:
+    return HTMLResponse(HTML_BASE.format(content=content, base=_base(request)))
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index(room: str = None, person: str = None, overdue: str = None):
-    tasks = list_tasks(
-        room=room,
-        assigned_to=person,
-        overdue_only=(overdue == "1")
-    )
+async def index(request: Request, room: str = None, person: str = None, overdue: str = None):
+    tasks = list_tasks(room=room, assigned_to=person, overdue_only=(overdue == "1"))
     areas = await get_areas()
-    persons = await get_persons()
 
     filters = '<div class="filters">'
-    filters += f'<a class="filter-btn {"active" if not room and not person and not overdue else ""}" href="./">Alle</a>'
-    filters += f'<a class="filter-btn {"active" if overdue == "1" else ""}" href="./?overdue=1">Ueberfaellig</a>'
+    active = "active" if not room and not person and not overdue else ""
+    filters += f'<a class="filter-btn {active}" href="./">Alle</a>'
+    active = "active" if overdue == "1" else ""
+    filters += f'<a class="filter-btn {active}" href="./?overdue=1">Ueberfaellig</a>'
     for r in areas:
         active = "active" if room == r else ""
         filters += f'<a class="filter-btn {active}" href="./?room={r}">{r}</a>'
@@ -181,11 +178,11 @@ async def index(room: str = None, person: str = None, overdue: str = None):
     {filters}
     <div class="card">{rows}</div>
     """
-    return render(content)
+    return render(content, request)
 
 
 @app.get("/new", response_class=HTMLResponse)
-async def new_form():
+async def new_form(request: Request):
     areas = await get_areas()
     persons = await get_persons()
 
@@ -228,11 +225,12 @@ async def new_form():
       </form>
     </div>
     """
-    return render(content)
+    return render(content, request)
 
 
 @app.post("/tasks")
 async def create(
+    request: Request,
     name: str = Form(...),
     room: str = Form(...),
     interval_days: int = Form(...),
@@ -247,7 +245,7 @@ async def create(
         points=points,
     )
     create_task(task)
-    return RedirectResponse("/", status_code=303)
+    return RedirectResponse(_base(request), status_code=303)
 
 
 @app.post("/done/{task_id}")
@@ -257,17 +255,17 @@ async def done(task_id: str, request: Request):
     task = mark_done(task_id, done_by=done_by or None)
     if not task:
         raise HTTPException(404)
-    return RedirectResponse("/", status_code=303)
+    return RedirectResponse(_base(request), status_code=303)
 
 
 @app.get("/delete/{task_id}")
-async def delete(task_id: str):
+async def delete(task_id: str, request: Request):
     delete_task(task_id)
-    return RedirectResponse("/", status_code=303)
+    return RedirectResponse(_base(request), status_code=303)
 
 
 @app.get("/scores", response_class=HTMLResponse)
-async def scores():
+async def scores(request: Request):
     data = get_scores()
     rows = ""
     if not data:
@@ -287,15 +285,15 @@ async def scores():
     <h2>Bestenliste</h2>
     <div class="card">{rows}</div>
     """
-    return render(content)
+    return render(content, request)
 
 
 @app.get("/healthz")
 async def health():
-    return {"status": "ok", "version": "0.2.0"}
+    return {"status": "ok", "version": "0.4.0"}
 
 
 if __name__ == "__main__":
     ingress_path = os.environ.get("INGRESS_PATH", "")
-    logger.info("TidyHome startet auf Port 8099 (ingress path: %s)", ingress_path or "/")
+    logger.info("TidyHome startet auf Port 8099 (ingress: %s)", ingress_path or "/")
     uvicorn.run(app, host="0.0.0.0", port=8099, root_path=ingress_path, log_level=log_level.lower())
