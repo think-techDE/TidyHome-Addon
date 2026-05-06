@@ -1,0 +1,167 @@
+from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+
+from ha_client import get_areas, get_persons
+from models import Task
+from render import INTERVALS, _base, _selected, interval_label, render, urgency_class
+from storage import (create_task, delete_task, edit_task, get_task, list_tasks,
+                     mark_done)
+
+router = APIRouter(prefix="/tasks")
+
+
+@router.get("", response_class=HTMLResponse)
+async def tasks_list(request: Request, room: str = None, person: str = None,
+                     overdue: str = None, p: str = ""):
+    tasks = list_tasks(room=room, assigned_to=person, overdue_only=(overdue == "1"))
+    areas = await get_areas()
+
+    filters = '<div class="filters">'
+    filters += f'<a class="filter-btn {"active" if not room and not overdue else ""}" href="tasks">Alle</a>'
+    filters += f'<a class="filter-btn {"active" if overdue == "1" else ""}" href="tasks?overdue=1">Überfällig</a>'
+    for r in areas:
+        filters += f'<a class="filter-btn {"active" if room == r else ""}" href="tasks?room={r}">{r}</a>'
+    filters += '</div>'
+
+    rows = ""
+    if not tasks:
+        rows = '<div class="empty">Keine Aufgaben gefunden.</div>'
+    else:
+        for t in tasks:
+            due = t.days_until_due()
+            uc = urgency_class(due)
+            if due < 0:    due_text = f"{abs(due)}d überfällig"
+            elif due == 0: due_text = "Heute"
+            elif due == 1: due_text = "Morgen"
+            else:          due_text = f"In {due}d"
+            assigned = f"<span class='task-meta'>→ {t.assigned_to}</span>" if t.assigned_to else ""
+            rows += f"""
+            <div class="task-row">
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+                  <span class="task-name">{t.name}</span>
+                  <span class="badge {uc}">{due_text}</span>
+                </div>
+                <div class="task-meta" style="margin-top:0.2rem">
+                  {t.room} · {interval_label(t.interval_days)} · {t.points} Pkt {assigned}
+                </div>
+              </div>
+              <form class="inline" method="post" action="tasks/{t.id}/done">
+                <button class="btn btn-success btn-sm" title="Erledigt">✓</button>
+              </form>
+              <a class="btn btn-ghost btn-sm" href="tasks/{t.id}/edit" title="Bearbeiten">✎</a>
+              <a class="btn btn-danger btn-sm" href="tasks/{t.id}/delete"
+                 onclick="return confirm('Löschen?')" title="Löschen">✕</a>
+            </div>"""
+
+    content = f"""
+    <div class="page-header">
+      <h2>Aufgaben ({len(tasks)})</h2>
+      <a class="btn btn-primary btn-sm" href="tasks/new">+ Neu</a>
+    </div>
+    {filters}
+    <div class="card card-flush">{rows}</div>"""
+
+    return render(content, request, page="tasks", person=p)
+
+
+@router.get("/new", response_class=HTMLResponse)
+async def task_new_form(request: Request, p: str = ""):
+    return await _task_form(request, "Neue Aufgabe", "tasks", "Aufgabe anlegen", person=p)
+
+
+@router.get("/{task_id}/edit", response_class=HTMLResponse)
+async def task_edit_form(task_id: str, request: Request, p: str = ""):
+    task = get_task(task_id)
+    if not task:
+        raise HTTPException(404)
+    return await _task_form(request, "Aufgabe bearbeiten", f"tasks/{task_id}/edit",
+                            "Speichern", task=task, person=p)
+
+
+@router.post("/{task_id}/edit")
+async def task_edit(task_id: str, request: Request,
+                    name: str = Form(...), room: str = Form(...),
+                    interval_days: int = Form(...), assigned_to: str = Form(""),
+                    points: int = Form(10)):
+    if not edit_task(task_id, name=name, room=room, interval_days=interval_days,
+                     assigned_to=assigned_to or None, points=points):
+        raise HTTPException(404)
+    return RedirectResponse(_base(request) + "tasks", status_code=303)
+
+
+@router.post("")
+async def task_create(request: Request, name: str = Form(...), room: str = Form(...),
+                      interval_days: int = Form(...), assigned_to: str = Form(""),
+                      points: int = Form(10)):
+    task = Task(name=name, room=room, interval_days=interval_days,
+                assigned_to=assigned_to or None, points=points)
+    create_task(task)
+    return RedirectResponse(_base(request) + "tasks", status_code=303)
+
+
+@router.post("/{task_id}/done")
+async def task_done(task_id: str, request: Request):
+    form = await request.form()
+    if not mark_done(task_id, done_by=form.get("done_by") or None):
+        raise HTTPException(404)
+    return RedirectResponse(_base(request) + "tasks", status_code=303)
+
+
+@router.get("/{task_id}/delete")
+async def task_delete(task_id: str, request: Request):
+    delete_task(task_id)
+    return RedirectResponse(_base(request) + "tasks", status_code=303)
+
+
+async def _task_form(request: Request, title: str, action: str,
+                     submit_label: str, task=None, person: str = "") -> HTMLResponse:
+    areas = await get_areas()
+    persons = await get_persons()
+    cur_room = task.room if task else ""
+    cur_interval = task.interval_days if task else 7
+    cur_person = task.assigned_to if task else ""
+    cur_points = task.points if task else 10
+    cur_name = task.name if task else ""
+
+    room_opts = "".join(
+        f'<option value="{r}"{_selected(r, cur_room)}>{r}</option>' for r in areas)
+    person_opts = (
+        f'<option value=""{_selected("", cur_person or "")}>— Niemand —</option>'
+        + "".join(f'<option value="{p}"{_selected(p, cur_person or "")}>{p}</option>'
+                  for p in persons))
+    interval_opts = "".join(
+        f'<option value="{d}"{_selected(d, cur_interval)}>{label}</option>'
+        for d, label in INTERVALS.items())
+
+    content = f"""
+    <h2>{title}</h2>
+    <div class="card">
+      <form method="post" action="{action}">
+        <div class="form-group">
+          <label>Was ist zu erledigen?</label>
+          <input name="name" required placeholder="z.B. Staubsaugen" value="{cur_name}">
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Raum</label>
+            <select name="room">{room_opts}</select>
+          </div>
+          <div class="form-group">
+            <label>Intervall</label>
+            <select name="interval_days">{interval_opts}</select>
+          </div>
+          <div class="form-group">
+            <label>Zugewiesen an</label>
+            <select name="assigned_to">{person_opts}</select>
+          </div>
+          <div class="form-group">
+            <label>Punkte</label>
+            <input name="points" type="number" value="{cur_points}" min="1" max="100">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" type="submit">{submit_label}</button>
+        <a class="btn btn-ghost btn-full" href="tasks" style="margin-top:0.5rem">Abbrechen</a>
+      </form>
+    </div>"""
+    return render(content, request, page="tasks", person=person)
