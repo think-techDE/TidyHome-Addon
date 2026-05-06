@@ -1,18 +1,20 @@
 import os
+import asyncio
 import logging
+from datetime import datetime, time as dtime, timedelta
 from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 import uvicorn
 
 from models import Task
-from storage import list_tasks, create_task, delete_task, mark_done, get_scores
-from ha_client import get_areas, get_persons
+from storage import list_tasks, get_task, create_task, edit_task, delete_task, mark_done, get_scores
+from ha_client import get_areas, get_persons, send_notification
 
 log_level = os.environ.get("LOG_LEVEL", "info").upper()
 logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
 logger = logging.getLogger("tidyhome")
 
-app = FastAPI(title="TidyHome", version="0.5.0")
+app = FastAPI(title="TidyHome", version="0.6.0")
 
 INTERVALS = {
     1: "Täglich",
@@ -115,6 +117,7 @@ HTML_BASE = """<!DOCTYPE html>
     <a href="./">Aufgaben</a>
     <a href="new">+ Neu</a>
     <a href="scores">Punkte</a>
+    <a href="notify-now" title="Jetzt Benachrichtigung senden">🔔</a>
   </nav>
 </header>
 <main>
@@ -168,9 +171,10 @@ async def index(request: Request, room: str = None, person: str = None, overdue:
                 <div class="task-meta">{t.room} · {interval_label(t.interval_days)} · {t.points} Pkt {assigned}</div>
               </div>
               <form class="inline" method="post" action="done/{t.id}">
-                <button class="btn btn-success btn-sm">✓</button>
+                <button class="btn btn-success btn-sm" title="Erledigt">✓</button>
               </form>
-              <a class="btn btn-danger btn-sm" href="delete/{t.id}" onclick="return confirm('Loeschen?')">✕</a>
+              <a class="btn btn-sm" href="edit/{t.id}" title="Bearbeiten" style="background:#edf2f7;color:#2d3748">✎</a>
+              <a class="btn btn-danger btn-sm" href="delete/{t.id}" onclick="return confirm('Loeschen?')" title="Loeschen">✕</a>
             </div>"""
 
     content = f"""
@@ -181,27 +185,40 @@ async def index(request: Request, room: str = None, person: str = None, overdue:
     return render(content, request)
 
 
-@app.get("/new", response_class=HTMLResponse)
-async def new_form(request: Request):
+def _selected(value, current) -> str:
+    return ' selected' if str(value) == str(current) else ''
+
+
+async def _render_task_form(request: Request, title: str, action: str,
+                            submit_label: str, task=None) -> HTMLResponse:
     areas = await get_areas()
     persons = await get_persons()
 
-    room_opts = "".join(f'<option value="{r}">{r}</option>' for r in areas)
-    person_opts = '<option value="">— Niemand —</option>' + "".join(
-        f'<option value="{p}">{p}</option>' for p in persons
+    cur_name = task.name if task else ""
+    cur_room = task.room if task else ""
+    cur_interval = task.interval_days if task else 7
+    cur_person = task.assigned_to if task else ""
+    cur_points = task.points if task else 10
+
+    room_opts = "".join(
+        f'<option value="{r}"{_selected(r, cur_room)}>{r}</option>' for r in areas
+    )
+    person_opts = f'<option value=""{_selected("", cur_person or "")}>— Niemand —</option>' + "".join(
+        f'<option value="{p}"{_selected(p, cur_person or "")}>{p}</option>' for p in persons
     )
     interval_opts = "".join(
-        f'<option value="{d}">{label}</option>' for d, label in INTERVALS.items()
+        f'<option value="{d}"{_selected(d, cur_interval)}>{label}</option>'
+        for d, label in INTERVALS.items()
     )
 
     content = f"""
-    <h2>Neue Aufgabe</h2>
+    <h2>{title}</h2>
     <div class="card">
-      <form method="post" action="tasks">
+      <form method="post" action="{action}">
         <div class="grid-2">
           <div class="form-group">
             <label>Name</label>
-            <input name="name" required placeholder="z.B. Staubsaugen">
+            <input name="name" required placeholder="z.B. Staubsaugen" value="{cur_name}">
           </div>
           <div class="form-group">
             <label>Raum</label>
@@ -217,15 +234,55 @@ async def new_form(request: Request):
           </div>
           <div class="form-group">
             <label>Punkte</label>
-            <input name="points" type="number" value="10" min="1" max="100">
+            <input name="points" type="number" value="{cur_points}" min="1" max="100">
           </div>
         </div>
-        <button class="btn btn-primary" type="submit">Aufgabe anlegen</button>
+        <button class="btn btn-primary" type="submit">{submit_label}</button>
         <a class="btn" href="./" style="background:#edf2f7;margin-left:0.5rem">Abbrechen</a>
       </form>
     </div>
     """
     return render(content, request)
+
+
+@app.get("/new", response_class=HTMLResponse)
+async def new_form(request: Request):
+    return await _render_task_form(
+        request, "Neue Aufgabe", "tasks", "Aufgabe anlegen"
+    )
+
+
+@app.get("/edit/{task_id}", response_class=HTMLResponse)
+async def edit_form(task_id: str, request: Request):
+    task = get_task(task_id)
+    if not task:
+        raise HTTPException(404)
+    return await _render_task_form(
+        request, "Aufgabe bearbeiten", f"edit/{task_id}", "Speichern", task=task
+    )
+
+
+@app.post("/edit/{task_id}")
+async def edit(
+    task_id: str,
+    request: Request,
+    name: str = Form(...),
+    room: str = Form(...),
+    interval_days: int = Form(...),
+    assigned_to: str = Form(""),
+    points: int = Form(10),
+):
+    updated = edit_task(
+        task_id,
+        name=name,
+        room=room,
+        interval_days=interval_days,
+        assigned_to=assigned_to or None,
+        points=points,
+    )
+    if not updated:
+        raise HTTPException(404)
+    return RedirectResponse(_base(request), status_code=303)
 
 
 @app.post("/tasks")
@@ -288,9 +345,79 @@ async def scores(request: Request):
     return render(content, request)
 
 
+NOTIFY_SERVICE = os.environ.get("NOTIFY_SERVICE", "").strip()
+NOTIFY_TIME = os.environ.get("NOTIFY_TIME", "08:00").strip() or "08:00"
+
+
+def _parse_notify_time(raw: str) -> dtime:
+    try:
+        hh, mm = raw.split(":", 1)
+        return dtime(hour=int(hh), minute=int(mm))
+    except Exception:
+        logger.warning("Ungueltige notify_time %r, fallback 08:00", raw)
+        return dtime(hour=8)
+
+
+async def _notify_due_tasks() -> None:
+    if not NOTIFY_SERVICE:
+        return
+    tasks = [t for t in list_tasks() if t.days_until_due() <= 0]
+    if not tasks:
+        logger.info("Keine faelligen Aufgaben heute")
+        return
+    lines = []
+    for t in tasks:
+        due = t.days_until_due()
+        if due < 0:
+            prefix = f"({abs(due)}d ueberfaellig)"
+        else:
+            prefix = "(heute)"
+        who = f" → {t.assigned_to}" if t.assigned_to else ""
+        lines.append(f"• {t.name} {prefix}{who}")
+    title = f"TidyHome: {len(tasks)} Aufgabe(n) faellig"
+    message = "\n".join(lines)
+    ok = await send_notification(NOTIFY_SERVICE, title, message)
+    logger.info("Notify gesendet=%s an %s (%d Aufgaben)", ok, NOTIFY_SERVICE, len(tasks))
+
+
+async def _notify_loop() -> None:
+    target = _parse_notify_time(NOTIFY_TIME)
+    logger.info("Notify-Loop gestartet (Service=%s, Zeit=%s)",
+                NOTIFY_SERVICE or "aus", target.strftime("%H:%M"))
+    while True:
+        now = datetime.now()
+        next_run = datetime.combine(now.date(), target)
+        if next_run <= now:
+            next_run += timedelta(days=1)
+        wait_s = (next_run - now).total_seconds()
+        logger.info("Naechste Pruefung um %s (%.0fs)", next_run, wait_s)
+        try:
+            await asyncio.sleep(wait_s)
+            await _notify_due_tasks()
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            logger.exception("Notify-Loop Fehler: %s", e)
+            await asyncio.sleep(60)
+
+
+@app.on_event("startup")
+async def _start_scheduler():
+    if NOTIFY_SERVICE:
+        asyncio.create_task(_notify_loop())
+    else:
+        logger.info("Keine notify_service konfiguriert, Scheduler bleibt aus")
+
+
+@app.get("/notify-now")
+async def notify_now(request: Request):
+    await _notify_due_tasks()
+    return RedirectResponse(_base(request), status_code=303)
+
+
 @app.get("/healthz")
 async def health():
-    return {"status": "ok", "version": "0.4.0"}
+    return {"status": "ok", "version": "0.6.0"}
 
 
 if __name__ == "__main__":

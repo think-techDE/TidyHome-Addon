@@ -66,6 +66,41 @@ async def get_areas() -> list[str]:
     return _default_rooms()
 
 
+async def call_service(domain: str, service: str, data: dict) -> bool:
+    if not SUPERVISOR_TOKEN:
+        logger.warning("Kein SUPERVISOR_TOKEN, kann Service %s.%s nicht rufen", domain, service)
+        return False
+    headers = {
+        "Authorization": f"Bearer {SUPERVISOR_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{HA_BASE}/services/{domain}/{service}",
+                headers=headers,
+                json=data,
+                timeout=aiohttp.ClientTimeout(total=5),
+            ) as r:
+                if r.status in (200, 201):
+                    return True
+                logger.warning("Service %s.%s returned %s: %s",
+                               domain, service, r.status, await r.text())
+    except Exception as e:
+        logger.warning("Service call error %s.%s: %s", domain, service, e)
+    return False
+
+
+async def send_notification(notify_service: str, title: str, message: str) -> bool:
+    if not notify_service:
+        return False
+    if "." in notify_service:
+        domain, service = notify_service.split(".", 1)
+    else:
+        domain, service = "notify", notify_service
+    return await call_service(domain, service, {"title": title, "message": message})
+
+
 async def get_persons() -> list[str]:
     data = await _get("/states")
     if not data:

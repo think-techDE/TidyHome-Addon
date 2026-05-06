@@ -1,6 +1,6 @@
 name: TidyHome
 description: Haushalt organisieren und gamifizieren – direkt in Home Assistant
-version: "0.5.0"
+version: "0.6.0"
 slug: tidyhome
 init: false
 arch:
@@ -17,5 +17,9 @@ map:
   - data:rw
 options:
   log_level: info
+  notify_service: ""
+  notify_time: "08:00"
 schema:
   log_level: list(debug|info|warning|error|critical)
+  notify_service: str?
+  notify_time: str?

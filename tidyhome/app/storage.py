@@ -58,6 +58,19 @@ def update_task(task: Task) -> Task:
     return task
 
 
+def edit_task(task_id: str, name: str, room: str, interval_days: int,
+              assigned_to: str | None, points: int) -> Task | None:
+    task = get_task(task_id)
+    if not task:
+        return None
+    task.name = name
+    task.room = room
+    task.interval_days = interval_days
+    task.assigned_to = assigned_to
+    task.points = points
+    return update_task(task)
+
+
 def delete_task(task_id: str) -> bool:
     table = get_tasks_table()
     Q = Query()
