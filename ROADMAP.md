@@ -4,65 +4,77 @@ Stand: 2026-05-06. Phasen sind sequenziell geplant; jede Phase wird als eigener 
 
 ---
 
-## Phase 1+2 – Ordnungsprojekte (Datenmodell + UI)
+## ✅ Phase 1+2 – Ordnungsprojekte (abgeschlossen)
 
-Ziel: Aufgaben mit Teilschritten ("Ordnungsprojekte") verwalten.
-
-- `models.py`: neues Modell `Project` (id, name, room, assigned_to, created_at) + `Step` (id, project_id, name, completed, points)
-- `storage.py`: CRUD fuer Projects + Steps (eigene TinyDB-Tabellen)
-- `main.py`: Routen `/projects`, `/projects/new`, `/projects/{id}`, POST Step abhaken
-- Punkte werden pro Step gutgeschrieben (wie bei Tasks)
-- Projekte sind einmalig (kein Intervall); archiviert wenn alle Steps erledigt
-- Statistik trennt Haushaltsaufgaben vs. Projektaufgaben
-
-Worauf achten:
-- Bestehende Tasks mit Defaults absichern (keine Migration noetig)
-- Steps in separater Tabelle `project_steps`
+- Modelle `Project` + `Step` in `models.py`
+- CRUD in `storage.py` (eigene TinyDB-Tabellen)
+- Routen `/projects`, `/projects/new`, `/projects/{id}`, Steps abhaken/loeschen
+- Punkte pro Step, getrennte Statistik (Haushaltsaufgaben vs. Projektschritte)
 
 ---
 
-## Phase 3+4 – Design + Dashboard
+## ✅ Phase 3+4 – Design + Dashboard (abgeschlossen)
 
-Ziel: Betidy-inspiriertes Design und personalisierte Startseite.
+- Warm-Rose/Mauve Farbschema mit CSS-Variablen
+- Bottom-Navigation (5 Tabs: Zuhause / Aufgaben / Projekte / Punkte / Einstellungen)
+- Dashboard als neue Startseite `/`: Begruessung, Statistik-Kacheln, Raumkarten-Grid
+- Aufgabenliste auf `/tasks` verschoben
 
-Design-System:
-- Farbschema: Warm-Rose/Mauve (`#c084a0`) statt Blau
-- Karten-Layout, mehr Weissraum, groessere Touch-Targets
-- Bottom-Navigation (position: fixed): Zuhause / Aufgaben / Projekte / Punkte / Einstellungen
-- Content-Bereich bekommt `padding-bottom` fuer Bottom-Nav
+---
 
-Dashboard (neue Startseite `/`):
-- "Hallo [Person]"-Begruessung (Person per `?person=Name` oder Cookie)
-- Kacheln: Tagesaufgaben (erledigt/gesamt), Ueberfaellig, Aufgaben & Projekte gesamt
-- Gesamtzustand-Fortschrittsbalken (erledigte Tasks letzte 30 Tage)
-- Raumkarten-Grid: offene Aufgaben + Projekte + Mini-Fortschrittsbalken pro Raum
+## ✅ Refactoring – Modulstruktur (abgeschlossen)
 
-Aufgabenliste zieht auf `/tasks` um (war `/`).
-
-Worauf achten:
-- HA Ingress: kein echtes Vollbild-Mobile, Bottom-Nav muss mit Ingress-Hoehe umgehen
-- Raumkarten ohne Fotos: Farbflächen mit Emoji/Icon
+- `main.py` auf ~35 Zeilen schlankt
+- `config.py`: ADMINS, Logger
+- `render.py`: HTML/CSS-Template, Hilfsfunktionen
+- `scheduler.py`: Benachrichtigungslogik
+- `routes/`: dashboard, tasks, projects, scores, settings (je eigene Datei)
 
 ---
 
 ## Phase 5 – Zusatz-Features
 
-Ziel: Komfort-Features aus Betidy.
+Ziel: Komfort-Features und Erweiterungen.
 
-- **Urlaubsmodus**: globaler Toggle in Settings → Intervall-Berechnung eingefroren
+- **Urlaubsmodus**: globaler Toggle → Intervall-Berechnung eingefroren, keine Notifications
 - **Einmalige Aufgaben**: `task_type = onetime`, nach Erledigung archiviert
-- **Wichtig-Flag**: hervorgehoben in der Liste
+- **Wichtig-Flag**: hervorgehoben in der Aufgabenliste
 - **Aufwand-Feld**: gering / mittel / hoch als Chip
-- **Leaderboard-Tabs**: Monat / Letzter Monat / Gesamt (Punkte nach Zeitraum)
+- **Leaderboard-Tabs**: Monat / Letzter Monat / Gesamt
+- **Projekte auto-archivieren**: wenn alle Schritte erledigt
 
 ---
 
-## Bereits umgesetzt (v0.8.0)
+## Phase 6 – Foto-Dokumentation
 
-- Aufgaben-CRUD mit Bearbeiten
+Ziel: Visuelle Hinweise und Vorher/Nachher-Dokumentation.
+
+- Fotos pro Aufgabe: Hinweisfoto (wo/was) + Vorher/Nachher bei Erledigung
+- Fotos pro Projekt und Schritt: Fortschrittsdokumentation
+- Upload via FastAPI (`UploadFile`), Ablage unter `/data/photos/`
+- Anzeige als Thumbnail in Aufgaben- und Projektansicht
+
+---
+
+## Phase 7 – Integrationen
+
+Ziel: Tiefer in das HA-Oekosystem einbinden.
+
+- **HA-Sensoren/Entities**: Aufgabenstatus als HA-Entity (fuer Automationen)
+- **Trash Card**: Muellkalender-Termine als Aufgaben-Trigger
+- **Benachrichtigungen fuer Projekte**: offene Schritte in Daily-Push erwaehnen
+
+---
+
+## Bereits umgesetzt (v1.0.0)
+
+- Aufgaben-CRUD (anlegen, bearbeiten, loeschen, abhaken)
 - Wiederkehrende Intervalle (1/2/7/14/30/90/180/365 Tage)
+- Ordnungsprojekte mit Teilschritten und Fortschrittsbalken
 - HA-Raeume und Personen per Template-API
-- Punkte und Bestenliste
-- Per-Person Benachrichtigungen mit eigenem Zeitplan
+- Punkte und Bestenliste (getrennt: Aufgaben vs. Projektschritte)
+- Per-Person Push-Benachrichtigungen mit eigenem Zeitplan
 - Admin-Rollentrennung (Geraete vs. persoenliche Einstellungen)
 - HA Ingress-Navigation
+- Rose/Mauve Design-System, Bottom-Navigation, Dashboard
+- Modulare Codebasis (routes/, render, scheduler, config)
