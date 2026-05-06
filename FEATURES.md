@@ -18,6 +18,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - 📋 Aufwand-Feld (gering / mittel / hoch)
 - 📋 Startdatum wählbar
 - 📋 Kalenderstreifen (Wochenübersicht mit Aufgaben pro Tag)
+- 💡 Fotos pro Aufgabe (Hinweisfoto wo/was, Vorher/Nachher bei Erledigung)
 
 ## Ordnungsprojekte
 
@@ -28,7 +29,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Fortschrittsbalken pro Projekt
 - ✅ Teilschritte löschen
 - 📋 Projekte archivieren wenn alle Schritte erledigt
-- 📋 Foto-Dokumentation pro Schritt (Vorher/Nachher)
+- 💡 Fotos pro Projekt und Schritt (Vorher/Nachher, Hinweisfotos)
 
 ## Gamification & Punkte
 
