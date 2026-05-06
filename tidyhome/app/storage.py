@@ -110,3 +110,28 @@ def get_scores() -> list[dict]:
     table = get_scores_table()
     scores = table.all()
     return sorted(scores, key=lambda s: s["points"], reverse=True)
+
+
+def get_settings_table():
+    return _db.table("person_settings")
+
+
+def get_person_settings(person: str) -> dict:
+    Q = Query()
+    row = get_settings_table().get(Q.person == person)
+    return row or {"person": person, "services": [], "notify_time": "08:00", "enabled": False}
+
+
+def save_person_settings(person: str, services: list[str], notify_time: str, enabled: bool) -> dict:
+    Q = Query()
+    data = {"person": person, "services": services,
+            "notify_time": notify_time, "enabled": enabled}
+    if get_settings_table().get(Q.person == person):
+        get_settings_table().update(data, Q.person == person)
+    else:
+        get_settings_table().insert(data)
+    return data
+
+
+def list_person_settings() -> list[dict]:
+    return get_settings_table().all()

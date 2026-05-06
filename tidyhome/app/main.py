@@ -7,14 +7,16 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 import uvicorn
 
 from models import Task
-from storage import list_tasks, get_task, create_task, edit_task, delete_task, mark_done, get_scores
+from storage import (list_tasks, get_task, create_task, edit_task, delete_task,
+                     mark_done, get_scores, get_person_settings, save_person_settings,
+                     list_person_settings)
 from ha_client import get_areas, get_persons, send_notification
 
 log_level = os.environ.get("LOG_LEVEL", "info").upper()
 logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
 logger = logging.getLogger("tidyhome")
 
-app = FastAPI(title="TidyHome", version="0.6.0")
+app = FastAPI(title="TidyHome", version="0.7.0")
 
 INTERVALS = {
     1: "Täglich",
@@ -117,7 +119,7 @@ HTML_BASE = """<!DOCTYPE html>
     <a href="./">Aufgaben</a>
     <a href="new">+ Neu</a>
     <a href="scores">Punkte</a>
-    <a href="notify-now" title="Jetzt Benachrichtigung senden">🔔</a>
+    <a href="settings">Einstellungen</a>
   </nav>
 </header>
 <main>
@@ -345,79 +347,154 @@ async def scores(request: Request):
     return render(content, request)
 
 
-NOTIFY_SERVICE = os.environ.get("NOTIFY_SERVICE", "").strip()
-NOTIFY_TIME = os.environ.get("NOTIFY_TIME", "08:00").strip() or "08:00"
-
-
-def _parse_notify_time(raw: str) -> dtime:
+def _parse_time(raw: str) -> str:
     try:
-        hh, mm = raw.split(":", 1)
-        return dtime(hour=int(hh), minute=int(mm))
+        hh, mm = raw.strip().split(":", 1)
+        return f"{int(hh):02d}:{int(mm):02d}"
     except Exception:
-        logger.warning("Ungueltige notify_time %r, fallback 08:00", raw)
-        return dtime(hour=8)
+        return "08:00"
 
 
-async def _notify_due_tasks() -> None:
-    if not NOTIFY_SERVICE:
-        return
-    tasks = [t for t in list_tasks() if t.days_until_due() <= 0]
+async def _notify_person(person: str, services: list[str]) -> None:
+    tasks = [t for t in list_tasks(assigned_to=person) if t.days_until_due() <= 0]
     if not tasks:
-        logger.info("Keine faelligen Aufgaben heute")
         return
     lines = []
     for t in tasks:
         due = t.days_until_due()
-        if due < 0:
-            prefix = f"({abs(due)}d ueberfaellig)"
-        else:
-            prefix = "(heute)"
-        who = f" → {t.assigned_to}" if t.assigned_to else ""
-        lines.append(f"• {t.name} {prefix}{who}")
+        prefix = f"({abs(due)}d ueberfaellig)" if due < 0 else "(heute)"
+        lines.append(f"• {t.name} {prefix}")
     title = f"TidyHome: {len(tasks)} Aufgabe(n) faellig"
     message = "\n".join(lines)
-    ok = await send_notification(NOTIFY_SERVICE, title, message)
-    logger.info("Notify gesendet=%s an %s (%d Aufgaben)", ok, NOTIFY_SERVICE, len(tasks))
+    for svc in services:
+        ok = await send_notification(svc.strip(), title, message)
+        logger.info("Notify %s -> %s: %s", person, svc, "ok" if ok else "fehler")
 
 
-async def _notify_loop() -> None:
-    target = _parse_notify_time(NOTIFY_TIME)
-    logger.info("Notify-Loop gestartet (Service=%s, Zeit=%s)",
-                NOTIFY_SERVICE or "aus", target.strftime("%H:%M"))
+async def _notify_person_now(person: str) -> None:
+    cfg = get_person_settings(person)
+    if not cfg.get("enabled") or not cfg.get("services"):
+        return
+    await _notify_person(person, cfg["services"])
+
+
+async def _scheduler_loop() -> None:
+    logger.info("Scheduler gestartet (minutlicher Check)")
+    notified_today: set[str] = set()
+    last_date = datetime.now().date()
+
     while True:
-        now = datetime.now()
-        next_run = datetime.combine(now.date(), target)
-        if next_run <= now:
-            next_run += timedelta(days=1)
-        wait_s = (next_run - now).total_seconds()
-        logger.info("Naechste Pruefung um %s (%.0fs)", next_run, wait_s)
         try:
-            await asyncio.sleep(wait_s)
-            await _notify_due_tasks()
+            await asyncio.sleep(60)
+            now = datetime.now()
+            today_str = now.date().isoformat()
+            hhmm = now.strftime("%H:%M")
+
+            if now.date() != last_date:
+                notified_today = set()
+                last_date = now.date()
+
+            for cfg in list_person_settings():
+                if not cfg.get("enabled") or not cfg.get("services"):
+                    continue
+                person = cfg["person"]
+                target = _parse_time(cfg.get("notify_time", "08:00"))
+                key = f"{person}:{today_str}"
+                if hhmm == target and key not in notified_today:
+                    notified_today.add(key)
+                    await _notify_person(person, cfg["services"])
+
         except asyncio.CancelledError:
             raise
         except Exception as e:
-            logger.exception("Notify-Loop Fehler: %s", e)
-            await asyncio.sleep(60)
+            logger.exception("Scheduler Fehler: %s", e)
 
 
 @app.on_event("startup")
 async def _start_scheduler():
-    if NOTIFY_SERVICE:
-        asyncio.create_task(_notify_loop())
-    else:
-        logger.info("Keine notify_service konfiguriert, Scheduler bleibt aus")
+    asyncio.create_task(_scheduler_loop())
 
 
-@app.get("/notify-now")
-async def notify_now(request: Request):
-    await _notify_due_tasks()
-    return RedirectResponse(_base(request), status_code=303)
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_form(request: Request):
+    persons = await get_persons()
+    cards = ""
+    for p in persons:
+        cfg = get_person_settings(p)
+        services_val = ", ".join(cfg.get("services") or [])
+        time_val = cfg.get("notify_time", "08:00")
+        checked = "checked" if cfg.get("enabled") else ""
+        cards += f"""
+        <div class="card" style="margin-bottom:1rem">
+          <form method="post" action="settings">
+            <input type="hidden" name="person" value="{p}">
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.75rem">
+              <span style="font-size:1.1rem;font-weight:600">{p}</span>
+              <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;font-weight:400;color:#4a5568;margin:0">
+                <input type="checkbox" name="enabled" value="1" {checked}>
+                Benachrichtigungen aktiv
+              </label>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label>HA-Services (kommagetrennt)</label>
+                <input name="services" placeholder="notify.mobile_app_iphone, notify.alexa_kueche"
+                       value="{services_val}">
+              </div>
+              <div class="form-group">
+                <label>Uhrzeit</label>
+                <input name="notify_time" type="time" value="{time_val}">
+              </div>
+            </div>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
+              <a class="btn btn-sm" href="notify-now/{p}"
+                 style="background:#edf2f7;color:#2d3748"
+                 title="Testbenachrichtigung jetzt senden">🔔 Testen</a>
+            </div>
+          </form>
+        </div>"""
+
+    hint = """
+    <div class="card" style="background:#ebf8ff;border:1px solid #bee3f8;margin-bottom:1rem">
+      <p style="font-size:0.85rem;color:#2b6cb0;margin:0">
+        <strong>Services finden:</strong> Entwicklerwerkzeuge → Dienste → nach <code>notify.</code> suchen.<br>
+        Mehrere Services kommagetrennt eingeben, z.B.:
+        <code>notify.mobile_app_iphone, notify.mobile_app_samsung</code>
+      </p>
+    </div>"""
+
+    content = f"<h2>Einstellungen</h2>{hint}{cards}"
+    return render(content, request)
+
+
+@app.post("/settings")
+async def settings_save(
+    request: Request,
+    person: str = Form(...),
+    services: str = Form(""),
+    notify_time: str = Form("08:00"),
+    enabled: str = Form(""),
+):
+    service_list = [s.strip() for s in services.split(",") if s.strip()]
+    save_person_settings(
+        person=person,
+        services=service_list,
+        notify_time=_parse_time(notify_time),
+        enabled=(enabled == "1"),
+    )
+    return RedirectResponse(_base(request) + "settings", status_code=303)
+
+
+@app.get("/notify-now/{person}")
+async def notify_now(person: str, request: Request):
+    await _notify_person_now(person)
+    return RedirectResponse(_base(request) + "settings", status_code=303)
 
 
 @app.get("/healthz")
 async def health():
-    return {"status": "ok", "version": "0.6.0"}
+    return {"status": "ok", "version": "0.7.0"}
 
 
 if __name__ == "__main__":
