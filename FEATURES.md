@@ -59,11 +59,11 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 
 - ✅ Responsive Web-UI über HA Ingress
 - ✅ Farbkodierung nach Dringlichkeit
-- 📋 Redesign: Warm-Rose/Mauve Farbschema (Betidy-Stil)
-- 📋 Bottom-Navigation (Zuhause / Aufgaben / Projekte / Punkte / Einstellungen)
-- 📋 Dashboard (Zuhause): Begrüßung, Tagesstatistik, Raumkarten-Grid
-- 📋 Aufgabenliste auf /tasks (Dashboard wird neue Startseite)
-- 📋 Raumkarten mit Fortschrittsbalken und Aufgaben/Projekt-Anzahl
+- ✅ Redesign: Warm-Rose/Mauve Farbschema (Betidy-Stil)
+- ✅ Bottom-Navigation (Zuhause / Aufgaben / Projekte / Punkte / Einstellungen)
+- ✅ Dashboard (Zuhause): Begrüßung, Tagesstatistik, Raumkarten-Grid
+- ✅ Aufgabenliste auf /tasks (Dashboard wird neue Startseite)
+- ✅ Raumkarten mit Fortschrittsbalken und Aufgaben/Projekt-Anzahl
 
 ## Home Assistant Integration
 
