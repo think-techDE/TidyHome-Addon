@@ -1,5 +1,5 @@
 from tinydb import TinyDB, Query
-from models import Task
+from models import Task, Project, Step
 from datetime import date
 import os
 
@@ -88,28 +88,116 @@ def mark_done(task_id: str, done_by: str = None, done_at: str = None) -> Task | 
     person = done_by or task.assigned_to
 
     if person:
-        _add_score(person, task.points)
+        _add_score(person, task.points, task_type="task")
 
     return update_task(task)
 
 
-def _add_score(person: str, points: int):
+def _add_score(person: str, points: int, task_type: str = "task"):
     table = get_scores_table()
     Q = Query()
     row = table.get(Q.person == person)
     if row:
-        table.update(
-            {"points": row["points"] + points, "tasks_done": row["tasks_done"] + 1},
-            Q.person == person
-        )
+        update = {"points": row["points"] + points}
+        if task_type == "project":
+            update["project_steps_done"] = row.get("project_steps_done", 0) + 1
+        else:
+            update["tasks_done"] = row.get("tasks_done", 0) + 1
+        table.update(update, Q.person == person)
     else:
-        table.insert({"person": person, "points": points, "tasks_done": 1})
+        entry = {"person": person, "points": points,
+                 "tasks_done": 0, "project_steps_done": 0}
+        if task_type == "project":
+            entry["project_steps_done"] = 1
+        else:
+            entry["tasks_done"] = 1
+        table.insert(entry)
 
 
 def get_scores() -> list[dict]:
     table = get_scores_table()
     scores = table.all()
     return sorted(scores, key=lambda s: s["points"], reverse=True)
+
+
+def get_projects_table():
+    return _db.table("projects")
+
+
+def get_steps_table():
+    return _db.table("project_steps")
+
+
+def list_projects(room: str = None, assigned_to: str = None) -> list[Project]:
+    Q = Query()
+    table = get_projects_table()
+    if room:
+        rows = table.search((Q.room == room) & (Q.active == True))
+    elif assigned_to:
+        rows = table.search((Q.assigned_to == assigned_to) & (Q.active == True))
+    else:
+        rows = table.search(Q.active == True)
+    return [Project(**r) for r in rows]
+
+
+def get_project(project_id: str) -> Project | None:
+    Q = Query()
+    row = get_projects_table().get(Q.id == project_id)
+    return Project(**row) if row else None
+
+
+def create_project(project: Project) -> Project:
+    get_projects_table().insert(project.model_dump())
+    return project
+
+
+def update_project(project: Project) -> Project:
+    Q = Query()
+    get_projects_table().update(project.model_dump(), Q.id == project.id)
+    return project
+
+
+def delete_project(project_id: str) -> bool:
+    Q = Query()
+    get_projects_table().update({"active": False}, Q.id == project_id)
+    return True
+
+
+def list_steps(project_id: str) -> list[Step]:
+    Q = Query()
+    rows = get_steps_table().search(Q.project_id == project_id)
+    return [Step(**r) for r in rows]
+
+
+def get_step(step_id: str) -> Step | None:
+    Q = Query()
+    row = get_steps_table().get(Q.id == step_id)
+    return Step(**row) if row else None
+
+
+def add_step(step: Step) -> Step:
+    get_steps_table().insert(step.model_dump())
+    return step
+
+
+def complete_step(step_id: str, done_by: str = None) -> Step | None:
+    step = get_step(step_id)
+    if not step or step.completed:
+        return step
+    step.completed = True
+    step.completed_by = done_by
+    step.completed_at = date.today().isoformat()
+    Q = Query()
+    get_steps_table().update(step.model_dump(), Q.id == step_id)
+    if done_by:
+        _add_score(done_by, step.points, task_type="project")
+    return step
+
+
+def delete_step(step_id: str) -> bool:
+    Q = Query()
+    removed = get_steps_table().remove(Q.id == step_id)
+    return len(removed) > 0
 
 
 def get_settings_table():

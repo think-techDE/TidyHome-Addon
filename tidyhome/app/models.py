@@ -31,6 +31,31 @@ class Task(BaseModel):
         return delta.days
 
 
+class Project(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    room: str
+    assigned_to: Optional[str] = None
+    description: Optional[str] = None
+    active: bool = True
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+
+    def progress(self, steps: list["Step"]) -> tuple[int, int]:
+        total = len(steps)
+        done = sum(1 for s in steps if s.completed)
+        return done, total
+
+
+class Step(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str
+    name: str
+    points: int = 5
+    completed: bool = False
+    completed_by: Optional[str] = None
+    completed_at: Optional[str] = None
+
+
 class TaskCreate(BaseModel):
     name: str
     room: str

@@ -9,7 +9,10 @@ import uvicorn
 from models import Task
 from storage import (list_tasks, get_task, create_task, edit_task, delete_task,
                      mark_done, get_scores, get_person_settings, save_person_settings,
-                     list_person_settings)
+                     list_person_settings, list_projects, get_project, create_project,
+                     update_project, delete_project, list_steps, add_step,
+                     complete_step, delete_step)
+from models import Task, Project, Step
 from ha_client import get_areas, get_persons, send_notification
 
 log_level = os.environ.get("LOG_LEVEL", "info").upper()
@@ -20,7 +23,7 @@ _admins_raw = os.environ.get("ADMINS", "")
 ADMINS: set[str] = {a.strip() for a in _admins_raw.split(",") if a.strip()}
 logger.info("Admins: %s", ADMINS or "(keine)")
 
-app = FastAPI(title="TidyHome", version="0.8.0")
+app = FastAPI(title="TidyHome", version="0.9.0")
 
 INTERVALS = {
     1: "Täglich",
@@ -122,6 +125,7 @@ HTML_BASE = """<!DOCTYPE html>
   <nav>
     <a href="./">Aufgaben</a>
     <a href="new">+ Neu</a>
+    <a href="projects">Projekte</a>
     <a href="scores">Punkte</a>
     <a href="settings">Einstellungen</a>
     <a href="admin">Admin</a>
@@ -337,11 +341,13 @@ async def scores(request: Request):
     else:
         for i, s in enumerate(data):
             medal = ["🥇", "🥈", "🥉"][i] if i < 3 else f"{i+1}."
+            tasks_done = s.get("tasks_done", 0)
+            proj_done = s.get("project_steps_done", 0)
             rows += f"""
             <div class="score-row">
               <span style="font-size:1.2rem">{medal}</span>
               <span class="score-name">{s["person"]}</span>
-              <span class="task-meta">{s["tasks_done"]} Aufgaben</span>
+              <span class="task-meta">{tasks_done} Aufgaben · {proj_done} Projektschritte</span>
               <span class="score-pts">{s["points"]} Pkt</span>
             </div>"""
 
@@ -563,6 +569,293 @@ async def admin_save(
         enabled=cfg.get("enabled", False),
     )
     return RedirectResponse(_base(request) + "admin", status_code=303)
+
+
+@app.get("/projects", response_class=HTMLResponse)
+async def projects_list(request: Request, room: str = None):
+    areas = await get_areas()
+    projects = list_projects(room=room)
+
+    filters = '<div class="filters">'
+    active = "active" if not room else ""
+    filters += f'<a class="filter-btn {active}" href="projects">Alle</a>'
+    for r in areas:
+        active = "active" if room == r else ""
+        filters += f'<a class="filter-btn {active}" href="projects?room={r}">{r}</a>'
+    filters += '</div>'
+
+    rows = ""
+    if not projects:
+        rows = '<div class="empty">Keine Ordnungsprojekte vorhanden.</div>'
+    else:
+        for p in projects:
+            steps = list_steps(p.id)
+            done, total = p.progress(steps)
+            pct = int(done / total * 100) if total else 0
+            assigned = f"<span class='task-meta'>→ {p.assigned_to}</span>" if p.assigned_to else ""
+            desc = f"<div class='task-meta' style='margin-top:0.2rem'>{p.description}</div>" if p.description else ""
+            rows += f"""
+            <div class="task-row">
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <a href="projects/{p.id}" class="task-name" style="text-decoration:none;color:inherit">{p.name}</a>
+                  {assigned}
+                </div>
+                {desc}
+                <div class="task-meta" style="margin-top:0.3rem">{p.room} · {done}/{total} Schritte</div>
+                <div style="background:#edf2f7;border-radius:999px;height:4px;margin-top:0.4rem">
+                  <div style="background:#3182ce;width:{pct}%;height:4px;border-radius:999px"></div>
+                </div>
+              </div>
+              <a class="btn btn-sm" href="projects/{p.id}/edit" style="background:#edf2f7;color:#2d3748">✎</a>
+              <a class="btn btn-danger btn-sm" href="projects/{p.id}/delete"
+                 onclick="return confirm('Projekt loeschen?')">✕</a>
+            </div>"""
+
+    content = f"""
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <h2>Ordnungsprojekte ({len(projects)})</h2>
+      <a class="btn btn-primary btn-sm" href="projects/new">+ Neues Projekt</a>
+    </div>
+    {filters}
+    <div class="card">{rows}</div>
+    """
+    return render(content, request)
+
+
+@app.get("/projects/new", response_class=HTMLResponse)
+async def project_new_form(request: Request):
+    areas = await get_areas()
+    persons = await get_persons()
+    room_opts = "".join(f'<option value="{r}">{r}</option>' for r in areas)
+    person_opts = '<option value="">— Niemand —</option>' + "".join(
+        f'<option value="{p}">{p}</option>' for p in persons
+    )
+    content = f"""
+    <h2>Neues Ordnungsprojekt</h2>
+    <div class="card">
+      <form method="post" action="projects">
+        <div class="form-group">
+          <label>Name</label>
+          <input name="name" required placeholder="z.B. Keller aufraeumen">
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Raum</label>
+            <select name="room">{room_opts}</select>
+          </div>
+          <div class="form-group">
+            <label>Zugewiesen an</label>
+            <select name="assigned_to">{person_opts}</select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Beschreibung (optional)</label>
+          <input name="description" placeholder="Was soll erreicht werden?">
+        </div>
+        <button class="btn btn-primary" type="submit">Projekt anlegen</button>
+        <a class="btn" href="projects" style="background:#edf2f7;margin-left:0.5rem">Abbrechen</a>
+      </form>
+    </div>"""
+    return render(content, request)
+
+
+@app.post("/projects")
+async def project_create(
+    request: Request,
+    name: str = Form(...),
+    room: str = Form(...),
+    assigned_to: str = Form(""),
+    description: str = Form(""),
+):
+    project = Project(
+        name=name, room=room,
+        assigned_to=assigned_to or None,
+        description=description or None,
+    )
+    create_project(project)
+    return RedirectResponse(_base(request) + f"projects/{project.id}", status_code=303)
+
+
+@app.get("/projects/{project_id}", response_class=HTMLResponse)
+async def project_detail(project_id: str, request: Request):
+    project = get_project(project_id)
+    if not project:
+        raise HTTPException(404)
+    steps = list_steps(project_id)
+    done, total = project.progress(steps)
+    pct = int(done / total * 100) if total else 0
+
+    persons = await get_persons()
+    person_opts = '<option value="">— Niemand —</option>' + "".join(
+        f'<option value="{p}">{p}</option>' for p in persons
+    )
+
+    step_rows = ""
+    for s in steps:
+        if s.completed:
+            who = f" von {s.completed_by}" if s.completed_by else ""
+            step_rows += f"""
+            <div class="task-row" style="opacity:0.55">
+              <span style="font-size:1.1rem">✓</span>
+              <span class="task-name" style="text-decoration:line-through">{s.name}</span>
+              <span class="task-meta">{s.points} Pkt{who}</span>
+            </div>"""
+        else:
+            step_rows += f"""
+            <div class="task-row">
+              <div style="flex:1">
+                <span class="task-name">{s.name}</span>
+                <span class="task-meta" style="margin-left:0.5rem">{s.points} Pkt</span>
+              </div>
+              <form class="inline" method="post" action="steps/{s.id}/done">
+                <select name="done_by" style="width:auto;padding:0.25rem 0.5rem;font-size:0.8rem;margin-right:0.4rem">
+                  {person_opts}
+                </select>
+                <button class="btn btn-success btn-sm">✓</button>
+              </form>
+              <a class="btn btn-danger btn-sm" href="steps/{s.id}/delete"
+                 onclick="return confirm('Schritt loeschen?')">✕</a>
+            </div>"""
+
+    if not steps:
+        step_rows = '<div class="empty">Noch keine Schritte. Fuege unten den ersten hinzu.</div>'
+
+    progress_bar = f"""
+    <div style="margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:#718096;margin-bottom:0.3rem">
+        <span>{done} von {total} Schritten erledigt</span>
+        <span>{pct}%</span>
+      </div>
+      <div style="background:#edf2f7;border-radius:999px;height:8px">
+        <div style="background:#38a169;width:{pct}%;height:8px;border-radius:999px;transition:width 0.3s"></div>
+      </div>
+    </div>"""
+
+    assigned = f" · → {project.assigned_to}" if project.assigned_to else ""
+    desc = f'<p style="color:#718096;font-size:0.9rem;margin-bottom:1rem">{project.description}</p>' if project.description else ""
+
+    content = f"""
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem">
+      <div>
+        <h2>{project.name}</h2>
+        <div class="task-meta">{project.room}{assigned}</div>
+      </div>
+      <a class="btn btn-sm" href="edit" style="background:#edf2f7;color:#2d3748">✎ Bearbeiten</a>
+    </div>
+    {desc}
+    {progress_bar}
+    <div class="card" style="margin-bottom:1rem">{step_rows}</div>
+    <div class="card">
+      <h2 style="margin-bottom:0.75rem">Schritt hinzufuegen</h2>
+      <form method="post" action="steps">
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Beschreibung</label>
+            <input name="name" required placeholder="z.B. Kartons sortieren">
+          </div>
+          <div class="form-group">
+            <label>Punkte</label>
+            <input name="points" type="number" value="5" min="1" max="100">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" type="submit">Schritt hinzufuegen</button>
+        <a class="btn btn-sm" href="projects" style="background:#edf2f7;color:#2d3748;margin-left:0.5rem">← Alle Projekte</a>
+      </form>
+    </div>"""
+    return render(content, request)
+
+
+@app.get("/projects/{project_id}/edit", response_class=HTMLResponse)
+async def project_edit_form(project_id: str, request: Request):
+    project = get_project(project_id)
+    if not project:
+        raise HTTPException(404)
+    areas = await get_areas()
+    persons = await get_persons()
+    room_opts = "".join(
+        f'<option value="{r}"{_selected(r, project.room)}>{r}</option>' for r in areas
+    )
+    person_opts = f'<option value=""{_selected("", project.assigned_to or "")}>— Niemand —</option>' + "".join(
+        f'<option value="{p}"{_selected(p, project.assigned_to or "")}>{p}</option>' for p in persons
+    )
+    content = f"""
+    <h2>Projekt bearbeiten</h2>
+    <div class="card">
+      <form method="post" action="edit">
+        <div class="form-group">
+          <label>Name</label>
+          <input name="name" required value="{project.name}">
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Raum</label>
+            <select name="room">{room_opts}</select>
+          </div>
+          <div class="form-group">
+            <label>Zugewiesen an</label>
+            <select name="assigned_to">{person_opts}</select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Beschreibung</label>
+          <input name="description" value="{project.description or ''}">
+        </div>
+        <button class="btn btn-primary" type="submit">Speichern</button>
+        <a class="btn" href="../{project_id}" style="background:#edf2f7;margin-left:0.5rem">Abbrechen</a>
+      </form>
+    </div>"""
+    return render(content, request)
+
+
+@app.post("/projects/{project_id}/edit")
+async def project_edit(
+    project_id: str, request: Request,
+    name: str = Form(...), room: str = Form(...),
+    assigned_to: str = Form(""), description: str = Form(""),
+):
+    project = get_project(project_id)
+    if not project:
+        raise HTTPException(404)
+    project.name = name
+    project.room = room
+    project.assigned_to = assigned_to or None
+    project.description = description or None
+    update_project(project)
+    return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
+
+
+@app.get("/projects/{project_id}/delete")
+async def project_delete(project_id: str, request: Request):
+    delete_project(project_id)
+    return RedirectResponse(_base(request) + "projects", status_code=303)
+
+
+@app.post("/projects/{project_id}/steps")
+async def step_add(
+    project_id: str, request: Request,
+    name: str = Form(...), points: int = Form(5),
+):
+    project = get_project(project_id)
+    if not project:
+        raise HTTPException(404)
+    step = Step(project_id=project_id, name=name, points=points)
+    add_step(step)
+    return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
+
+
+@app.post("/projects/{project_id}/steps/{step_id}/done")
+async def step_done(project_id: str, step_id: str, request: Request):
+    form = await request.form()
+    done_by = form.get("done_by") or None
+    complete_step(step_id, done_by=done_by)
+    return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
+
+
+@app.get("/projects/{project_id}/steps/{step_id}/delete")
+async def step_delete(project_id: str, step_id: str, request: Request):
+    delete_step(step_id)
+    return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
 
 
 @app.get("/notify-now/{person}")
