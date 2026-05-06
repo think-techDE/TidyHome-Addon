@@ -13,7 +13,7 @@ log_level = os.environ.get("LOG_LEVEL", "info").upper()
 logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
 logger = logging.getLogger("tidyhome")
 
-app = FastAPI(title="TidyHome", version="0.2.0")
+app = FastAPI(title="TidyHome", version="0.3.0")
 
 INTERVALS = {
     1: "Täglich",
@@ -46,6 +46,7 @@ HTML_BASE = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="{base_href}">
 <title>TidyHome</title>
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -107,9 +108,9 @@ HTML_BASE = """<!DOCTYPE html>
   <span style="font-size:1.5rem">🧹</span>
   <h1>TidyHome</h1>
   <nav>
-    <a href="/">Aufgaben</a>
-    <a href="/new">+ Neu</a>
-    <a href="/scores">Punkte</a>
+    <a href="./">Aufgaben</a>
+    <a href="new">+ Neu</a>
+    <a href="scores">Punkte</a>
   </nav>
 </header>
 <main>
@@ -119,8 +120,12 @@ HTML_BASE = """<!DOCTYPE html>
 </html>"""
 
 
+_ingress_path = os.environ.get("INGRESS_PATH", "").rstrip("/")
+
+
 def render(content: str) -> HTMLResponse:
-    return HTMLResponse(HTML_BASE.format(content=content))
+    base_href = _ingress_path + "/" if _ingress_path else "/"
+    return HTMLResponse(HTML_BASE.format(content=content, base_href=base_href))
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -134,11 +139,11 @@ async def index(room: str = None, person: str = None, overdue: str = None):
     persons = await get_persons()
 
     filters = '<div class="filters">'
-    filters += f'<a class="filter-btn {"active" if not room and not person and not overdue else ""}" href="/">Alle</a>'
-    filters += f'<a class="filter-btn {"active" if overdue == "1" else ""}" href="/?overdue=1">Ueberfaellig</a>'
+    filters += f'<a class="filter-btn {"active" if not room and not person and not overdue else ""}" href="./">Alle</a>'
+    filters += f'<a class="filter-btn {"active" if overdue == "1" else ""}" href="./?overdue=1">Ueberfaellig</a>'
     for r in areas:
         active = "active" if room == r else ""
-        filters += f'<a class="filter-btn {active}" href="/?room={r}">{r}</a>'
+        filters += f'<a class="filter-btn {active}" href="./?room={r}">{r}</a>'
     filters += '</div>'
 
     rows = ""
@@ -165,10 +170,10 @@ async def index(room: str = None, person: str = None, overdue: str = None):
                 <div class="task-name">{t.name}</div>
                 <div class="task-meta">{t.room} · {interval_label(t.interval_days)} · {t.points} Pkt {assigned}</div>
               </div>
-              <form class="inline" method="post" action="/done/{t.id}">
+              <form class="inline" method="post" action="done/{t.id}">
                 <button class="btn btn-success btn-sm">✓</button>
               </form>
-              <a class="btn btn-danger btn-sm" href="/delete/{t.id}" onclick="return confirm('Loeschen?')">✕</a>
+              <a class="btn btn-danger btn-sm" href="delete/{t.id}" onclick="return confirm('Loeschen?')">✕</a>
             </div>"""
 
     content = f"""
@@ -195,7 +200,7 @@ async def new_form():
     content = f"""
     <h2>Neue Aufgabe</h2>
     <div class="card">
-      <form method="post" action="/tasks">
+      <form method="post" action="tasks">
         <div class="grid-2">
           <div class="form-group">
             <label>Name</label>
@@ -219,7 +224,7 @@ async def new_form():
           </div>
         </div>
         <button class="btn btn-primary" type="submit">Aufgabe anlegen</button>
-        <a class="btn" href="/" style="background:#edf2f7;margin-left:0.5rem">Abbrechen</a>
+        <a class="btn" href="./" style="background:#edf2f7;margin-left:0.5rem">Abbrechen</a>
       </form>
     </div>
     """
@@ -291,5 +296,6 @@ async def health():
 
 
 if __name__ == "__main__":
-    logger.info("TidyHome startet auf Port 8099")
-    uvicorn.run(app, host="0.0.0.0", port=8099, log_level=log_level.lower())
+    ingress_path = os.environ.get("INGRESS_PATH", "")
+    logger.info("TidyHome startet auf Port 8099 (ingress path: %s)", ingress_path or "/")
+    uvicorn.run(app, host="0.0.0.0", port=8099, root_path=ingress_path, log_level=log_level.lower())
