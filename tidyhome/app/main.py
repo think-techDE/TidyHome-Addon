@@ -12,7 +12,7 @@ log_level = os.environ.get("LOG_LEVEL", "info").upper()
 logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
 logger = logging.getLogger("tidyhome")
 
-app = FastAPI(title="TidyHome", version="0.4.0")
+app = FastAPI(title="TidyHome", version="0.5.0")
 
 INTERVALS = {
     1: "Täglich",

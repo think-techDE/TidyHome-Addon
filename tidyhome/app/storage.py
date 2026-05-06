@@ -1,6 +1,4 @@
 from tinydb import TinyDB, Query
-from tinydb.storages import JSONStorage
-from tinydb.middlewares import CachingMiddleware
 from models import Task
 from datetime import date
 import os
@@ -8,18 +6,16 @@ import os
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 DB_PATH = os.path.join(DATA_DIR, "tidyhome.json")
 
-
-def get_db() -> TinyDB:
-    os.makedirs(DATA_DIR, exist_ok=True)
-    return TinyDB(DB_PATH, storage=CachingMiddleware(JSONStorage))
+os.makedirs(DATA_DIR, exist_ok=True)
+_db = TinyDB(DB_PATH)
 
 
 def get_tasks_table():
-    return get_db().table("tasks")
+    return _db.table("tasks")
 
 
 def get_scores_table():
-    return get_db().table("scores")
+    return _db.table("scores")
 
 
 def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = False) -> list[Task]:
