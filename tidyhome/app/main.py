@@ -3,6 +3,7 @@ import os
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from config import logger
 from routes.dashboard import router as dashboard_router
@@ -13,6 +14,8 @@ from routes.tasks import router as tasks_router
 from scheduler import scheduler_loop
 
 app = FastAPI(title="TidyHome", version="1.0.0")
+
+app.mount("/assets", StaticFiles(directory="/app/assets"), name="assets")
 
 app.include_router(dashboard_router)
 app.include_router(tasks_router)

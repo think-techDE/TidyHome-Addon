@@ -41,6 +41,7 @@ _HTML_BASE = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <base href="{base}">
 <title>TidyHome</title>
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 <style>
   :root {{
     --primary: #b5738a;
@@ -167,7 +168,7 @@ _HTML_BASE = """<!DOCTYPE html>
 <body>
 <header>
   <div class="h-left">
-    <span class="h-logo">🧹</span>
+    <img src="assets/logo.svg" style="width:30px;height:30px;border-radius:7px">
     <span class="h-title">TidyHome</span>
   </div>
   <div style="display:flex;gap:0.4rem;align-items:center">

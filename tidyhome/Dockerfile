@@ -3,6 +3,7 @@ FROM $BUILD_FROM
 
 WORKDIR /app
 COPY app/ /app/
+COPY assets/ /app/assets/
 
 RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
