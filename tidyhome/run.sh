@@ -5,4 +5,4 @@ export LOG_LEVEL
 
 bashio::log.info "TidyHome startet (Log-Level: ${LOG_LEVEL})..."
 
-exec /venv/bin/python3 /app/main.py
+exec python3 /app/main.py
