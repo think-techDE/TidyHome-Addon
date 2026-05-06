@@ -72,6 +72,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Notify-Services aus HA (mobile_app, alexa, etc.)
 - ✅ SUPERVISOR_TOKEN für API-Auth
 - 📋 HA-Sensoren/Entities für Aufgabenstatus (optional, für Automationen)
+- 💡 Verknüpfung mit Trash Card (Müllkalender-Karte als Aufgaben-Trigger)
 
 ## Technisch
 
