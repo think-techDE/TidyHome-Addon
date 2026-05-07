@@ -21,6 +21,10 @@
     --shadow: 0 12px 30px rgba(24, 31, 42, 0.06);
     --nav-h: 4.25rem;
     --radius: 0.75rem;
+    --ring-bg: var(--surface-2);
+    --icon-bg: var(--primary-soft);
+    --icon-color: var(--primary-dark);
+    --primary-light: var(--primary-soft);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -147,6 +151,31 @@
                   padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--primary-border); }
   .page-header { display: flex; justify-content: space-between;
                   align-items: center; margin-bottom: 1rem; }
+  /* Icon buttons (SVG action buttons) */
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; cursor: pointer; background: transparent;
+    color: var(--muted); transition: all 0.15s; text-decoration: none;
+    flex-shrink: 0;
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--text); }
+  .icon-btn.success { color: var(--success); }
+  .icon-btn.success:hover { background: var(--success-bg); }
+  .icon-btn.danger { color: var(--danger); }
+  .icon-btn.danger:hover { background: var(--danger-bg); }
+  /* Task date row */
+  .task-date { display: flex; align-items: center; gap: 0.3rem;
+               font-size: 0.74rem; color: var(--muted); margin-top: 0.2rem; }
+  /* Project list rows */
+  .proj-row { display: flex; align-items: center; gap: 0.875rem;
+              padding: 1rem; border-bottom: 1px solid var(--border); }
+  .proj-row:last-child { border-bottom: none; }
+  /* Empty states with icon */
+  .empty { display: flex; flex-direction: column; align-items: center;
+           justify-content: center; padding: 3rem 1.5rem; color: var(--muted);
+           font-size: 0.88rem; gap: 0.4rem; text-align: center; }
+  .empty-icon { font-size: 2.2rem; opacity: 0.35; margin-bottom: 0.2rem; }
   .project-card { display:block; color:inherit; text-decoration:none; padding:1rem; border-bottom:1px solid var(--border); }
   .project-card:last-child { border-bottom:none; }
   .project-card.done { opacity:0.72; }

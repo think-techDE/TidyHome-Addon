@@ -429,7 +429,7 @@ def render(content: str, request: Request, page: str = "home",
 <base href="{base}">
 <title>TidyHome</title>
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
-<style>{_CSS}</style>
+<link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
 <header>
