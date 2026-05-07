@@ -164,8 +164,13 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
     done, total = proj.progress(steps)
     pct = int(done / total * 100) if total else 0
     persons = await get_persons()
-    person_opts = '<option value="">— Niemand —</option>' + "".join(
-        f'<option value="{pn}">{pn}</option>' for pn in persons)
+    default_done_by = proj.assigned_to or p or ""
+    person_names = list(persons)
+    if default_done_by and default_done_by not in person_names:
+        person_names.insert(0, default_done_by)
+    person_opts = f'<option value=""{_selected("", default_done_by)}>— Niemand —</option>' + "".join(
+        f'<option value="{pn}"{_selected(pn, default_done_by)}>{pn}</option>'
+        for pn in person_names)
 
     fill_cls = "green" if pct == 100 else ""
     step_rows = ""
@@ -173,32 +178,36 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
         if s.completed:
             who = f" · {s.completed_by}" if s.completed_by else ""
             step_rows += f"""
-            <div class="task-row" style="opacity:0.5">
+            <div class="project-step-row is-done">
               <span style="color:var(--success);font-size:1.1rem;flex-shrink:0">
                 {_icon("check", 18, "var(--success)")}
               </span>
-              <span class="task-name" style="flex:1;text-decoration:line-through;
-                    color:var(--muted)">{s.name}</span>
-              <span class="task-meta">{s.points} Pkt{who}</span>
+              <div class="project-step-main">
+                <span class="project-step-title">{s.name}</span>
+                <span class="project-step-meta">{s.points} Pkt{who}</span>
+              </div>
             </div>"""
         else:
             step_rows += f"""
-            <div class="task-row">
-              <span class="task-name" style="flex:1">{s.name}</span>
-              <span class="task-meta" style="margin-right:0.5rem">{s.points} Pkt</span>
-              <form class="inline" method="post" action="{base}projects/{project_id}/steps/{s.id}/done">
-                <select name="done_by" style="width:auto;padding:0.22rem 0.4rem;
-                  font-size:0.78rem;margin-right:0.3rem;border-radius:0.4rem;
-                  border:1.5px solid var(--border);background:var(--card);color:var(--text)">
+            <div class="project-step-row">
+              <div class="project-step-main">
+                <span class="project-step-title">{s.name}</span>
+                <span class="project-step-meta">{s.points} Pkt</span>
+              </div>
+              <div class="project-step-actions">
+                <form class="project-step-form" method="post" action="{base}projects/{project_id}/steps/{s.id}/done">
+                  <select class="project-step-person" name="done_by" aria-label="Erledigt von">
                   {person_opts}
-                </select>
-                <button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>
-              </form>
-              <a class="icon-btn danger" style="margin-left:0.1rem"
-                 href="{base}projects/{project_id}/steps/{s.id}/delete"
-                 onclick="return confirm('Schritt löschen?')">
-                 {_icon("trash", 15)}
-              </a>
+                  </select>
+                  <button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>
+                </form>
+                <a class="icon-btn danger"
+                   href="{base}projects/{project_id}/steps/{s.id}/delete"
+                   onclick="return confirm('Schritt löschen?')"
+                   title="Schritt löschen">
+                   {_icon("trash", 15)}
+                </a>
+              </div>
             </div>"""
 
     if not steps:
@@ -225,9 +234,8 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
       </a>
     </div>
     {desc}
-    <div class="card" style="padding:1rem;margin-bottom:1rem">
-      <div style="display:flex;justify-content:space-between;font-size:0.78rem;
-                  color:var(--muted);margin-bottom:0.4rem">
+    <div class="card project-progress-card">
+      <div class="project-progress-head">
         <span>{done} von {total} Schritten</span><span>{pct}%</span>
       </div>
       <div class="progress-track">
@@ -248,11 +256,12 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
             <input name="points" type="number" value="5" min="1" max="100">
           </div>
         </div>
-        <button class="btn btn-primary btn-sm" type="submit"
-                style="display:flex;align-items:center;gap:0.3rem">
-          {_icon("plus", 14, "white")} Hinzufügen
-        </button>
-        <a class="btn btn-ghost btn-sm" href="{base}projects" style="margin-left:0.5rem">← Alle Projekte</a>
+        <div class="project-step-add-actions">
+          <button class="btn btn-primary btn-sm" type="submit">
+            {_icon("plus", 14, "white")} Hinzufügen
+          </button>
+          <a class="btn btn-ghost btn-sm" href="{base}projects">← Alle Projekte</a>
+        </div>
       </form>
     </div>"""
     return render(content, request, page="projects", person=p)
