@@ -55,6 +55,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Admins verwalten Geräte-Zuordnung
 - ✅ Jeder Nutzer stellt eigene Benachrichtigungszeit ein
 - 📋 Urlaubsmodus (Intervalle einfrieren, keine Notifications)
+- 💡 Räume pro Person ausblenden (z.B. Kinderzimmer nur für Eltern sichtbar)
 
 ## Design & Navigation
 
