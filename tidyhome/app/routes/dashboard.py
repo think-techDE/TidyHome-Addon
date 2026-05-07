@@ -136,7 +136,7 @@ async def dashboard(request: Request, p: str = ""):
              Alle{chev}
           </a>
         </div>
-        <div class="card card-flush" style="margin-bottom:1rem">{task_rows}</div>"""
+        <div class="card card-flush list-card" style="margin-bottom:1rem">{task_rows}</div>"""
     else:
         next_tasks_section = f"""
         <div class="card" style="text-align:center;padding:1.5rem;margin-bottom:1rem">
@@ -159,10 +159,7 @@ async def dashboard(request: Request, p: str = ""):
                 f'{r_overdue}×</span>'
             ) if r_overdue else ""
             room_rows += f"""
-            <a href="{base}tasks?room={r}{('&p=' + p) if p else ''}"
-               style="display:flex;align-items:center;gap:0.875rem;
-                      padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);
-                      text-decoration:none;color:var(--text)">
+            <a class="room-row" href="{base}tasks?room={r}{('&p=' + p) if p else ''}">
               {_room_icon(r, 40, stored_room_icons)}
               <span style="flex:1;font-weight:600;font-size:0.9rem">{r}</span>
               <span style="font-size:0.74rem;color:var(--muted)">{sub}</span>
@@ -171,7 +168,7 @@ async def dashboard(request: Request, p: str = ""):
             </a>"""
         room_block = (
             f'<h2 style="font-size:0.95rem;margin-bottom:0.6rem">Räume</h2>'
-            f'<div class="card card-flush">{room_rows}</div>'
+            f'<div class="card card-flush list-card">{room_rows}</div>'
         )
     else:
         room_block = (

@@ -170,7 +170,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
       </a>
     </div>
     {filters}
-    <div class="card card-flush">{rows}</div>"""
+    <div class="card card-flush list-card">{rows}</div>"""
 
     return render(content, request, page="tasks", person=p)
 
