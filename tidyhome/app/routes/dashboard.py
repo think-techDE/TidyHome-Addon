@@ -104,6 +104,7 @@ async def dashboard(request: Request, p: str = ""):
             done_btn = (
                 f'<form class="inline" method="post" action="{base}tasks/{t.id}/done">'
                 + (f'<input type="hidden" name="done_by" value="{p}">' if p else "")
+                + (f'<input type="hidden" name="return_p" value="{p}">' if p else "")
                 + f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
                 f'</form>'
             )

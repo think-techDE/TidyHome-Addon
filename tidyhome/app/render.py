@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from storage import get_admins
@@ -24,6 +26,44 @@ ROOM_ICONS: dict[str, tuple[str, str]] = {
     "Kinderzimmer": ("1F392",      "var(--primary-soft)"),
     "Balkon":       ("1FAB4",      "var(--success-bg)"),
     "Terrasse":     ("2600",       "var(--warning-bg)"),
+}
+
+ROOM_ICON_CHOICES: dict[str, tuple[str, str]] = {
+    "kitchen":       ("1F373",      "var(--warning-bg)"),
+    "living_room":   ("1F6CB",      "var(--primary-soft)"),
+    "bedroom":       ("1F6CF-FE0F", "rgba(59,130,246,0.12)"),
+    "bathroom":      ("1F6C0",      "rgba(59,130,246,0.12)"),
+    "hallway":       ("1F6AA",      "var(--surface-2)"),
+    "basement":      ("1F4E6",      "var(--surface-2)"),
+    "garden":        ("1F333",      "var(--success-bg)"),
+    "garage":        ("1F697",      "var(--surface-2)"),
+    "office":        ("1F4BB",      "var(--primary-soft)"),
+    "dining_room":   ("1F37D-FE0F", "var(--warning-bg)"),
+    "kids_room":     ("1F392",      "var(--primary-soft)"),
+    "balcony":       ("1FAB4",      "var(--success-bg)"),
+    "terrace":       ("2600",       "var(--warning-bg)"),
+    "laundry":       ("1F9FA",      "var(--primary-soft)"),
+    "storage":       ("1F4E6",      "var(--warning-bg)"),
+    "home":          ("1F3E0",      "var(--primary-soft)"),
+}
+
+ROOM_ICON_LABELS: dict[str, str] = {
+    "kitchen": "Küche",
+    "living_room": "Wohnzimmer",
+    "bedroom": "Schlafzimmer",
+    "bathroom": "Bad",
+    "hallway": "Flur",
+    "basement": "Keller",
+    "garden": "Garten",
+    "garage": "Garage",
+    "office": "Büro",
+    "dining_room": "Esszimmer",
+    "kids_room": "Kinderzimmer",
+    "balcony": "Balkon",
+    "terrace": "Terrasse",
+    "laundry": "Wäsche",
+    "storage": "Lager",
+    "home": "Allgemein",
 }
 
 # ── SVG icon paths (Feather-style 24×24) ─────────────────────────────────────
@@ -279,7 +319,9 @@ def _room_icon(room: str, size: int = 40,
                stored: dict[str, str] | None = None) -> str:
     """Round icon bubble using OpenMoji SVG for a room.
     stored: optional {room_name: icon_key} overrides from DB."""
-    if stored and room in stored and stored[room] in _TASK_ICONS:
+    if stored and room in stored and stored[room] in ROOM_ICON_CHOICES:
+        filename, bg = ROOM_ICON_CHOICES[stored[room]]
+    elif stored and room in stored and stored[room] in _TASK_ICONS:
         filename, bg = _TASK_ICONS[stored[room]]
     else:
         filename, bg = ROOM_ICONS.get(room, ("1F3E0", "var(--primary-soft)"))
@@ -331,11 +373,19 @@ def _base(request: Request) -> str:
     return path + "/"
 
 
-def resolve_person(request: Request, p_param: str = "") -> str:
-    ha_user = (
+def _ha_user(request: Request) -> str:
+    return (
         request.headers.get("X-Remote-User-Display-Name") or
         request.headers.get("X-Remote-User-Name", "")
     ).strip()
+
+
+def person_suffix(person: str = "", separator: str = "?") -> str:
+    return f"{separator}p={quote(person)}" if person else ""
+
+
+def resolve_person(request: Request, p_param: str = "") -> str:
+    ha_user = _ha_user(request)
     if p_param and ha_user in get_admins():
         return p_param
     return ha_user or p_param
@@ -583,24 +633,43 @@ _CSS = """
 def render(content: str, request: Request, page: str = "home",
            person: str = "") -> HTMLResponse:
     base = _base(request)
-    psuffix = f"?p={person}" if person else ""
+    psuffix = person_suffix(person)
     admins = get_admins()
+    ha_user = _ha_user(request)
+    is_admin = ha_user in admins
+    display_person = person or ha_user
 
     # Person nav pill / dropdown
-    if not person:
+    if not display_person:
         person_nav = f'<a href="{base}settings" class="h-pill">Wer bin ich?</a>'
-    elif person in admins:
+    elif is_admin:
+        profile_person = person or ha_user
+        own_link = (
+            f'<a href="{base}">Zurück zu mir</a>'
+            if profile_person != ha_user else
+            f'<a href="{base}">Meine Ansicht</a>'
+        )
+        current_profile = (
+            f'<a href="{base}settings{person_suffix(profile_person)}">'
+            f'Profil: {profile_person}</a>'
+        )
+        own_profile = (
+            f'<a href="{base}settings{person_suffix(ha_user)}">Mein Profil</a>'
+            if ha_user and profile_person != ha_user else ""
+        )
         person_nav = f'''
         <details class="hpill-menu">
-          <summary class="h-pill">{person} ▾</summary>
+          <summary class="h-pill">{display_person} ▾</summary>
           <div class="hpill-dropdown">
-            <a href="{base}settings?p={person}">Mein Profil</a>
+            {own_link}
+            {current_profile}
+            {own_profile}
             <a href="{base}settings">Person wechseln</a>
             <a href="{base}admin">Admin-Bereich</a>
           </div>
         </details>'''
     else:
-        person_nav = f'<span class="h-pill">{person}</span>'
+        person_nav = f'<span class="h-pill">{display_person}</span>'
 
     # Bottom navigation with SVG icons
     nav_items = ""

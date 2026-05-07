@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from ha_client import get_areas, get_persons
 from models import Task
 from render import (INTERVALS, _base, _icon, _icon_chooser, _selected, _task_icon,
-                    interval_label, render, resolve_person, urgency_class)
+                    interval_label, person_suffix, render, resolve_person, urgency_class)
 from storage import (create_task, delete_task, edit_task, filter_tasks_by_role,
                      get_admins, get_person_settings, get_task, list_people_by_role,
                      list_tasks, mark_done)
@@ -93,15 +93,16 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
         done_btn = (
             f'<form class="inline" method="post" action="tasks/{t.id}/done">'
             + (f'<input type="hidden" name="done_by" value="{p}">' if p else "")
+            + (f'<input type="hidden" name="return_p" value="{p}">' if p else "")
             + f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
             f'</form>'
         )
         edit_btn = (
-            f'<a class="icon-btn" href="tasks/{t.id}/edit" title="Bearbeiten">'
+            f'<a class="icon-btn" href="tasks/{t.id}/edit{person_suffix(p)}" title="Bearbeiten">'
             f'{_icon("edit", 16)}</a>'
         )
         del_btn = (
-            f'<a class="icon-btn danger" href="tasks/{t.id}/delete" '
+            f'<a class="icon-btn danger" href="tasks/{t.id}/delete{person_suffix(p)}" '
             f'onclick="return confirm(\'Aufgabe löschen?\')" title="Löschen">'
             f'{_icon("trash", 16)}</a>'
         )
@@ -204,7 +205,8 @@ async def task_edit(task_id: str, request: Request,
                      important=(important == "1"), onetime=(onetime == "1"),
                      icon=icon):
         raise HTTPException(404)
-    return RedirectResponse(_base(request) + "tasks", status_code=303)
+    return_p = str(form.get("return_p") or "")
+    return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
 
 
 @router.post("")
@@ -219,7 +221,8 @@ async def task_create(request: Request, name: str = Form(...), room: str = Form(
                 important=(important == "1"), onetime=(onetime == "1"),
                 icon=icon)
     create_task(task)
-    return RedirectResponse(_base(request) + "tasks", status_code=303)
+    return_p = str(form.get("return_p") or "")
+    return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
 
 
 @router.post("/{task_id}/done")
@@ -227,13 +230,15 @@ async def task_done(task_id: str, request: Request):
     form = await request.form()
     if not mark_done(task_id, done_by=form.get("done_by") or None):
         raise HTTPException(404)
-    return RedirectResponse(_base(request) + "tasks", status_code=303)
+    return_p = str(form.get("return_p") or "")
+    return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
 
 
 @router.get("/{task_id}/delete")
-async def task_delete(task_id: str, request: Request):
+async def task_delete(task_id: str, request: Request, p: str = ""):
     delete_task(task_id)
-    return RedirectResponse(_base(request) + "tasks", status_code=303)
+    p = resolve_person(request, p) if p else ""
+    return RedirectResponse(_base(request) + f"tasks{person_suffix(p)}", status_code=303)
 
 
 async def _task_form(request: Request, title: str, action: str,
@@ -275,6 +280,7 @@ async def _task_form(request: Request, title: str, action: str,
     </div>
     <div class="card">
       <form method="post" action="{action}">
+        <input type="hidden" name="return_p" value="{person}">
         <div class="form-group">
           <label>Was ist zu erledigen?</label>
           <input name="name" required placeholder="z.B. Staubsaugen" value="{cur_name}">

@@ -1,3 +1,12 @@
+## 1.2.4
+
+- Admins behalten beim Wechsel auf andere Personen den Personenumschalter im Header
+- Neue Rückkehrpfade für Admins: eigene Ansicht, eigenes Profil und Person wechseln
+- Aufgaben- und Projektaktionen behalten die aktive Personenansicht nach Speichern, Erledigen und Löschen bei
+- Admin-Seite klarer gegliedert in Admin-Rechte, Raum-Icons, Benachrichtigungen und Personeneinstellungen
+- Raum-Icon-Auswahl nutzt jetzt eigene Raum-Symbole statt Aufgaben-Icons; bestehende alte Icon-Zuweisungen bleiben sichtbar
+- App-Version, Add-on-Version und README-Badge auf 1.2.4 aktualisiert
+
 ## 1.2.3
 
 - Admin-Dashboard und Standardlisten zeigen wieder nur eigene Aufgaben und eigene Projektanteile
