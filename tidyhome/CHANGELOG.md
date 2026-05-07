@@ -1,3 +1,8 @@
+## 1.1.8
+
+- Admin-Bereich erreichbar: neuer Button "Admin-Bereich öffnen" auf der Einstellungsseite (nur für Admins sichtbar)
+- Bisher musste die URL /admin manuell eingegeben werden — über HA Ingress kaum möglich
+
 ## 1.1.7
 
 - Fix: Admin-Panel lädt jetzt wieder zuverlässig (Icon-Chooser durch kompaktes Select ersetzt)

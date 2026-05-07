@@ -113,6 +113,12 @@ async def settings_form(request: Request, p: str = ""):
     ).strip()
     is_admin = ha_user in admins
 
+    admin_link = (
+        f'<a href="{base}admin" class="btn btn-primary btn-sm" '
+        f'style="margin-bottom:1rem">Admin-Bereich öffnen</a>'
+        if is_admin else ""
+    )
+
     if not p:
         if is_admin:
             # Admin ohne ?p= → Personenpicker anzeigen
@@ -123,7 +129,9 @@ async def settings_form(request: Request, p: str = ""):
                 for pn in persons
             )
             content = f"""
-            <h2>Person wechseln</h2>
+            <h2>Einstellungen</h2>
+            {admin_link}
+            <h3 style="margin-bottom:0.5rem">Person wechseln</h3>
             <div class="card">
               <p class="muted" style="margin-bottom:1rem">
                 Als Admin kannst du die Ansicht für jede Person öffnen.
@@ -155,7 +163,7 @@ async def settings_form(request: Request, p: str = ""):
         return render(content, request, page="settings", person="")
 
     card = _person_settings_card(p, areas, admins, base=base, action="settings")
-    content = f"<h2>Einstellungen</h2>{card}"
+    content = f"<h2>Einstellungen</h2>{admin_link}{card}"
     return render(content, request, page="settings", person=p)
 
 
