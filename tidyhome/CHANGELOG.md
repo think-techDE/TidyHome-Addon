@@ -1,3 +1,7 @@
+## 1.0.8
+
+- Fix: Admin-Personenpicker öffnet sich korrekt beim Klick auf den Namen
+
 ## 1.0.7
 
 - Person wird automatisch anhand des HA-Logins erkannt (kein manuelles Auswählen mehr nötig)
