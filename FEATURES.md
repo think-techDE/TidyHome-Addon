@@ -65,6 +65,16 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - 📋 Urlaubsmodus (Intervalle einfrieren, keine Notifications)
 - 💡 Räume pro Person individuell ausblenden (z.B. Kinderzimmer nur für Eltern sichtbar)
 
+## Barrierefreiheit & Neurodiversität
+
+- 💡 Fokus-Modus: reduzierte Ansicht mit nur 1–3 Aufgaben pro Tag (für ADHS / Reizüberflutung)
+- 💡 Sanfte Sprache: keine negativen Formulierungen bei überfälligen Aufgaben ("noch offen" statt "überfällig")
+- 💡 Energielevel-Modus: Aufgaben nach Aufwand filtern (gering / mittel / hoch) je nach Tagesverfassung
+- 💡 Aufgaben-Pausen: Intervalle temporär einfrieren ohne Urlaubsmodus (z.B. bei depressiven Episoden)
+- 💡 Positive Verstärkung: ermutigende Meldungen bei Erledigung, keine Straf-Mechanismen
+- 💡 Erinnerungsabstand anpassen: sanftere Benachrichtigungsfrequenz pro Person einstellbar
+- 💡 Strukturhilfe: Aufgaben automatisch in kleine Teilschritte vorschlagen (gut für Autismus / ADHS)
+
 ## Familie & Kommunikation
 
 - 💡 Kommentare / Notizen zu Aufgaben und Projekten hinterlassen
