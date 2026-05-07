@@ -163,6 +163,19 @@ _HTML_BASE = """<!DOCTYPE html>
                   padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--primary-border); }}
   .page-header {{ display: flex; justify-content: space-between;
                   align-items: center; margin-bottom: 1rem; }}
+  @media (prefers-color-scheme: dark) {{
+    :root {{
+      --bg: #1c1518; --card: #261e22; --text: #ede5e9;
+      --muted: #9b8890; --border: #3d2d34;
+      --primary-light: #2e1e27; --primary-border: #5a3347;
+      --success-bg: #0f2a1c; --warning-bg: #2a1e08; --danger-bg: #2a0f0f;
+    }}
+    header, .bottom-nav {{ background: var(--card); }}
+    input, select {{ background: #2e2228; color: var(--text); border-color: var(--border); }}
+    .room-card, .stat-card {{ background: var(--card); }}
+    .filter-btn {{ background: var(--card); color: var(--text); border-color: var(--border); }}
+    .filter-btn.active {{ background: var(--primary); color: white; border-color: var(--primary); }}
+  }}
 </style>
 </head>
 <body>

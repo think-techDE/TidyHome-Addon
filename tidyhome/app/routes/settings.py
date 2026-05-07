@@ -18,6 +18,7 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
     checked = "checked" if cfg.get("enabled") else ""
     services = cfg.get("services") or []
     hidden_rooms = set(cfg.get("hidden_rooms") or [])
+    weekly_goal = cfg.get("weekly_goal", 0) or 0
     svc_info = (
         f'<div class="muted" style="margin-bottom:0.75rem">Geräte: {", ".join(services)}</div>'
         if services else
@@ -53,6 +54,13 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
               <input type="checkbox" name="enabled" value="1" {checked} style="width:auto">
               Aktiv
             </label>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Wochenziel (Aufgaben)</label>
+            <input name="weekly_goal" type="number" min="0" max="99" value="{weekly_goal}"
+                   placeholder="0 = kein Ziel">
           </div>
         </div>
         <div class="form-group">
@@ -92,10 +100,14 @@ async def settings_save(request: Request):
     notify_time = parse_time(form.get("notify_time", "08:00"))
     enabled = form.get("enabled", "") == "1"
     hidden_rooms = list(form.getlist("hidden_rooms"))
+    try:
+        weekly_goal = int(form.get("weekly_goal", 0) or 0)
+    except ValueError:
+        weekly_goal = 0
     cfg = get_person_settings(person)
     save_person_settings(person=person, services=cfg.get("services") or [],
                          notify_time=notify_time, enabled=enabled,
-                         hidden_rooms=hidden_rooms)
+                         hidden_rooms=hidden_rooms, weekly_goal=weekly_goal)
     return RedirectResponse(_base(request) + "settings", status_code=303)
 
 

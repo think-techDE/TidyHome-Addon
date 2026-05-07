@@ -1,3 +1,10 @@
+## 1.0.6
+
+- Dark Mode: folgt automatisch dem System-/HA-Theme
+- Persönliche Statistik auf der Punkte-Seite: Streak, diese Woche, Gesamt-Punkte
+- Wochenziel: in den Einstellungen konfigurierbar, Fortschrittsbalken auf der Punkte-Seite
+- Eigene Zeile im Leaderboard wird farblich hervorgehoben
+
 ## 1.0.5
 
 - Einmalige Aufgaben: nach Erledigung automatisch archiviert (1×-Badge in der Liste)

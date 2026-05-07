@@ -266,20 +266,62 @@ def get_person_settings(person: str) -> dict:
     Q = Query()
     row = get_settings_table().get(Q.person == person)
     return row or {"person": person, "services": [], "notify_time": "08:00",
-                   "enabled": False, "hidden_rooms": []}
+                   "enabled": False, "hidden_rooms": [], "weekly_goal": 0}
 
 
 def save_person_settings(person: str, services: list[str], notify_time: str,
-                         enabled: bool, hidden_rooms: list[str] | None = None) -> dict:
+                         enabled: bool, hidden_rooms: list[str] | None = None,
+                         weekly_goal: int = 0) -> dict:
     Q = Query()
     data = {"person": person, "services": services,
             "notify_time": notify_time, "enabled": enabled,
-            "hidden_rooms": hidden_rooms or []}
+            "hidden_rooms": hidden_rooms or [], "weekly_goal": weekly_goal}
     if get_settings_table().get(Q.person == person):
         get_settings_table().update(data, Q.person == person)
     else:
         get_settings_table().insert(data)
     return data
+
+
+def get_person_stats(person: str) -> dict:
+    """Persönliche Statistik aus score_log: Streak, Woche, Gesamt."""
+    from datetime import timedelta
+    log = _db.table("score_log").all()
+    plog = [e for e in log if e["person"] == person]
+
+    total_points = sum(e["points"] for e in plog)
+    tasks_done = sum(1 for e in plog if e.get("type") != "project")
+    proj_steps = sum(1 for e in plog if e.get("type") == "project")
+
+    today = date.today()
+    week_start = (today - timedelta(days=today.weekday())).isoformat()
+    wlog = [e for e in plog if e["date"] >= week_start]
+    week_points = sum(e["points"] for e in wlog)
+    week_tasks = sum(1 for e in wlog if e.get("type") != "project")
+
+    # Streak: aufeinanderfolgende Tage mit mindestens einer Erledigung
+    active_dates = sorted(set(e["date"] for e in plog), reverse=True)
+    streak = 0
+    if active_dates:
+        yesterday = (today - timedelta(days=1)).isoformat()
+        if active_dates[0] >= yesterday:
+            expected = date.fromisoformat(active_dates[0])
+            for d_str in active_dates:
+                d = date.fromisoformat(d_str)
+                if d == expected:
+                    streak += 1
+                    expected = d - timedelta(days=1)
+                else:
+                    break
+
+    return {
+        "total_points": total_points,
+        "tasks_done": tasks_done,
+        "proj_steps": proj_steps,
+        "week_points": week_points,
+        "week_tasks": week_tasks,
+        "streak": streak,
+    }
 
 
 def list_person_settings() -> list[dict]:
