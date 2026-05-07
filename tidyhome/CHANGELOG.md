@@ -1,3 +1,12 @@
+## 1.2.10
+
+- Fix: Leere Seite nach Update behoben (html opacity:0 verhinderte Darstellung; jetzt nur body)
+- Dashboard: Schnellaktions-Buttons "+ Aufgabe" und "+ Projekt" direkt auf der Startseite
+- Dashboard: Raeume nur noch sichtbar wenn Person eigene Aufgaben oder Projekte darin hat
+- Dashboard: Admins und Elternteile sehen fremde Raeume abgesetzt als "Weitere Raeume"
+- Aufgabenliste: Eintraege kompakter – Aktionsbuttons rechts inline statt separate Zeile unten
+- CSS: .btn-outline fuer sekundaere Buttons ergaenzt
+
 ## 1.2.9
 
 - Fix: FOUC (Aufblinken) beim Seitenwechsel beseitigt – kritisches Layout-CSS inline im `<head>` verhindert Flackern vor dem App.css-Laden
