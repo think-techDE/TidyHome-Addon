@@ -109,7 +109,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
 
         return f"""
         <div class="task-row{important_cls}">
-          {_task_icon(t.name, t.room, icon=t.icon)}
+          {_task_icon(t.name, t.room, icon=t.icon, size=40)}
           <div class="task-body">
             <div class="task-header">
               <span class="task-name">{star}{t.name}</span>
@@ -122,10 +122,9 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
               <span class="task-meta">{date_text}</span>
               {assigned_txt}
             </div>
-            <div class="task-actions">
-              {done_btn}
-              <div style="display:flex">{edit_btn}{del_btn}</div>
-            </div>
+          </div>
+          <div class="task-actions">
+            {done_btn}{edit_btn}{del_btn}
           </div>
         </div>"""
 
