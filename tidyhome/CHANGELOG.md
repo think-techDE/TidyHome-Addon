@@ -1,3 +1,10 @@
+## 1.0.10
+
+- Aufgaben können mehreren Personen gleichzeitig zugeordnet werden
+- Mehrfachauswahl per Checkbox in der Aufgaben-Maske
+- Eltern/Admins sehen im Raum-Filter Aufgaben nach jeder zugewiesenen Person gruppiert
+- Rückwärtskompatibel: bestehende Einzelzuweisungen werden automatisch migriert
+
 ## 1.0.9
 
 - Neue Aufgaben werden automatisch dem angemeldeten Nutzer zugeordnet

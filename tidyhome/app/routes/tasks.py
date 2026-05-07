@@ -46,7 +46,8 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
         elif due == 0: due_text = "Heute"
         elif due == 1: due_text = "Morgen"
         else:          due_text = f"In {due}d"
-        assigned = f"<span class='task-meta'>→ {t.assigned_to}</span>" if t.assigned_to and not show_grouped else ""
+        assigned = (f"<span class='task-meta'>→ {', '.join(t.assigned_to)}</span>"
+                    if t.assigned_to and not show_grouped else "")
         star = '<span title="Wichtig" style="font-size:1rem">⭐</span>' if t.important else ""
         onetime_badge = '<span class="badge" style="background:var(--muted);color:#fff;font-size:0.65rem">1×</span>' if t.onetime else ""
         border = "border-left:3px solid var(--warning);" if t.important else ""
@@ -76,7 +77,11 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
         from collections import defaultdict
         grouped = defaultdict(list)
         for t in tasks:
-            grouped[t.assigned_to or "— Nicht zugeordnet —"].append(t)
+            if t.assigned_to:
+                for pn in t.assigned_to:
+                    grouped[pn].append(t)
+            else:
+                grouped["— Nicht zugeordnet —"].append(t)
         for person_name, ptasks in sorted(grouped.items()):
             rows += f'<div style="padding:0.6rem 1.25rem 0.2rem;font-size:0.75rem;font-weight:700;color:var(--primary-dark);text-transform:uppercase;letter-spacing:0.05em;background:var(--primary-light)">👤 {person_name}</div>'
             for t in ptasks:
@@ -115,11 +120,12 @@ async def task_edit_form(task_id: str, request: Request, p: str = ""):
 @router.post("/{task_id}/edit")
 async def task_edit(task_id: str, request: Request,
                     name: str = Form(...), room: str = Form(...),
-                    interval_days: int = Form(...), assigned_to: str = Form(""),
-                    points: int = Form(10), important: str = Form(""),
-                    onetime: str = Form("")):
+                    interval_days: int = Form(...), points: int = Form(10),
+                    important: str = Form(""), onetime: str = Form("")):
+    form = await request.form()
+    assigned_to = list(form.getlist("assigned_to"))
     if not edit_task(task_id, name=name, room=room, interval_days=interval_days,
-                     assigned_to=assigned_to or None, points=points,
+                     assigned_to=assigned_to, points=points,
                      important=(important == "1"), onetime=(onetime == "1")):
         raise HTTPException(404)
     return RedirectResponse(_base(request) + "tasks", status_code=303)
@@ -127,11 +133,12 @@ async def task_edit(task_id: str, request: Request,
 
 @router.post("")
 async def task_create(request: Request, name: str = Form(...), room: str = Form(...),
-                      interval_days: int = Form(...), assigned_to: str = Form(""),
-                      points: int = Form(10), important: str = Form(""),
-                      onetime: str = Form("")):
+                      interval_days: int = Form(...), points: int = Form(10),
+                      important: str = Form(""), onetime: str = Form("")):
+    form = await request.form()
+    assigned_to = list(form.getlist("assigned_to"))
     task = Task(name=name, room=room, interval_days=interval_days,
-                assigned_to=assigned_to or None, points=points,
+                assigned_to=assigned_to, points=points,
                 important=(important == "1"), onetime=(onetime == "1"))
     create_task(task)
     return RedirectResponse(_base(request) + "tasks", status_code=303)
@@ -157,7 +164,7 @@ async def _task_form(request: Request, title: str, action: str,
     persons = await get_persons()
     cur_room = task.room if task else ""
     cur_interval = task.interval_days if task else 7
-    cur_person = task.assigned_to if task else (person or "")
+    cur_persons = task.assigned_to if task else ([person] if person else [])
     cur_points = task.points if task else 10
     cur_name = task.name if task else ""
     cur_important = task.important if task else False
@@ -165,10 +172,14 @@ async def _task_form(request: Request, title: str, action: str,
 
     room_opts = "".join(
         f'<option value="{r}"{_selected(r, cur_room)}>{r}</option>' for r in areas)
-    person_opts = (
-        f'<option value=""{_selected("", cur_person or "")}>— Niemand —</option>'
-        + "".join(f'<option value="{p}"{_selected(p, cur_person or "")}>{p}</option>'
-                  for p in persons))
+    person_boxes = "".join(
+        f'<label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;'
+        f'cursor:pointer;font-size:0.88rem">'
+        f'<input type="checkbox" name="assigned_to" value="{pn}"'
+        f'{" checked" if pn in cur_persons else ""}'
+        f' style="width:1rem;height:1rem;accent-color:var(--primary)">{pn}</label>'
+        for pn in persons
+    )
     interval_opts = "".join(
         f'<option value="{d}"{_selected(d, cur_interval)}>{label}</option>'
         for d, label in INTERVALS.items())
@@ -195,7 +206,7 @@ async def _task_form(request: Request, title: str, action: str,
           </div>
           <div class="form-group">
             <label>Zugewiesen an</label>
-            <select name="assigned_to">{person_opts}</select>
+            <div style="display:flex;flex-wrap:wrap;gap:0 1.5rem;padding:0.4rem 0">{person_boxes}</div>
           </div>
           <div class="form-group">
             <label>Punkte</label>

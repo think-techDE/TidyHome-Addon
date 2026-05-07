@@ -16,6 +16,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Wichtig-Flag (Stern-Badge, orange Markierung, wird oben sortiert)
 - ✅ Einmalige Aufgaben (nach Erledigung automatisch archiviert, 1×-Badge)
 - ✅ Neue Aufgaben automatisch dem angemeldeten Nutzer zugeordnet
+- ✅ Aufgaben mehreren Personen gleichzeitig zuweisbar (Mehrfach-Checkbox)
 - 📋 Aufwand-Feld (gering / mittel / hoch)
 - 📋 Startdatum wählbar
 - 📋 Kalenderstreifen (Wochenübersicht mit Aufgaben pro Tag)

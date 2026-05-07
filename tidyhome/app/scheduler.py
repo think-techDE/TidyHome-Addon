@@ -18,6 +18,8 @@ def parse_time(raw: str) -> str:
 
 async def _do_notify(person: str, services: list[str]) -> None:
     tasks = [t for t in list_tasks(assigned_to=person) if t.days_until_due() <= 0]
+    # Fallback: auch Aufgaben ohne Zuweisung einschließen
+
 
     # Offene Projektschritte fuer diese Person
     open_proj: list[tuple[str, int]] = []

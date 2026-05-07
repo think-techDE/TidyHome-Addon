@@ -22,14 +22,12 @@ def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = F
     table = get_tasks_table()
     Q = Query()
 
-    if room:
-        rows = table.search(Q.room == room)
-    elif assigned_to:
-        rows = table.search(Q.assigned_to == assigned_to)
-    else:
-        rows = table.all()
-
+    rows = table.search(Q.room == room) if room else table.all()
     tasks = [Task(**r) for r in rows if r.get("active", True)]
+
+    # assigned_to ist jetzt eine Liste – Python-seitig filtern
+    if assigned_to:
+        tasks = [t for t in tasks if assigned_to in t.assigned_to]
 
     if overdue_only:
         tasks = [t for t in tasks if t.is_overdue()]
@@ -59,7 +57,7 @@ def update_task(task: Task) -> Task:
 
 
 def edit_task(task_id: str, name: str, room: str, interval_days: int,
-              assigned_to: str | None, points: int,
+              assigned_to: list[str], points: int,
               important: bool = False, onetime: bool = False) -> Task | None:
     task = get_task(task_id)
     if not task:
@@ -88,7 +86,7 @@ def mark_done(task_id: str, done_by: str = None, done_at: str = None) -> Task | 
 
     done_date = done_at or date.today().isoformat()
     task.last_done = done_date
-    person = done_by or task.assigned_to
+    person = done_by or (task.assigned_to[0] if task.assigned_to else None)
 
     if person:
         _add_score(person, task.points, task_type="task")
@@ -313,10 +311,10 @@ def filter_tasks_by_role(tasks: list, person: str, admins: set[str]) -> list:
             if r.get("role") == "child"
         }
         return [t for t in tasks
-                if not t.assigned_to or t.assigned_to == person
-                or t.assigned_to in child_persons]
+                if not t.assigned_to or person in t.assigned_to
+                or any(p in child_persons for p in t.assigned_to)]
     # member / housekeeper / child ohne Berechtigung
-    return [t for t in tasks if not t.assigned_to or t.assigned_to == person]
+    return [t for t in tasks if not t.assigned_to or person in t.assigned_to]
 
 
 def get_person_stats(person: str) -> dict:

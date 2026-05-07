@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime, date
 import uuid
@@ -9,7 +9,17 @@ class Task(BaseModel):
     name: str
     room: str
     interval_days: int  # 1=daily, 7=weekly, 30=monthly, 365=yearly
-    assigned_to: Optional[str] = None
+    assigned_to: list[str] = []  # Mehrere Personen möglich
+
+    @field_validator("assigned_to", mode="before")
+    @classmethod
+    def _coerce_assigned_to(cls, v):
+        """Rückwärtskompatibilität: alter String-Wert → Liste."""
+        if v is None:
+            return []
+        if isinstance(v, str):
+            return [v] if v else []
+        return v
     points: int = 10
     active: bool = True
     important: bool = False
