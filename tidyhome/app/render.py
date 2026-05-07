@@ -76,15 +76,28 @@ def _task_icon_key(name: str, room: str = "") -> str:
     return "tasks"
 
 
-def _task_icon(name: str, room: str = "", size: int = 40) -> str:
-    """Round icon bubble for a task."""
+_ICON_PALETTE: dict[str, tuple[str, str]] = {
+    "vacuum":    ("var(--primary-soft)",          "var(--primary-dark)"),
+    "trash_bin": ("var(--surface-2)",             "var(--muted)"),
+    "plant":     ("var(--success-bg)",            "var(--success)"),
+    "broom":     ("var(--primary-soft)",          "var(--primary-dark)"),
+    "hanger":    ("var(--warning-bg)",            "var(--warning)"),
+    "box":       ("var(--warning-bg)",            "var(--warning)"),
+    "drop":      ("rgba(59,130,246,0.12)",        "#3b82f6"),
+    "tasks":     ("var(--primary-soft)",          "var(--primary-dark)"),
+}
+
+
+def _task_icon(name: str, room: str = "", size: int = 44) -> str:
+    """Round icon bubble for a task with per-type color."""
     key = _task_icon_key(name, room)
+    bg, fg = _ICON_PALETTE.get(key, ("var(--primary-soft)", "var(--primary-dark)"))
     inner = int(size * 0.46)
     return (
         f'<div style="width:{size}px;height:{size}px;border-radius:50%;'
-        f'background:var(--icon-bg);display:flex;align-items:center;'
+        f'background:{bg};display:flex;align-items:center;'
         f'justify-content:center;flex-shrink:0">'
-        f'{_icon(key, inner, "var(--icon-color)")}'
+        f'{_icon(key, inner, fg)}'
         f'</div>'
     )
 
