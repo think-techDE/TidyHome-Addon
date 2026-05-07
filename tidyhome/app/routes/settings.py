@@ -246,7 +246,7 @@ async def admin_form(request: Request, saved: str = ""):
           <p style="color:var(--warning);margin:0;font-size:0.85rem">
             Noch keine Admins festgelegt. Wähle oben mindestens eine Person aus.
           </p>
-        </div>"""
+        </section>"""
     else:
         available_svcs = await get_notify_services()
         cards = ""
@@ -336,7 +336,7 @@ async def admin_form(request: Request, saved: str = ""):
             <span class="admin-row-sub">Icon für Raumlisten und Übersichten</span>
           </div>
           <select class="admin-compact-select" name="icon__{safe_name}">{opts}</select>
-        </section>"""
+        </div>"""
 
     room_icons_section = f"""
     <section class="card admin-section">

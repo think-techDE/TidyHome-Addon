@@ -1,3 +1,12 @@
+## 1.2.5
+
+- Fix: Defektes HTML im Admin Panel behoben (Raum-Icons: `</section>` statt `</div>`, kein-Admins-Banner: `</div>` statt `</section>`)
+- Aufräumen: Toter `_CSS`-Inline-Block (~230 Zeilen) aus render.py entfernt – `app.css` ist die einzige CSS-Quelle
+- Light Mode: Hintergrund von kühlem Blaugrau auf warmes Mauve-Rosa angepasst (`#f4f0f2`)
+- Light Mode: Ring-Chart-Hintergrundring jetzt klar sichtbar (`#e0d8dc` statt fast-weißem `#f0f2f5`)
+- Light Mode: Cards mit stärkerem Schatten und etwas kräftigerer Border
+- Light Mode: App-Titel im Header jetzt in `--primary-dark` statt `--text`
+
 ## 1.2.4
 
 - Admins behalten beim Wechsel auf andere Personen den Personenumschalter im Header
