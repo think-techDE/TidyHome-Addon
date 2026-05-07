@@ -1,3 +1,8 @@
+## 1.2.8
+
+- Fix: Trennlinien zwischen Aufgaben, Räumen und Projektschritten jetzt in Dark und Light Mode sichtbar
+- Neue CSS-Variable --sep (rgba-basiert) statt --border für Listentrennlinien – garantierter Kontrast auf jedem Hintergrund
+
 ## 1.2.7
 
 - Dashboard: Aufgaben-Zeilen kompakter – Icon 36px, Name+Badge+Erledigt-Button in einer Zeile, kein separater Aktions-Block
