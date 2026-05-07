@@ -13,8 +13,9 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Wiederkehrende Intervalle (täglich bis jährlich)
 - ✅ Fälligkeitsanzeige (überfällig / heute / bald / ok) mit Farbkodierung
 - ✅ Filter nach Raum, Person, Überfällig
-- 📋 Einmalige Aufgaben (kein Intervall, nach Erledigung archiviert)
 - ✅ Wichtig-Flag (Stern-Badge, orange Markierung, wird oben sortiert)
+- ✅ Einmalige Aufgaben (nach Erledigung automatisch archiviert, 1×-Badge)
+- ✅ Neue Aufgaben automatisch dem angemeldeten Nutzer zugeordnet
 - 📋 Aufwand-Feld (gering / mittel / hoch)
 - 📋 Startdatum wählbar
 - 📋 Kalenderstreifen (Wochenübersicht mit Aufgaben pro Tag)
@@ -40,50 +41,56 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 
 - ✅ Punkte bei Aufgaben-Erledigung
 - ✅ Punkte bei Projektschritte-Erledigung
-- ✅ Bestenliste (Gesamt)
+- ✅ Bestenliste (Gesamt / Dieser Monat / Letzter Monat)
 - ✅ Getrennte Statistik: Haushaltsaufgaben vs. Projektschritte
-- ✅ Bestenliste nach Zeitraum (Gesamt / Dieser Monat / Letzter Monat)
-- 💡 Wochenziele pro Person (z.B. 5 Aufgaben / Woche)
+- ✅ Persönliche Statistik: Streak 🔥, Punkte diese Woche, Gesamt-Punkte
+- ✅ Wochenziel pro Person konfigurierbar mit Fortschrittsbalken
+- ✅ Eigene Zeile im Leaderboard hervorgehoben
 - 💡 Abzeichen / Achievements (erste Aufgabe, 10er-Serie, Monatsbester …)
-- 💡 Persönliche Statistik-Seite (Verlauf, Streak, Lieblingsraum)
+- 💡 Persönliche Verlaufsseite (Aktivitätshistorie, Lieblingsraum)
 
 ## Benachrichtigungen
 
 - ✅ Tägliche Push-Benachrichtigung mit fälligen Aufgaben
+- ✅ Offene Projektschritte in der täglichen Benachrichtigung
 - ✅ Per-Person konfigurierbar (eigene Uhrzeit, eigene Geräte)
-- ✅ Mehrere Geräte pro Person (kommagetrennt)
-- ✅ Admin definiert Geräte, Nutzer stellt Uhrzeit selbst ein
+- ✅ Admin definiert Geräte (Notify-Services per Checkbox aus HA)
 - ✅ Test-Benachrichtigung direkt aus der UI
-- 📋 Benachrichtigung auch für Projekte mit offenen Schritten
 - 💡 Erinnerung an andere Person schicken ("Küche ist noch offen")
+- 💡 Urlaubsmodus (keine Notifications, Intervalle eingefroren)
+
+## Benutzerverwaltung & Rollen
+
+- ✅ Personen aus Home Assistant geladen
+- ✅ Automatische Erkennung des angemeldeten Nutzers via HA-Login
+- ✅ Admin-Rolle per Checkbox in der UI (Personen aus HA)
+- ✅ Admins können Ansicht für andere Personen öffnen (▾-Pill)
+- ✅ Rollen-System: Elternteil / Kind / Haushaltshilfe / Mitglied
+- ✅ Rollenbasierte Sichtbarkeit:
+  - Elternteil/Admin: alle Aufgaben, nach Person gruppiert im Raum-View
+  - Kind mit Berechtigung: eigene + andere Kinder
+  - Mitglied/Haushaltshilfe: nur eigene + nicht zugeordnete
+- ✅ Räume pro Person individuell ausblendbar
+- ✅ Persönliche Einstellungen auf /settings, alle Personen im Admin-Panel
+- 📋 Urlaubsmodus (Intervalle einfrieren, keine Notifications)
 
 ## Haushaltshilfe
 
-- 💡 Person als "Haushaltshilfe" markierbar (eigene Rolle, durch Admin verwaltbar)
+- ✅ Rolle "Haushaltshilfe" vergeben (durch Admin)
 - 💡 Zeiterfassung: Arbeitsbeginn / -ende pro Einsatz eintragen oder stempeln
 - 💡 Stundensatz hinterlegen (durch Admin, nicht sichtbar für die Haushaltshilfe)
 - 💡 Kostenübersicht für Admins: Stunden × Stundensatz pro Monat / Zeitraum
 - 💡 Aufgaben-Protokoll: welche Aufgaben wurden in welchem Einsatz erledigt
 - 💡 Export der Zeiterfassung (CSV) für Abrechnung oder Steuererklärung
 
-## Benutzerverwaltung & Einstellungen
-
-- ✅ Personen aus Home Assistant geladen
-- ✅ Admin-Rolle per Checkbox in der UI festlegbar (Personen aus HA)
-- ✅ Admins verwalten Geräte-Zuordnung (Notify-Services per Checkbox)
-- ✅ Jeder Nutzer stellt eigene Benachrichtigungszeit ein
-- 📋 Urlaubsmodus (Intervalle einfrieren, keine Notifications)
-- 💡 Räume pro Person individuell ausblenden (z.B. Kinderzimmer nur für Eltern sichtbar)
-
 ## Barrierefreiheit & Neurodiversität
 
 - 💡 Fokus-Modus: reduzierte Ansicht mit nur 1–3 Aufgaben pro Tag (für ADHS / Reizüberflutung)
-- 💡 Sanfte Sprache: keine negativen Formulierungen bei überfälligen Aufgaben ("noch offen" statt "überfällig")
-- 💡 Energielevel-Modus: Aufgaben nach Aufwand filtern (gering / mittel / hoch) je nach Tagesverfassung
-- 💡 Aufgaben-Pausen: Intervalle temporär einfrieren ohne Urlaubsmodus (z.B. bei depressiven Episoden)
-- 💡 Positive Verstärkung: ermutigende Meldungen bei Erledigung, keine Straf-Mechanismen
-- 💡 Erinnerungsabstand anpassen: sanftere Benachrichtigungsfrequenz pro Person einstellbar
-- 💡 Strukturhilfe: Aufgaben automatisch in kleine Teilschritte vorschlagen (gut für Autismus / ADHS)
+- 💡 Sanfte Sprache: keine negativen Formulierungen bei überfälligen Aufgaben
+- 💡 Energielevel-Modus: Aufgaben nach Aufwand filtern je nach Tagesverfassung
+- 💡 Aufgaben-Pausen: Intervalle temporär einfrieren (z.B. bei depressiven Episoden)
+- 💡 Positive Verstärkung: ermutigende Meldungen bei Erledigung
+- 💡 Strukturhilfe: Aufgaben automatisch in kleine Teilschritte vorschlagen
 
 ## Familie & Kommunikation
 
@@ -94,20 +101,21 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 
 - ✅ Responsive Web-UI über HA Ingress
 - ✅ Farbkodierung nach Dringlichkeit
-- ✅ Redesign: Warm-Rose/Mauve Farbschema (Betidy-Stil)
+- ✅ Warm-Rose/Mauve Farbschema
 - ✅ Bottom-Navigation (Zuhause / Aufgaben / Projekte / Punkte / Einstellungen)
-- ✅ Dashboard (Zuhause): Begrüßung, Tagesstatistik, Raumkarten-Grid
-- ✅ Aufgabenliste auf /tasks (Dashboard wird neue Startseite)
+- ✅ Dashboard: Begrüßung, Tagesstatistik, Raumkarten-Grid
 - ✅ Raumkarten mit Fortschrittsbalken und Aufgaben/Projekt-Anzahl
-- 💡 Dunkles / Helles Design (Dark Mode / Light Mode umschaltbar, folgt optional HA-Theme)
+- ✅ Dark Mode (folgt automatisch System-/HA-Theme)
+- ✅ Person bleibt beim Navigieren zwischen Seiten erhalten
 
 ## Home Assistant Integration
 
-- ✅ Räume aus HA Area Registry (Template-API)
+- ✅ Räume aus HA Area Registry
 - ✅ Personen aus HA Persons
 - ✅ Notify-Services aus HA (mobile_app, alexa, etc.)
 - ✅ SUPERVISOR_TOKEN für API-Auth
-- 📋 HA-Sensoren/Entities für Aufgabenstatus (optional, für Automationen)
+- ✅ Automatische Nutzer-Erkennung via HA Ingress-Header
+- 📋 HA-Sensoren/Entities für Aufgabenstatus (für Automationen)
 - 💡 Verknüpfung mit Trash Card (Müllkalender-Karte als Aufgaben-Trigger)
 - 💡 Aufgaben per HA-Automation anlegen (REST-API Endpunkt)
 
@@ -118,6 +126,6 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ HA Ingress-kompatible Navigation (X-Ingress-Path)
 - ✅ Docker-Build mit HA Base-Image
 - ✅ Dual-Remote Git (Gitea + GitHub)
-- ✅ Automatischer Versionierungsworkflow
+- ✅ CHANGELOG.md für HA Update-Dialog
 - 💡 Mehrsprachigkeit (Deutsch / Englisch)
 - 💡 Daten-Export (CSV / JSON-Backup der gesamten Datenbank)

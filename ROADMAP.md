@@ -1,6 +1,6 @@
 # TidyHome – Roadmap
 
-Stand: 2026-05-07 · Aktuelle Version: 1.0.4
+Stand: 2026-05-07 · Aktuelle Version: 1.0.9
 
 ---
 
@@ -24,20 +24,11 @@ Stand: 2026-05-07 · Aktuelle Version: 1.0.4
 
 ## ✅ Refactoring – Modulstruktur
 
-- `main.py` auf ~35 Zeilen schlankt
-- `config.py`: ADMINS, Logger
-- `render.py`: HTML/CSS-Template, Hilfsfunktionen
+- `main.py` auf ~35 Zeilen schlank
+- `config.py`: Logger, Bootstrap-Admins
+- `render.py`: HTML/CSS-Template, Hilfsfunktionen, `resolve_person()`
 - `scheduler.py`: Benachrichtigungslogik
 - `routes/`: dashboard, tasks, projects, scores, settings (je eigene Datei)
-
----
-
-## ✅ Logo & Assets
-
-- SVG-Logo (Haus + Häkchen im Rose/Mauve-Gradient)
-- PNG-Icon für HA Add-on Store (`icon.png`, 256×256)
-- Logo als Favicon und Header-Icon in der Web-UI
-- Assets werden via FastAPI StaticFiles unter `/assets/` ausgeliefert
 
 ---
 
@@ -53,67 +44,71 @@ Stand: 2026-05-07 · Aktuelle Version: 1.0.4
 
 ---
 
-## Phase 6 – Weitere Komfort-Features
+## ✅ Phase 6 – Weitere Komfort-Features (v1.0.5)
 
-Ziel: Nützliche Erweiterungen für den Alltag.
-
-- **Urlaubsmodus**: globaler Toggle → Intervall-Berechnung eingefroren, keine Notifications
-- **Einmalige Aufgaben**: `task_type = onetime`, nach Erledigung archiviert
-- **Aufwand-Feld**: gering / mittel / hoch als Chip
-- **Benachrichtigungen für Projekte**: offene Schritte in Daily-Push erwähnen
-- **Räume pro Person ausblenden**: individuelle Raumauswahl in den Einstellungen
+- **Einmalige Aufgaben**: nach Erledigung automatisch archiviert, `1×`-Badge in der Liste
+- **Räume pro Person ausblenden**: Checkboxen in den Einstellungen, wirkt auf Dashboard, Aufgaben und Projekte
+- **Projekt-Benachrichtigungen**: offene Projektschritte in der täglichen Push-Benachrichtigung
+- **Einstellungen aufgeteilt**: persönliche Einstellungen auf `/settings`, alle Personen im Admin-Panel
 
 ---
 
-## Phase 7 – Gamification & Statistik
+## ✅ Phase 7 – Gamification & Statistik (v1.0.6)
 
-Ziel: Motivation langfristig erhalten.
-
-- **Wochenziele**: pro Person konfigurierbar (z.B. 5 Aufgaben / Woche)
-- **Achievements / Abzeichen**: erste Aufgabe, 10er-Serie, Monatsbester …
-- **Persönliche Statistik-Seite**: Verlauf, Streak, Lieblingsraum
-- **Dark Mode / Light Mode**: umschaltbar, folgt optional dem HA-Theme
+- **Dark Mode**: folgt automatisch dem System-/HA-Theme via `prefers-color-scheme`
+- **Persönliche Statistik**: Streak, Punkte diese Woche, Gesamt-Punkte auf der Punkte-Seite
+- **Wochenziel**: pro Person konfigurierbar, Fortschrittsbalken auf der Punkte-Seite
+- **Leaderboard-Highlight**: eigene Zeile farblich hervorgehoben
 
 ---
 
-## Phase 8 – Familie & Kommunikation
+## ✅ Phase 8 – Authentifizierung & Rollen (v1.0.7–1.0.9)
+
+- **HA-Login-Erkennung**: Person wird automatisch via `X-Remote-User-Display-Name` erkannt
+- **Admin-Personenwechsel**: Admins können per `▾`-Pill die Ansicht wechseln
+- **Rollen-System**: Elternteil / Kind / Haushaltshilfe / Mitglied im Admin-Panel vergeben
+- **Rollenbasierte Sichtbarkeit**: Elternteil/Admin sieht alle Aufgaben; Kind optional andere Kinder; Mitglied/Haushaltshilfe nur eigene
+- **Raum-Gruppenansicht**: Elternteil/Admin sieht Aufgaben im Raum-Filter nach Person gruppiert
+- **Aufgaben-Default**: neue Aufgaben werden automatisch dem angemeldeten Nutzer zugeordnet
+
+---
+
+## Phase 9 – Familie & Kommunikation
 
 Ziel: Gemeinsames Arbeiten erleichtern.
 
 - **Kommentare**: Notizen zu Aufgaben und Projekten hinterlassen
-- **Erinnerung senden**: andere Person auf offene Aufgabe hinweisen ("Küche ist noch offen")
-- **Einkaufsliste**: eigener Bereich, ähnlich wie Projekte, ohne Intervall
+- **Erinnerung senden**: andere Person auf offene Aufgabe hinweisen
+- **Einkaufsliste**: eigener Bereich ohne Intervall
+- **Urlaubsmodus**: globaler Toggle → Intervall-Berechnung eingefroren, keine Notifications
 
 ---
 
-## Phase 9 – Barrierefreiheit & Neurodiversität
+## Phase 10 – Barrierefreiheit & Neurodiversität
 
 Ziel: Die App für Menschen mit ADHS, Depressionen, Autismus u.a. zugänglich machen.
 
-- **Fokus-Modus**: reduzierte Ansicht mit nur 1–3 Aufgaben pro Tag (weniger Reizüberflutung)
-- **Sanfte Sprache**: "noch offen" statt "überfällig", keine negativen Formulierungen
+- **Fokus-Modus**: reduzierte Ansicht mit nur 1–3 Aufgaben pro Tag
+- **Sanfte Sprache**: "noch offen" statt "überfällig"
 - **Energielevel-Modus**: Aufgaben nach Aufwand filtern je nach Tagesverfassung
-- **Aufgaben-Pausen**: Intervalle gezielt einfrieren (z.B. bei depressiven Episoden)
-- **Positive Verstärkung**: ermutigende Meldungen bei Erledigung, keine Straf-Mechanismen
-- **Erinnerungsabstand**: sanftere Benachrichtigungsfrequenz pro Person einstellbar
-- **Strukturhilfe**: Aufgaben automatisch in kleine Teilschritte vorschlagen
+- **Aufgaben-Pausen**: Intervalle temporär einfrieren
+- **Positive Verstärkung**: ermutigende Meldungen bei Erledigung
+- **Strukturhilfe**: Aufgaben in kleine Teilschritte aufteilen
 
 ---
 
-## Phase 10 – Haushaltshilfe-Verwaltung
+## Phase 11 – Haushaltshilfe-Verwaltung
 
 Ziel: Bezahlte Haushaltshilfen verwalten, Zeiten erfassen und Kosten tracken.
 
-- **Rolle "Haushaltshilfe"**: eigene Kennzeichnung, durch Admin verwaltbar
 - **Zeiterfassung**: Arbeitsbeginn/-ende stempeln oder manuell eintragen
 - **Stundensatz**: durch Admin hinterlegt, für die Haushaltshilfe nicht sichtbar
 - **Kostenübersicht**: Stunden × Stundensatz, filterbar nach Monat / Zeitraum
-- **Aufgaben-Protokoll**: welche Aufgaben wurden in welchem Einsatz erledigt
-- **CSV-Export**: für Abrechnung oder Steuererklärung (haushaltsnahe Dienstleistungen)
+- **CSV-Export**: für Abrechnung oder Steuererklärung
 
 ---
 
-## Phase 11 – Foto-Dokumentation
+## Phase 12 – Foto-Dokumentation
 
 Ziel: Visuelle Hinweise und Vorher/Nachher-Dokumentation.
 
@@ -124,7 +119,7 @@ Ziel: Visuelle Hinweise und Vorher/Nachher-Dokumentation.
 
 ---
 
-## Phase 12 – Integrationen & Erweiterungen
+## Phase 13 – Integrationen & Erweiterungen
 
 Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
 
@@ -138,21 +133,25 @@ Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
 
 ---
 
-## Bereits umgesetzt (v1.0.4)
+## Bereits umgesetzt (v1.0.9)
 
 - Aufgaben-CRUD (anlegen, bearbeiten, löschen, abhaken)
 - Wiederkehrende Intervalle (1/2/7/14/30/90/180/365 Tage)
+- Einmalige Aufgaben (nach Erledigung archiviert)
 - Wichtig-Flag: Stern-Badge, orange Markierung, Sortierung oben
 - Ordnungsprojekte mit Teilschritten und Fortschrittsbalken
-- Projekte auto-abschließen wenn alle Schritte erledigt; Archivieren-Tab
+- Projekte auto-abschließen wenn alle Schritte erledigt; Abgeschlossen-Tab
 - HA-Räume und Personen per Template-API
 - Punkte und Bestenliste (Gesamt / Dieser Monat / Letzter Monat)
-- Getrennte Statistik: Haushaltsaufgaben vs. Projektschritte
-- Per-Person Push-Benachrichtigungen mit eigenem Zeitplan
-- Admin-Verwaltung per Checkbox (Personen aus HA)
-- Geräte-Verwaltung per Checkbox (Notify-Services aus HA)
-- HA Ingress-Navigation
+- Persönliche Statistik: Streak, Wochenpunkte, Wochenziel mit Fortschrittsbalken
+- Per-Person Push-Benachrichtigungen (Aufgaben + Projektschritte) mit eigenem Zeitplan
+- Admin-Verwaltung per Checkbox; Geräte-Verwaltung per Checkbox
+- Rollen-System: Elternteil / Kind / Haushaltshilfe / Mitglied
+- Rollenbasierte Sichtbarkeit und Raum-Gruppenansicht für Elternteil/Admin
+- Person automatisch aus HA-Login erkannt; Admins können Ansicht wechseln
+- Räume pro Person individuell ausblendbar
+- Dark Mode (folgt System-/HA-Theme automatisch)
+- HA Ingress-Navigation, `p`-Parameter bleibt beim Navigieren erhalten
 - Rose/Mauve Design-System, Bottom-Navigation, Dashboard
 - Modulare Codebasis (`routes/`, `render`, `scheduler`, `config`)
-- SVG-Logo + PNG-Icon, Favicon in der Web-UI
-- CHANGELOG.md für HA Update-Dialog
+- SVG-Logo + PNG-Icon, Favicon; CHANGELOG.md für HA Update-Dialog
