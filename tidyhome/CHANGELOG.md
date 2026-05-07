@@ -1,3 +1,11 @@
+## 1.2.1
+
+- Projekt-Detailansicht: Beim Abhaken eines Projektschritts wird die dem Projekt zugewiesene Person vorausgewählt
+- Projekt-Detailansicht: Gespeicherte Projektperson bleibt auswählbar, auch wenn sie nicht aus der aktuellen HA-Personenliste kommt
+- Projekt-Schritte: Aufgeräumtes Layout mit stabiler Aktionsgruppe für Person, Erledigt und Löschen
+- Formular "Schritt hinzufügen": Klarere Button-Zeile für Hinzufügen und Zurück zu allen Projekten
+- Health-Endpunkt und App-Version sind mit der Add-on-Version synchron
+
 ## 1.2.0
 
 - Dashboard: "Nächste Aufgaben" nutzt jetzt dasselbe Design wie die Aufgabenliste
