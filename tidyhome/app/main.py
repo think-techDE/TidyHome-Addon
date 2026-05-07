@@ -1,5 +1,6 @@
 import asyncio
 import os
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
@@ -13,9 +14,14 @@ from routes.settings import router as settings_router
 from routes.tasks import router as tasks_router
 from scheduler import scheduler_loop
 
-app = FastAPI(title="TidyHome", version="1.0.0")
+APP_VERSION = "1.1.0"
 
-app.mount("/assets", StaticFiles(directory="/app/assets"), name="assets")
+app = FastAPI(title="TidyHome", version=APP_VERSION)
+
+ASSETS_DIR = Path("/app/assets")
+if not ASSETS_DIR.exists():
+    ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
+app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
 
 app.include_router(dashboard_router)
 app.include_router(tasks_router)
@@ -37,7 +43,7 @@ async def _startup():
 
 @app.get("/healthz")
 async def health():
-    return {"status": "ok", "version": "1.0.0"}
+    return {"status": "ok", "version": APP_VERSION}
 
 
 if __name__ == "__main__":

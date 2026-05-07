@@ -230,11 +230,10 @@ async def _task_form(request: Request, title: str, action: str,
     room_opts = "".join(
         f'<option value="{r}"{_selected(r, cur_room)}>{r}</option>' for r in areas)
     person_boxes = "".join(
-        f'<label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;'
-        f'cursor:pointer;font-size:0.88rem">'
+        f'<label class="option-card" style="padding:0.55rem 0.7rem">'
         f'<input type="checkbox" name="assigned_to" value="{pn}"'
         f'{" checked" if pn in cur_persons else ""}'
-        f' style="width:1rem;height:1rem;accent-color:var(--primary)">{pn}</label>'
+        f'><span>{pn}</span></label>'
         for pn in persons
     )
     interval_opts = "".join(
@@ -263,7 +262,7 @@ async def _task_form(request: Request, title: str, action: str,
           </div>
           <div class="form-group">
             <label>Zugewiesen an</label>
-            <div style="display:flex;flex-wrap:wrap;gap:0 1.5rem;padding:0.4rem 0">{person_boxes}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:0.5rem">{person_boxes}</div>
           </div>
           <div class="form-group">
             <label>Punkte</label>
@@ -271,16 +270,14 @@ async def _task_form(request: Request, title: str, action: str,
           </div>
         </div>
         <div class="form-group">
-          <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;
-                        text-transform:none;font-size:0.9rem;letter-spacing:0;font-weight:500">
+          <label class="option-card">
             <input type="checkbox" name="important" value="1" {important_checked}
                    style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
             ⭐ Als wichtig markieren
           </label>
         </div>
         <div class="form-group">
-          <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;
-                        text-transform:none;font-size:0.9rem;letter-spacing:0;font-weight:500">
+          <label class="option-card">
             <input type="checkbox" name="onetime" value="1" {onetime_checked}
                    style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
             1× Einmalige Aufgabe (nach Erledigung archiviert)

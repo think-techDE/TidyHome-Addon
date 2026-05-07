@@ -1,6 +1,6 @@
 # TidyHome – Roadmap
 
-Stand: 2026-05-07 · Aktuelle Version: 1.0.9
+Stand: 2026-05-07 · Aktuelle Version: 1.1.0
 
 ---
 
@@ -73,7 +73,35 @@ Stand: 2026-05-07 · Aktuelle Version: 1.0.9
 
 ---
 
-## Phase 9 – Familie & Kommunikation
+## ✅ Phase 9 – Modern UI Refresh (v1.1.0)
+
+Ziel: TidyHome optisch ruhiger, moderner und Home-Assistant-näher machen, ohne die bestehende serverseitige FastAPI-Struktur unnötig umzubauen.
+
+- **Design-System auffrischen**: neutrale App-Flächen, Mauve/Rose nur noch als Akzent, klare Statusfarben für überfällig/heute/bald/erledigt
+- **Light/Dark Tokens**: gemeinsame CSS-Variablen für Background, Surface, Border, Text, Muted, Primary, Success, Warning und Danger
+- **Dashboard als Heute-Ansicht**: kompakter Überblick mit erledigt/offen/überfällig, nächsten Aufgaben und dezenter Gesamtzustand-Anzeige
+- **Aufgabenliste modernisieren**: Statuskante, klare Fälligkeits-Badges, Icon-Aktionen, bessere Dichte auf Mobile
+- **Projektkarten stärken**: Fortschritt, nächster offener Schritt und abgeschlossene Projekte visuell klarer unterscheiden
+- **Navigation und Icons vereinheitlichen**: Bottom-Navigation, Aktionen und Statusanzeigen mit konsistenten Icons statt Emoji-Mix
+- **Filter überarbeiten**: horizontale Chip-/Segment-Leiste für Alle, Heute, Überfällig, Meine und Räume
+- **Formulare vereinfachen**: ruhigere Labels, bessere Toggle-Optionen für Wichtig/Einmalig, klare Primär- und Abbruchaktionen
+- **Barrierefreiheit prüfen**: Kontrast, Touch-Ziele, lange deutsche Texte, leere Zustände und Dark-Mode-Lesbarkeit
+
+Umgesetzt:
+
+1. CSS/Markup in `render.py` und den vorhandenen Routen modernisiert.
+2. Keine neuen Frontend-Abhängigkeiten eingeführt.
+3. Styles in `assets/app.css` ausgelagert und lokalen Asset-Fallback ergänzt.
+
+Nächster Feinschliff:
+
+- Action-Icons vollständig als SVG vereinheitlichen.
+- Empty States für Aufgaben, Projekte und Punkte weiter ausarbeiten.
+- Browser-Check in Home Assistant auf Mobile, Tablet und Dashboard-Panel nachziehen.
+
+---
+
+## Phase 10 – Familie & Kommunikation
 
 Ziel: Gemeinsames Arbeiten erleichtern.
 
@@ -84,7 +112,7 @@ Ziel: Gemeinsames Arbeiten erleichtern.
 
 ---
 
-## Phase 10 – Barrierefreiheit & Neurodiversität
+## Phase 11 – Barrierefreiheit & Neurodiversität
 
 Ziel: Die App für Menschen mit ADHS, Depressionen, Autismus u.a. zugänglich machen.
 
@@ -97,7 +125,7 @@ Ziel: Die App für Menschen mit ADHS, Depressionen, Autismus u.a. zugänglich ma
 
 ---
 
-## Phase 11 – Haushaltshilfe-Verwaltung
+## Phase 12 – Haushaltshilfe-Verwaltung
 
 Ziel: Bezahlte Haushaltshilfen verwalten, Zeiten erfassen und Kosten tracken.
 
@@ -108,7 +136,7 @@ Ziel: Bezahlte Haushaltshilfen verwalten, Zeiten erfassen und Kosten tracken.
 
 ---
 
-## Phase 12 – Foto-Dokumentation
+## Phase 13 – Foto-Dokumentation
 
 Ziel: Visuelle Hinweise und Vorher/Nachher-Dokumentation.
 
@@ -119,7 +147,7 @@ Ziel: Visuelle Hinweise und Vorher/Nachher-Dokumentation.
 
 ---
 
-## Phase 13 – Integrationen & Erweiterungen
+## Phase 14 – Integrationen & Erweiterungen
 
 Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
 
@@ -133,12 +161,13 @@ Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
 
 ---
 
-## Bereits umgesetzt (v1.0.9)
+## Bereits umgesetzt (v1.1.0)
 
 - Aufgaben-CRUD (anlegen, bearbeiten, löschen, abhaken)
 - Wiederkehrende Intervalle (1/2/7/14/30/90/180/365 Tage)
 - Einmalige Aufgaben (nach Erledigung archiviert)
 - Wichtig-Flag: Stern-Badge, orange Markierung, Sortierung oben
+- Aufgaben können mehreren Personen gleichzeitig zugeordnet werden
 - Ordnungsprojekte mit Teilschritten und Fortschrittsbalken
 - Projekte auto-abschließen wenn alle Schritte erledigt; Abgeschlossen-Tab
 - HA-Räume und Personen per Template-API
@@ -152,6 +181,8 @@ Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
 - Räume pro Person individuell ausblendbar
 - Dark Mode (folgt System-/HA-Theme automatisch)
 - HA Ingress-Navigation, `p`-Parameter bleibt beim Navigieren erhalten
-- Rose/Mauve Design-System, Bottom-Navigation, Dashboard
+- Modernes Rose/Mauve Design-System mit Light/Dark Tokens, SVG-Bottom-Navigation und Heute-Dashboard
+- Statuskanten, klare Badges, Projektkarten mit nächstem Schritt und kompakten Filter-Chips
+- Statisches Stylesheet `assets/app.css` mit lokalem Asset-Fallback
 - Modulare Codebasis (`routes/`, `render`, `scheduler`, `config`)
 - SVG-Logo + PNG-Icon, Favicon; CHANGELOG.md für HA Update-Dialog

@@ -8,10 +8,10 @@ INTERVALS = {
 }
 
 ROOM_ICONS = {
-    "Küche": "🍳", "Wohnzimmer": "🛋", "Schlafzimmer": "🛏", "Bad": "🚿",
-    "Badezimmer": "🚿", "Flur": "🚪", "Keller": "📦", "Garten": "🌿",
-    "Garage": "🚗", "Büro": "💻", "Arbeitszimmer": "💻", "Esszimmer": "🍽",
-    "Kinderzimmer": "🧸", "Balkon": "🌅", "Terrasse": "🌅",
+    "Küche": "KI", "Wohnzimmer": "WO", "Schlafzimmer": "SZ", "Bad": "BD",
+    "Badezimmer": "BD", "Flur": "FL", "Keller": "KE", "Garten": "GA",
+    "Garage": "GR", "Büro": "BU", "Arbeitszimmer": "AR", "Esszimmer": "EZ",
+    "Kinderzimmer": "KZ", "Balkon": "BA", "Terrasse": "TE",
 }
 
 # ── SVG icon paths (Feather-style 24×24) ─────────────────────────────────────
