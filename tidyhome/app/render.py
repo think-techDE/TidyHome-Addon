@@ -1,5 +1,6 @@
 from fastapi import Request
 from fastapi.responses import HTMLResponse
+from storage import get_admins
 
 INTERVALS = {
     1: "Täglich", 2: "Alle 2 Tage", 7: "Wöchentlich", 14: "Alle 2 Wochen",
@@ -207,8 +208,15 @@ def render(content: str, request: Request, page: str = "home",
            person: str = "") -> HTMLResponse:
     base = _base(request)
     psuffix = f"?p={person}" if person else ""
-    person_nav = (f'<a href="settings{psuffix}" class="h-pill">{person}</a>' if person
-                  else '<a href="settings" class="h-pill">Wer bin ich?</a>')
+    admins = get_admins()
+    if not person:
+        person_nav = '<a href="settings" class="h-pill">Wer bin ich?</a>'
+    elif person in admins:
+        # Admin: kann Person wechseln
+        person_nav = f'<a href="settings" class="h-pill">{person} ▾</a>'
+    else:
+        # Kein Admin: Name nur als Text, kein Wechsel möglich
+        person_nav = f'<span class="h-pill">{person}</span>'
     html = _HTML_BASE.format(
         base=base,
         content=content,

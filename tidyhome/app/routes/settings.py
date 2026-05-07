@@ -97,6 +97,11 @@ async def settings_form(request: Request, p: str = ""):
         </div>"""
         return render(content, request, page="settings", person=p)
 
+    # Nicht-Admin: kann keine andere Person aufrufen
+    if p not in admins:
+        card = _person_settings_card(p, areas, admins, action="settings")
+        return render(f"<h2>Einstellungen</h2>{card}", request, page="settings", person=p)
+
     card = _person_settings_card(p, areas, admins, action="settings")
     content = f"<h2>Einstellungen</h2>{card}"
     return render(content, request, page="settings", person=p)
