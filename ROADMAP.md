@@ -1,6 +1,6 @@
 # TidyHome – Roadmap
 
-Stand: 2026-05-07 · Aktuelle Version: 1.0.10
+Stand: 2026-05-07 · Aktuelle Version: 1.1.0
 
 ---
 
@@ -73,7 +73,7 @@ Stand: 2026-05-07 · Aktuelle Version: 1.0.10
 
 ---
 
-## Phase 9 – Modern UI Refresh
+## ✅ Phase 9 – Modern UI Refresh (v1.1.0)
 
 Ziel: TidyHome optisch ruhiger, moderner und Home-Assistant-näher machen, ohne die bestehende serverseitige FastAPI-Struktur unnötig umzubauen.
 
@@ -87,11 +87,17 @@ Ziel: TidyHome optisch ruhiger, moderner und Home-Assistant-näher machen, ohne 
 - **Formulare vereinfachen**: ruhigere Labels, bessere Toggle-Optionen für Wichtig/Einmalig, klare Primär- und Abbruchaktionen
 - **Barrierefreiheit prüfen**: Kontrast, Touch-Ziele, lange deutsche Texte, leere Zustände und Dark-Mode-Lesbarkeit
 
-Umsetzungsvorschlag:
+Umgesetzt:
 
-1. Nur CSS/Markup in `render.py` und den vorhandenen Routen anpassen.
-2. Keine neuen Frontend-Abhängigkeiten im ersten Schritt.
-3. Danach optional CSS aus `render.py` in eine statische Datei auslagern.
+1. CSS/Markup in `render.py` und den vorhandenen Routen modernisiert.
+2. Keine neuen Frontend-Abhängigkeiten eingeführt.
+3. Styles in `assets/app.css` ausgelagert und lokalen Asset-Fallback ergänzt.
+
+Nächster Feinschliff:
+
+- Action-Icons vollständig als SVG vereinheitlichen.
+- Empty States für Aufgaben, Projekte und Punkte weiter ausarbeiten.
+- Browser-Check in Home Assistant auf Mobile, Tablet und Dashboard-Panel nachziehen.
 
 ---
 
@@ -155,7 +161,7 @@ Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
 
 ---
 
-## Bereits umgesetzt (v1.0.10)
+## Bereits umgesetzt (v1.1.0)
 
 - Aufgaben-CRUD (anlegen, bearbeiten, löschen, abhaken)
 - Wiederkehrende Intervalle (1/2/7/14/30/90/180/365 Tage)
@@ -175,6 +181,8 @@ Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
 - Räume pro Person individuell ausblendbar
 - Dark Mode (folgt System-/HA-Theme automatisch)
 - HA Ingress-Navigation, `p`-Parameter bleibt beim Navigieren erhalten
-- Rose/Mauve Design-System, Bottom-Navigation, Dashboard
+- Modernes Rose/Mauve Design-System mit Light/Dark Tokens, SVG-Bottom-Navigation und Heute-Dashboard
+- Statuskanten, klare Badges, Projektkarten mit nächstem Schritt und kompakten Filter-Chips
+- Statisches Stylesheet `assets/app.css` mit lokalem Asset-Fallback
 - Modulare Codebasis (`routes/`, `render`, `scheduler`, `config`)
 - SVG-Logo + PNG-Icon, Favicon; CHANGELOG.md für HA Update-Dialog

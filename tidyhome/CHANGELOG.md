@@ -1,3 +1,12 @@
+## 1.1.0
+
+- Modern UI Refresh: ruhigeres Light/Dark Design mit neutralen Flächen und Mauve/Rose-Akzent
+- Dashboard als Heute-Ansicht mit Statuswerten, nächsten Aufgaben und Raumüberblick
+- Aufgaben- und Projektansichten mit klareren Badges, Fortschritt, Statuskante und kompakten Aktionen
+- Bottom-Navigation mit konsistenten SVG-Icons statt Emoji-Mix
+- Stylesheet nach `assets/app.css` ausgelagert; `render.py` bleibt schlanker
+- Lokaler Asset-Fallback für einfachere Entwicklung außerhalb des Add-ons
+
 ## 1.0.10
 
 - Aufgaben können mehreren Personen gleichzeitig zugeordnet werden
