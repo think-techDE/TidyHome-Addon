@@ -51,33 +51,37 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     role_p = cfg_p.get("role", "member")
     show_grouped = room and p and (p in admins or role_p == "parent")
 
-    chev = _icon("chevron_r", 16, "var(--muted)")
-    cal  = _icon("calendar", 13, "var(--muted)")
+    cal = _icon("calendar", 13, "var(--muted)")
 
     def _task_row(t: Task) -> str:
         due = t.days_until_due()
-        uc  = urgency_class(due)
-        if due < 0:    due_text = f"{abs(due)}d überfällig"
-        elif due == 0: due_text = "Heute"
-        elif due == 1: due_text = "Morgen"
-        else:          due_text = f"In {due}d"
+
+        # Badge: Status-Label (was) – Datum: konkretes Timing (wann)
+        if due < 0:
+            badge_text, badge_cls = "Überfällig", "overdue"
+            date_text = f"{abs(due)}d überfällig"
+        elif due == 0:
+            badge_text, badge_cls = "Heute", "today"
+            date_text = "Heute"
+        else:
+            badge_text, badge_cls = "Geplant", "ok"
+            date_text = "Morgen" if due == 1 else f"In {due} Tagen"
+
+        important_cls = " important" if t.important else ""
+        star = (
+            f'{_icon("star", 13, "var(--warning)", 2.5)}'
+        ) if t.important else ""
+        onetime_badge = (
+            '<span class="badge" style="background:var(--muted);color:#fff;'
+            'font-size:0.62rem;flex-shrink:0">1×</span>'
+        ) if t.onetime else ""
 
         assigned_txt = ""
         if t.assigned_to and not show_grouped:
             assigned_txt = (
-                f'<div class="task-meta" style="margin-top:0.15rem">'
-                f'→ {", ".join(t.assigned_to)}</div>'
+                f'<span class="task-meta" style="font-size:0.72rem">'
+                f'→ {", ".join(t.assigned_to)}</span>'
             )
-
-        star = (
-            '<span title="Wichtig" style="color:var(--warning);margin-right:0.15rem;'
-            'font-size:0.85rem">★</span>'
-        ) if t.important else ""
-        onetime_badge = (
-            '<span class="badge" style="background:var(--muted);color:#fff;'
-            'font-size:0.62rem">1×</span>'
-        ) if t.onetime else ""
-        border = "border-left:3px solid var(--warning);" if t.important else ""
 
         done_btn = (
             f'<form class="inline" method="post" action="tasks/{t.id}/done">'
@@ -96,19 +100,22 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
         )
 
         return f"""
-        <div class="task-row" style="{border}">
+        <div class="task-row{important_cls}">
           {_task_icon(t.name, t.room)}
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap">
-              {star}<span class="task-name">{t.name}</span>
-              <span class="badge {uc}">{due_text}</span>{onetime_badge}
+          <div class="task-body">
+            <div class="task-header">
+              <span class="task-name">{star}{t.name}</span>
+              <div style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0">
+                {onetime_badge}
+                <span class="badge {badge_cls}">{badge_text}</span>
+              </div>
             </div>
             <div class="task-date">{cal}
-              <span class="task-meta">{t.room} · {interval_label(t.interval_days)} · {t.points} Pkt</span>
+              <span class="task-meta">{date_text}</span>
+              {assigned_txt}
             </div>
-            {assigned_txt}
+            <div class="task-actions">{done_btn}{edit_btn}{del_btn}</div>
           </div>
-          <div class="task-actions">{done_btn}{edit_btn}{del_btn}</div>
         </div>"""
 
     rows = ""
