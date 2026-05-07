@@ -3,7 +3,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Task
-from render import INTERVALS, _base, _selected, interval_label, render, resolve_person, urgency_class
+from render import (INTERVALS, _base, _icon, _selected, _task_icon,
+                    interval_label, render, resolve_person, urgency_class)
 from storage import (create_task, delete_task, edit_task, filter_tasks_by_role,
                      get_admins, get_person_settings, get_task, list_tasks, mark_done)
 
@@ -12,70 +13,117 @@ router = APIRouter(prefix="/tasks")
 
 @router.get("", response_class=HTMLResponse)
 async def tasks_list(request: Request, room: str = None, person: str = None,
-                     overdue: str = None, p: str = ""):
+                     overdue: str = None, mine: str = None, p: str = ""):
     p = resolve_person(request, p)
     admins = get_admins()
-    tasks = list_tasks(room=room, assigned_to=person, overdue_only=(overdue == "1"))
-    areas = await get_areas()
+    tasks = list_tasks(room=room, assigned_to=person,
+                       overdue_only=(overdue == "1"))
 
-    # Räume ausblenden für aktive Person
+    # "Meine" filter
+    if mine == "1" and p:
+        tasks = [t for t in tasks if p in t.assigned_to]
+
+    # Hidden rooms
     if p:
         hidden = set(get_person_settings(p).get("hidden_rooms", []))
         if hidden:
             tasks = [t for t in tasks if t.room not in hidden]
 
-    # Rollenbasierte Sichtbarkeit
+    # Role-based visibility
     tasks = filter_tasks_by_role(tasks, p, admins)
 
+    areas = await get_areas()
+    psuffix = f"&p={p}" if p else ""
+
+    # Filter bar
+    all_active = not room and not overdue and not mine
     filters = '<div class="filters">'
-    filters += f'<a class="filter-btn {"active" if not room and not overdue else ""}" href="tasks">Alle</a>'
-    filters += f'<a class="filter-btn {"active" if overdue == "1" else ""}" href="tasks?overdue=1">Überfällig</a>'
+    filters += f'<a class="filter-btn {"active" if all_active else ""}" href="tasks{("?p="+p) if p else ""}">Alle</a>'
+    if p:
+        filters += f'<a class="filter-btn {"active" if mine == "1" else ""}" href="tasks?mine=1{psuffix}">Meine</a>'
+    filters += f'<a class="filter-btn {"active" if overdue == "1" else ""}" href="tasks?overdue=1{psuffix}">Überfällig</a>'
     for r in areas:
-        filters += f'<a class="filter-btn {"active" if room == r else ""}" href="tasks?room={r}">{r}</a>'
+        filters += f'<a class="filter-btn {"active" if room == r else ""}" href="tasks?room={r}{psuffix}">{r}</a>'
     filters += '</div>'
 
-    # Grouped view für Elternteil/Admin im Raum-Filter
+    # Grouped view for parent/admin + room filter
     cfg_p = get_person_settings(p) if p else {}
     role_p = cfg_p.get("role", "member")
     show_grouped = room and p and (p in admins or role_p == "parent")
 
-    def _task_row(t):
+    chev = _icon("chevron_r", 16, "var(--muted)")
+    cal  = _icon("calendar", 13, "var(--muted)")
+
+    def _task_row(t: Task) -> str:
         due = t.days_until_due()
-        uc = urgency_class(due)
+        uc  = urgency_class(due)
         if due < 0:    due_text = f"{abs(due)}d überfällig"
         elif due == 0: due_text = "Heute"
         elif due == 1: due_text = "Morgen"
         else:          due_text = f"In {due}d"
-        assigned = (f"<span class='task-meta'>→ {', '.join(t.assigned_to)}</span>"
-                    if t.assigned_to and not show_grouped else "")
-        star = '<span title="Wichtig" style="font-size:1rem">⭐</span>' if t.important else ""
-        onetime_badge = '<span class="badge" style="background:var(--muted);color:#fff;font-size:0.65rem">1×</span>' if t.onetime else ""
+
+        assigned_txt = ""
+        if t.assigned_to and not show_grouped:
+            assigned_txt = (
+                f'<div class="task-meta" style="margin-top:0.15rem">'
+                f'→ {", ".join(t.assigned_to)}</div>'
+            )
+
+        star = (
+            '<span title="Wichtig" style="color:var(--warning);margin-right:0.15rem;'
+            'font-size:0.85rem">★</span>'
+        ) if t.important else ""
+        onetime_badge = (
+            '<span class="badge" style="background:var(--muted);color:#fff;'
+            'font-size:0.62rem">1×</span>'
+        ) if t.onetime else ""
         border = "border-left:3px solid var(--warning);" if t.important else ""
+
+        done_btn = (
+            f'<form class="inline" method="post" action="tasks/{t.id}/done">'
+            + (f'<input type="hidden" name="done_by" value="{p}">' if p else "")
+            + f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
+            f'</form>'
+        )
+        edit_btn = (
+            f'<a class="icon-btn" href="tasks/{t.id}/edit" title="Bearbeiten">'
+            f'{_icon("edit", 16)}</a>'
+        )
+        del_btn = (
+            f'<a class="icon-btn danger" href="tasks/{t.id}/delete" '
+            f'onclick="return confirm(\'Aufgabe löschen?\')" title="Löschen">'
+            f'{_icon("trash", 16)}</a>'
+        )
+
         return f"""
         <div class="task-row" style="{border}">
+          {_task_icon(t.name, t.room)}
           <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap">
               {star}<span class="task-name">{t.name}</span>
               <span class="badge {uc}">{due_text}</span>{onetime_badge}
             </div>
-            <div class="task-meta" style="margin-top:0.2rem">
-              {t.room} · {interval_label(t.interval_days)} · {t.points} Pkt {assigned}
+            <div class="task-date">{cal}
+              <span class="task-meta">{t.room} · {interval_label(t.interval_days)} · {t.points} Pkt</span>
             </div>
+            {assigned_txt}
           </div>
-          <form class="inline" method="post" action="tasks/{t.id}/done">
-            <button class="btn btn-success btn-sm" title="Erledigt">✓</button>
-          </form>
-          <a class="btn btn-ghost btn-sm" href="tasks/{t.id}/edit" title="Bearbeiten">✎</a>
-          <a class="btn btn-danger btn-sm" href="tasks/{t.id}/delete"
-             onclick="return confirm('Löschen?')" title="Löschen">✕</a>
+          <div class="task-actions">{done_btn}{edit_btn}{del_btn}</div>
         </div>"""
 
     rows = ""
     if not tasks:
-        rows = '<div class="empty">Keine Aufgaben gefunden.</div>'
+        rows = (
+            '<div class="empty">'
+            '<div class="empty-icon">✅</div>'
+            '<div style="font-weight:600">Keine Aufgaben gefunden</div>'
+            '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
+            'Alle erledigt oder kein Filter passend.</div>'
+            '</div>'
+        )
     elif show_grouped:
         from collections import defaultdict
-        grouped = defaultdict(list)
+        grouped: dict[str, list[Task]] = defaultdict(list)
         for t in tasks:
             if t.assigned_to:
                 for pn in t.assigned_to:
@@ -83,17 +131,26 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             else:
                 grouped["— Nicht zugeordnet —"].append(t)
         for person_name, ptasks in sorted(grouped.items()):
-            rows += f'<div style="padding:0.6rem 1.25rem 0.2rem;font-size:0.75rem;font-weight:700;color:var(--primary-dark);text-transform:uppercase;letter-spacing:0.05em;background:var(--primary-light)">👤 {person_name}</div>'
+            rows += (
+                f'<div style="padding:0.5rem 1.25rem;font-size:0.72rem;font-weight:700;'
+                f'color:var(--primary-dark);text-transform:uppercase;letter-spacing:0.06em;'
+                f'background:var(--primary-light);display:flex;align-items:center;gap:0.4rem">'
+                f'{_icon("person", 13, "var(--primary-dark)")} {person_name}</div>'
+            )
             for t in ptasks:
                 rows += _task_row(t)
     else:
         for t in tasks:
             rows += _task_row(t)
 
+    psuffix_q = f"?p={p}" if p else ""
     content = f"""
     <div class="page-header">
-      <h2>Aufgaben ({len(tasks)})</h2>
-      <a class="btn btn-primary btn-sm" href="tasks/new">+ Neu</a>
+      <h2>Aufgaben <span class="muted" style="font-weight:400">({len(tasks)})</span></h2>
+      <a class="btn btn-primary btn-sm" href="tasks/new{psuffix_q}"
+         style="display:flex;align-items:center;gap:0.3rem">
+        {_icon("plus", 14, "white")} Neu
+      </a>
     </div>
     {filters}
     <div class="card card-flush">{rows}</div>"""
@@ -160,15 +217,15 @@ async def task_delete(task_id: str, request: Request):
 
 async def _task_form(request: Request, title: str, action: str,
                      submit_label: str, task=None, person: str = "") -> HTMLResponse:
-    areas = await get_areas()
+    areas   = await get_areas()
     persons = await get_persons()
-    cur_room = task.room if task else ""
-    cur_interval = task.interval_days if task else 7
-    cur_persons = task.assigned_to if task else ([person] if person else [])
-    cur_points = task.points if task else 10
-    cur_name = task.name if task else ""
+    cur_room      = task.room if task else ""
+    cur_interval  = task.interval_days if task else 7
+    cur_persons   = task.assigned_to if task else ([person] if person else [])
+    cur_points    = task.points if task else 10
+    cur_name      = task.name if task else ""
     cur_important = task.important if task else False
-    cur_onetime = task.onetime if task else False
+    cur_onetime   = task.onetime if task else False
 
     room_opts = "".join(
         f'<option value="{r}"{_selected(r, cur_room)}>{r}</option>' for r in areas)
@@ -185,7 +242,7 @@ async def _task_form(request: Request, title: str, action: str,
         for d, label in INTERVALS.items())
 
     important_checked = "checked" if cur_important else ""
-    onetime_checked = "checked" if cur_onetime else ""
+    onetime_checked   = "checked" if cur_onetime   else ""
 
     content = f"""
     <h2>{title}</h2>
@@ -218,7 +275,7 @@ async def _task_form(request: Request, title: str, action: str,
                         text-transform:none;font-size:0.9rem;letter-spacing:0;font-weight:500">
             <input type="checkbox" name="important" value="1" {important_checked}
                    style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
-            ⭐ Als wichtig markieren (wird oben in der Liste angezeigt)
+            ⭐ Als wichtig markieren
           </label>
         </div>
         <div class="form-group">
@@ -226,7 +283,7 @@ async def _task_form(request: Request, title: str, action: str,
                         text-transform:none;font-size:0.9rem;letter-spacing:0;font-weight:500">
             <input type="checkbox" name="onetime" value="1" {onetime_checked}
                    style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
-            1× Einmalige Aufgabe (wird nach Erledigung automatisch archiviert)
+            1× Einmalige Aufgabe (nach Erledigung archiviert)
           </label>
         </div>
         <button class="btn btn-primary btn-full" type="submit">{submit_label}</button>

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 from ha_client import get_areas
-from render import render, resolve_person, ROOM_ICONS
+from render import _icon, _ring_chart, render, resolve_person, ROOM_ICONS
 from storage import get_person_settings, list_tasks, list_projects
 
 router = APIRouter()
@@ -16,7 +16,7 @@ async def dashboard(request: Request, p: str = ""):
     areas = await get_areas()
     today = date.today().isoformat()
 
-    # Räume ausblenden für aktive Person
+    # Hidden rooms for active person
     hidden_rooms: set[str] = set()
     if p:
         hidden_rooms = set(get_person_settings(p).get("hidden_rooms", []))
@@ -25,75 +25,136 @@ async def dashboard(request: Request, p: str = ""):
     all_tasks = list_tasks()
     if hidden_rooms:
         all_tasks = [t for t in all_tasks if t.room not in hidden_rooms]
-    overdue = [t for t in all_tasks if t.days_until_due() < 0]
-    due_today = [t for t in all_tasks if t.days_until_due() == 0]
-    done_today = [t for t in all_tasks if t.last_done == today]
-    all_projects = list_projects()
+    overdue_tasks = [t for t in all_tasks if t.days_until_due() < 0]
+    due_today     = [t for t in all_tasks if t.days_until_due() == 0]
+    done_today    = [t for t in all_tasks if t.last_done == today]
+    all_projects  = list_projects()
     if hidden_rooms:
         all_projects = [pr for pr in all_projects if pr.room not in hidden_rooms]
 
     total = len(all_tasks)
-    health_pct = int((total - len(overdue)) / total * 100) if total else 100
-    greeting = f"Hallo{' ' + p if p else ''}! 👋"
+    health_pct   = int((total - len(overdue_tasks)) / total * 100) if total else 100
+    done_of_due  = len(due_today) + len(done_today)
+    done_pct     = int(len(done_today) / done_of_due * 100) if done_of_due else 100
 
-    stat_grid = f"""
-    <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-value">{len(done_today)}<span style="font-size:1rem;color:var(--muted)">/{len(due_today) + len(done_today)}</span></div>
-        <div class="stat-label">Heute erledigt</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value {'green' if not overdue else ''}">{len(overdue)}</div>
-        <div class="stat-label">Überfällig</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="font-size:1.4rem">{total} <span style="font-size:0.9rem;color:var(--muted)">|</span> {len(all_projects)}</div>
-        <div class="stat-label">Aufgaben | Projekte</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value {'green' if health_pct == 100 else ''}">{health_pct}%</div>
-        <div class="stat-label">Gesamtzustand</div>
+    greeting = f"Hallo{' ' + p if p else ''}!"
+
+    # ── 3 Ring-Charts ───────────────────────────────────────────────────────
+    done_color    = "var(--success)" if len(done_today) >= done_of_due else "var(--primary)"
+    overdue_color = "var(--danger)"  if overdue_tasks else "var(--success)"
+    health_color  = "var(--success)" if health_pct > 80 else "var(--warning)" if health_pct > 50 else "var(--danger)"
+
+    ring_done    = _ring_chart(
+        f"{len(done_today)}/{done_of_due}",
+        done_pct, done_color, "Erledigt"
+    )
+    ring_overdue = _ring_chart(
+        str(len(overdue_tasks)),
+        min(len(overdue_tasks) * 20, 100), overdue_color, "Überfällig"
+    )
+    ring_health  = _ring_chart(
+        f"{health_pct}%",
+        health_pct, health_color, "Zustand"
+    )
+
+    rings_row = f"""
+    <div class="card" style="padding:1.25rem 1rem">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;align-items:start">
+        {ring_done}{ring_overdue}{ring_health}
       </div>
     </div>"""
 
-    health_bar = f"""
-    <div class="card" style="padding:1rem">
-      <div style="display:flex;justify-content:space-between;font-size:0.78rem;
-                  color:var(--muted);margin-bottom:0.4rem">
-        <span>Gesamtzustand</span><span>{health_pct}%</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill {'green' if health_pct > 80 else ''}"
-             style="width:{health_pct}%"></div>
-      </div>
-    </div>"""
+    # ── Nächste Aufgaben ─────────────────────────────────────────────────────
+    upcoming = sorted(all_tasks, key=lambda t: t.days_until_due())[:5]
+    cal_icon = _icon("calendar", 13, "var(--muted)")
+    chev     = _icon("chevron_r", 16, "var(--muted)")
 
-    room_cards = ""
-    for r in visible_areas:
-        icon = ROOM_ICONS.get(r, "🏠")
-        r_tasks = [t for t in all_tasks if t.room == r]
-        r_projects = [pr for pr in all_projects if pr.room == r]
-        r_overdue = sum(1 for t in r_tasks if t.days_until_due() < 0)
-        count_txt = f"{len(r_tasks)} Aufgaben · {len(r_projects)} Projekte"
-        badge = (f'<span class="badge overdue" style="font-size:0.65rem">'
-                 f'{r_overdue} überfällig</span>' if r_overdue else "")
-        room_cards += f"""
-        <a class="room-card" href="tasks?room={r}">
-          <div class="room-icon">{icon}</div>
-          <div class="room-name">{r}</div>
-          <div class="room-count">{count_txt}</div>
-          {badge}
-        </a>"""
+    if upcoming:
+        task_rows = ""
+        for t in upcoming:
+            d = t.days_until_due()
+            if d < 0:    dtxt = f"{abs(d)}d überfällig"; dcls = "color:var(--danger)"
+            elif d == 0: dtxt = "Heute";                 dcls = "color:var(--warning)"
+            elif d == 1: dtxt = "Morgen";                dcls = "color:var(--muted)"
+            else:        dtxt = f"In {d} Tagen";         dcls = "color:var(--muted)"
+
+            # Mark-done form
+            done_btn = (
+                f'<form class="inline" method="post" action="tasks/{t.id}/done">'
+                f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
+                f'</form>'
+            )
+            task_rows += f"""
+            <div class="task-row" style="padding:0.75rem 1.25rem">
+              <div style="flex:1;min-width:0">
+                <div class="task-name" style="font-size:0.88rem">{t.name}</div>
+                <div class="task-date">{cal_icon}<span style="{dcls}">{dtxt}</span></div>
+              </div>
+              {done_btn}
+            </div>"""
+
+        next_tasks_section = f"""
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    margin-bottom:0.6rem">
+          <h2 style="margin:0;font-size:0.95rem">Nächste Aufgaben</h2>
+          <a href="tasks{('?p=' + p) if p else ''}" style="font-size:0.78rem;
+             color:var(--primary);text-decoration:none;font-weight:600;
+             display:flex;align-items:center;gap:0.1rem">
+             Alle{chev}
+          </a>
+        </div>
+        <div class="card card-flush" style="margin-bottom:1rem">{task_rows}</div>"""
+    else:
+        next_tasks_section = f"""
+        <div class="card" style="text-align:center;padding:1.5rem;margin-bottom:1rem">
+          <div style="font-size:1.8rem;margin-bottom:0.5rem">🎉</div>
+          <div style="font-weight:600;font-size:0.9rem">Alles erledigt!</div>
+          <div class="muted" style="margin-top:0.25rem">Keine offenen Aufgaben.</div>
+        </div>"""
+
+    # ── Räume als Liste ──────────────────────────────────────────────────────
+    if visible_areas:
+        room_rows = ""
+        for r in visible_areas:
+            icon = ROOM_ICONS.get(r, "🏠")
+            r_tasks    = [t for t in all_tasks if t.room == r]
+            r_projects = [pr for pr in all_projects if pr.room == r]
+            r_overdue  = sum(1 for t in r_tasks if t.days_until_due() < 0)
+            sub = f"{len(r_tasks)} Aufg."
+            if r_projects: sub += f" · {len(r_projects)} Proj."
+            badge = (
+                f'<span class="badge overdue" style="font-size:0.62rem;margin-right:0.3rem">'
+                f'{r_overdue}×</span>'
+            ) if r_overdue else ""
+            room_rows += f"""
+            <a href="tasks?room={r}{('&p=' + p) if p else ''}"
+               style="display:flex;align-items:center;gap:0.875rem;
+                      padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);
+                      text-decoration:none;color:var(--text)">
+              <div style="width:40px;height:40px;border-radius:50%;
+                          background:var(--icon-bg);display:flex;align-items:center;
+                          justify-content:center;font-size:1.2rem;flex-shrink:0">
+                {icon}
+              </div>
+              <span style="flex:1;font-weight:600;font-size:0.9rem">{r}</span>
+              <span style="font-size:0.74rem;color:var(--muted)">{sub}</span>
+              {badge}
+              {chev}
+            </a>"""
+        room_block = (
+            f'<h2 style="font-size:0.95rem;margin-bottom:0.6rem">Räume</h2>'
+            f'<div class="card card-flush">{room_rows}</div>'
+        )
+    else:
+        room_block = (
+            '<div class="empty"><div class="empty-icon">🏠</div>'
+            '<div>Noch keine Räume in Home Assistant konfiguriert.</div></div>'
+        )
 
     content = f"""
-    <h2 style="font-size:1.2rem;margin-bottom:1rem">{greeting}</h2>
-    {stat_grid}
-    {health_bar}
-    <div style="display:flex;justify-content:space-between;align-items:center;
-                margin-bottom:0.75rem;margin-top:0.25rem">
-      <h2 style="margin:0">Räume</h2>
-      <a class="btn btn-ghost btn-sm" href="tasks/new">+ Neue Aufgabe</a>
-    </div>
-    <div class="room-grid">{room_cards}</div>"""
+    <h2 style="font-size:1.25rem;font-weight:800;margin-bottom:0.875rem">{greeting}</h2>
+    {rings_row}
+    {next_tasks_section}
+    {room_block}"""
 
     return render(content, request, page="home", person=p)

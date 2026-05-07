@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Project, Step
-from render import _base, _selected, render, resolve_person
+from render import _base, _icon, _proj_icon, _selected, render, resolve_person
 from storage import (add_step, complete_step, create_project, delete_project,
                      delete_step, get_person_settings, get_project, list_projects,
                      list_steps, update_project)
@@ -17,7 +17,6 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
     areas = await get_areas()
     all_projects = list_projects(room=room)
 
-    # Räume ausblenden für aktive Person
     if p:
         hidden = set(get_person_settings(p).get("hidden_rooms", []))
         if hidden:
@@ -27,49 +26,79 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
     done_projects   = [pr for pr in all_projects if pr.completed]
     projects = done_projects if show == "done" else active_projects
 
+    psuffix = f"&p={p}" if p else ""
+
     filters = '<div class="filters">'
-    filters += f'<a class="filter-btn {"active" if show == "active" and not room else ""}" href="projects">Offen</a>'
-    filters += f'<a class="filter-btn {"active" if show == "done" else ""}" href="projects?show=done">✅ Abgeschlossen ({len(done_projects)})</a>'
+    filters += f'<a class="filter-btn {"active" if show == "active" and not room else ""}" href="projects{("?p="+p) if p else ""}">Offen</a>'
+    filters += f'<a class="filter-btn {"active" if show == "done" else ""}" href="projects?show=done{psuffix}">Abgeschlossen ({len(done_projects)})</a>'
     for r in areas:
         active_cls = "active" if room == r and show != "done" else ""
-        filters += f'<a class="filter-btn {active_cls}" href="projects?room={r}">{r}</a>'
+        filters += f'<a class="filter-btn {active_cls}" href="projects?room={r}{psuffix}">{r}</a>'
     filters += '</div>'
 
     rows = ""
     if not projects:
         hint = "Noch keine abgeschlossenen Projekte." if show == "done" else "Noch keine Ordnungsprojekte."
-        rows = f'<div class="empty">{hint}</div>'
+        rows = (
+            f'<div class="empty">'
+            f'<div class="empty-icon">📦</div>'
+            f'<div style="font-weight:600">{hint}</div>'
+            f'<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
+            f'Leg ein neues Projekt an, um loszulegen.</div>'
+            f'</div>'
+        )
     else:
         for proj in projects:
             steps = list_steps(proj.id)
             done, total = proj.progress(steps)
             pct = int(done / total * 100) if total else 0
             assigned = f"<span class='task-meta'>→ {proj.assigned_to}</span>" if proj.assigned_to else ""
-            completed_badge = '<span class="badge ok">✓ Fertig</span>' if proj.completed else ""
-            opacity = "opacity:0.7;" if proj.completed else ""
             fill_class = "green" if proj.completed else ""
+            opacity = "opacity:0.65;" if proj.completed else ""
+
+            if proj.completed:
+                action_btns = (
+                    f'<a class="icon-btn" href="projects/{proj.id}/archive" '
+                    f'title="Archivieren">{_icon("archive", 16)}</a>'
+                )
+            else:
+                action_btns = (
+                    f'<a class="icon-btn" href="projects/{proj.id}/edit" '
+                    f'title="Bearbeiten">{_icon("edit", 16)}</a>'
+                )
+            del_btn = (
+                f'<a class="icon-btn danger" href="projects/{proj.id}/delete" '
+                f'onclick="return confirm(\'Projekt löschen?\')" title="Löschen">'
+                f'{_icon("trash", 16)}</a>'
+            )
+
             rows += f"""
-            <div class="task-row" style="{opacity}">
+            <div class="proj-row" style="{opacity}">
+              <a href="projects/{proj.id}" style="display:contents;text-decoration:none">
+                {_proj_icon(proj.room)}
+              </a>
               <div style="flex:1;min-width:0">
-                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
-                  <a href="projects/{proj.id}" class="task-name"
-                     style="text-decoration:none;color:inherit">{proj.name}</a>
-                  {completed_badge}{assigned}
-                </div>
-                <div class="task-meta" style="margin-top:0.2rem">{proj.room} · {done}/{total} Schritte</div>
+                <a href="projects/{proj.id}"
+                   style="text-decoration:none;color:inherit;font-weight:600;
+                          font-size:0.9rem;display:block;margin-bottom:0.15rem">
+                  {proj.name}
+                </a>
+                <div class="task-meta">{proj.room} · {done}/{total} Schritte {assigned}</div>
                 <div class="progress-track" style="margin-top:0.4rem">
                   <div class="progress-fill {fill_class}" style="width:{pct}%"></div>
                 </div>
               </div>
-              {'<a class="btn btn-danger btn-sm" href="projects/' + proj.id + '/archive" title="Archivieren">📁</a>' if proj.completed else '<a class="btn btn-ghost btn-sm" href="projects/' + proj.id + '/edit">✎</a>'}
-              <a class="btn btn-danger btn-sm" href="projects/{proj.id}/delete"
-                 onclick="return confirm('Projekt löschen?')">✕</a>
+              <div class="task-actions">{action_btns}{del_btn}</div>
             </div>"""
 
+    psuffix_q = f"?p={p}" if p else ""
     content = f"""
     <div class="page-header">
-      <h2>Ordnungsprojekte ({len(active_projects)} offen)</h2>
-      <a class="btn btn-primary btn-sm" href="projects/new">+ Neu</a>
+      <h2>Projekte <span class="muted" style="font-weight:400">({len(active_projects)} offen)</span></h2>
+      <a class="btn btn-primary btn-sm" href="projects/new{psuffix_q}"
+         style="display:flex;align-items:center;gap:0.3rem">
+        {_icon("plus", 14, "white")} Neu
+      </a>
     </div>
     {filters}
     <div class="card card-flush">{rows}</div>"""
@@ -79,9 +108,9 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
 @router.get("/new", response_class=HTMLResponse)
 async def project_new_form(request: Request, p: str = ""):
     p = resolve_person(request, p)
-    areas = await get_areas()
+    areas   = await get_areas()
     persons = await get_persons()
-    room_opts = "".join(f'<option value="{r}">{r}</option>' for r in areas)
+    room_opts   = "".join(f'<option value="{r}">{r}</option>' for r in areas)
     person_opts = '<option value="">— Niemand —</option>' + "".join(
         f'<option value="{pn}">{pn}</option>' for pn in persons)
     content = f"""
@@ -135,14 +164,18 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
     person_opts = '<option value="">— Niemand —</option>' + "".join(
         f'<option value="{pn}">{pn}</option>' for pn in persons)
 
+    fill_cls = "green" if pct == 100 else ""
     step_rows = ""
     for s in steps:
         if s.completed:
             who = f" · {s.completed_by}" if s.completed_by else ""
             step_rows += f"""
             <div class="task-row" style="opacity:0.5">
-              <span style="color:var(--success);font-size:1.1rem">✓</span>
-              <span class="task-name" style="text-decoration:line-through">{s.name}</span>
+              <span style="color:var(--success);font-size:1.1rem;flex-shrink:0">
+                {_icon("check", 18, "var(--success)")}
+              </span>
+              <span class="task-name" style="flex:1;text-decoration:line-through;
+                    color:var(--muted)">{s.name}</span>
               <span class="task-meta">{s.points} Pkt{who}</span>
             </div>"""
         else:
@@ -151,18 +184,26 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
               <span class="task-name" style="flex:1">{s.name}</span>
               <span class="task-meta" style="margin-right:0.5rem">{s.points} Pkt</span>
               <form class="inline" method="post" action="steps/{s.id}/done">
-                <select name="done_by" style="width:auto;padding:0.2rem 0.4rem;
-                  font-size:0.78rem;margin-right:0.3rem;border-radius:0.4rem">
+                <select name="done_by" style="width:auto;padding:0.22rem 0.4rem;
+                  font-size:0.78rem;margin-right:0.3rem;border-radius:0.4rem;
+                  border:1.5px solid var(--border);background:var(--card);color:var(--text)">
                   {person_opts}
                 </select>
-                <button class="btn btn-success btn-sm">✓</button>
+                <button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>
               </form>
-              <a class="btn btn-danger btn-sm" style="margin-left:0.3rem"
-                 href="steps/{s.id}/delete" onclick="return confirm('Schritt löschen?')">✕</a>
+              <a class="icon-btn danger" style="margin-left:0.1rem"
+                 href="steps/{s.id}/delete" onclick="return confirm('Schritt löschen?')">
+                 {_icon("trash", 15)}
+              </a>
             </div>"""
 
     if not steps:
-        step_rows = '<div class="empty">Noch keine Schritte. Füge unten den ersten hinzu.</div>'
+        step_rows = (
+            '<div class="empty">'
+            '<div class="empty-icon">📝</div>'
+            '<div>Noch keine Schritte. Füge unten den ersten hinzu.</div>'
+            '</div>'
+        )
 
     assigned = f" · → {proj.assigned_to}" if proj.assigned_to else ""
     desc = (f'<p class="muted" style="margin-bottom:1rem">{proj.description}</p>'
@@ -174,7 +215,10 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
         <h2>{proj.name}</h2>
         <div class="muted">{proj.room}{assigned}</div>
       </div>
-      <a class="btn btn-ghost btn-sm" href="edit">✎ Bearbeiten</a>
+      <a class="btn btn-ghost btn-sm" href="edit"
+         style="display:flex;align-items:center;gap:0.3rem">
+        {_icon("edit", 14, "var(--primary-dark)")} Bearbeiten
+      </a>
     </div>
     {desc}
     <div class="card" style="padding:1rem;margin-bottom:1rem">
@@ -183,7 +227,7 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
         <span>{done} von {total} Schritten</span><span>{pct}%</span>
       </div>
       <div class="progress-track">
-        <div class="progress-fill {'green' if pct == 100 else ''}" style="width:{pct}%"></div>
+        <div class="progress-fill {fill_cls}" style="width:{pct}%"></div>
       </div>
     </div>
     <div class="card card-flush" style="margin-bottom:1rem">{step_rows}</div>
@@ -200,7 +244,10 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
             <input name="points" type="number" value="5" min="1" max="100">
           </div>
         </div>
-        <button class="btn btn-primary btn-sm" type="submit">Hinzufügen</button>
+        <button class="btn btn-primary btn-sm" type="submit"
+                style="display:flex;align-items:center;gap:0.3rem">
+          {_icon("plus", 14, "white")} Hinzufügen
+        </button>
         <a class="btn btn-ghost btn-sm" href="projects" style="margin-left:0.5rem">← Alle Projekte</a>
       </form>
     </div>"""
@@ -213,7 +260,7 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
     proj = get_project(project_id)
     if not proj:
         raise HTTPException(404)
-    areas = await get_areas()
+    areas   = await get_areas()
     persons = await get_persons()
     room_opts = "".join(
         f'<option value="{r}"{_selected(r, proj.room)}>{r}</option>' for r in areas)
@@ -275,7 +322,7 @@ async def project_delete(project_id: str, request: Request):
 async def project_archive(project_id: str, request: Request):
     proj = get_project(project_id)
     if proj:
-        delete_project(project_id)  # sets active=False
+        delete_project(project_id)
     return RedirectResponse(_base(request) + "projects", status_code=303)
 
 

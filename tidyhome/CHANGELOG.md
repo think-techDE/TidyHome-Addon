@@ -1,3 +1,16 @@
+## 1.1.0
+
+- Visuelles Redesign: SVG-Icons statt Emoji in Navigation und Aktionsbuttons
+- Dashboard: Ring-Charts (Erledigt / Überfällig / Zustand) statt Zahlen-Grid
+- Dashboard: "Nächste Aufgaben"-Liste direkt auf der Startseite
+- Dashboard: Räume als kompakte Liste mit Icon und Pfeil
+- Aufgaben: Kategorie-Icons pro Aufgabe (Staubsauger, Mülleimer, Pflanze etc.)
+- Aufgaben: "Meine"-Filter zeigt nur eigene Aufgaben
+- Aufgaben: Icon-Buttons für Erledigt/Bearbeiten/Löschen (konsistentes Design)
+- Projekte: Card-Layout mit Raumicon, Fortschrittsbalken und Icon-Buttons
+- Leerer-Zustand-Seiten mit illustrierter Meldung
+- Dark Mode: deutlich verbesserte Kontraste und Farbvariablen
+
 ## 1.0.10
 
 - Aufgaben können mehreren Personen gleichzeitig zugeordnet werden
