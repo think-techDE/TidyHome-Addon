@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -9,6 +11,10 @@ from storage import (add_step, assign_step, complete_step, create_project,
                      get_project, list_projects, list_steps, update_project)
 
 router = APIRouter(prefix="/projects")
+
+
+def _p_suffix(person: str = "", separator: str = "?") -> str:
+    return f"{separator}p={quote(person)}" if person else ""
 
 
 def _step_assignee(step: Step, project: Project) -> str:
@@ -96,28 +102,29 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
 
             if proj.completed:
                 action_btns = (
-                    f'<a class="icon-btn" href="projects/{proj.id}/archive" '
+                    f'<a class="icon-btn" href="projects/{proj.id}/archive{_p_suffix(p)}" '
                     f'title="Archivieren">{_icon("archive", 16)}</a>'
                 )
             else:
                 action_btns = (
-                    f'<a class="icon-btn" href="projects/{proj.id}/edit" '
+                    f'<a class="icon-btn" href="projects/{proj.id}/edit{_p_suffix(p)}" '
                     f'title="Bearbeiten">{_icon("edit", 16)}</a>'
                 )
             del_btn = (
-                f'<a class="icon-btn danger" href="projects/{proj.id}/delete" '
+                f'<a class="icon-btn danger" href="projects/{proj.id}/delete{_p_suffix(p)}" '
                 f'onclick="return confirm(\'Projekt löschen?\')" title="Löschen">'
                 f'{_icon("trash", 16)}</a>'
             )
 
             person_suffix = f" · {person_name}" if person_name else ""
+            detail_suffix = f"?scope=people{_p_suffix(p, '&')}" if grouped_by_person else _p_suffix(p)
             return f"""
             <div class="proj-row" style="{opacity}">
-              <a href="projects/{proj.id}{'?scope=people' if grouped_by_person else ''}" style="display:contents;text-decoration:none">
+              <a href="projects/{proj.id}{detail_suffix}" style="display:contents;text-decoration:none">
                 {_proj_icon(proj.room, icon=proj.icon)}
               </a>
               <div style="flex:1;min-width:0">
-                <a href="projects/{proj.id}{'?scope=people' if grouped_by_person else ''}"
+                <a href="projects/{proj.id}{detail_suffix}"
                    style="text-decoration:none;color:inherit;font-weight:600;
                           font-size:0.9rem;display:block;margin-bottom:0.15rem">
                   {proj.name}
@@ -179,6 +186,7 @@ async def project_new_form(request: Request, p: str = ""):
     <h2>Neues Ordnungsprojekt</h2>
     <div class="card">
       <form method="post" action="projects">
+        <input type="hidden" name="return_p" value="{p}">
         <div class="form-group">
           <label>Projektname</label>
           <input name="name" required placeholder="z.B. Keller aufräumen">
@@ -199,7 +207,7 @@ async def project_new_form(request: Request, p: str = ""):
         </div>
         {_icon_chooser("", "icon")}
         <button class="btn btn-primary btn-full" type="submit">Projekt anlegen</button>
-        <a class="btn btn-ghost btn-full" href="projects" style="margin-top:0.5rem">Abbrechen</a>
+        <a class="btn btn-ghost btn-full" href="projects{_p_suffix(p)}" style="margin-top:0.5rem">Abbrechen</a>
       </form>
     </div>"""
     return render(content, request, page="projects", person=p)
@@ -208,11 +216,11 @@ async def project_new_form(request: Request, p: str = ""):
 @router.post("")
 async def project_create(request: Request, name: str = Form(...), room: str = Form(...),
                           assigned_to: str = Form(""), description: str = Form(""),
-                          icon: str = Form("")):
+                          icon: str = Form(""), return_p: str = Form("")):
     proj = Project(name=name, room=room, assigned_to=assigned_to or None,
                    description=description or None, icon=icon)
     create_project(proj)
-    return RedirectResponse(_base(request) + f"projects/{proj.id}", status_code=303)
+    return RedirectResponse(_base(request) + f"projects/{proj.id}{_p_suffix(return_p)}", status_code=303)
 
 
 @router.get("/{project_id}", response_class=HTMLResponse)
@@ -270,6 +278,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
               </div>
               <div class="project-step-actions">
                 <form class="project-step-form" method="post" action="{base}projects/{project_id}/steps/{s.id}/assign">
+                  <input type="hidden" name="return_p" value="{p}">
                   <select class="project-step-person" name="assigned_to" aria-label="Zugewiesen an"
                           onchange="this.form.submit()">
                   {step_person_opts}
@@ -277,10 +286,11 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
                 </form>
                 <form class="inline" method="post" action="{base}projects/{project_id}/steps/{s.id}/done">
                   <input type="hidden" name="done_by" value="{assignee}">
+                  <input type="hidden" name="return_p" value="{p}">
                   <button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>
                 </form>
                 <a class="icon-btn danger"
-                   href="{base}projects/{project_id}/steps/{s.id}/delete"
+                   href="{base}projects/{project_id}/steps/{s.id}/delete{_p_suffix(p)}"
                    onclick="return confirm('Schritt löschen?')"
                    title="Schritt löschen">
                    {_icon("trash", 15)}
@@ -306,7 +316,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
         <h2>{proj.name}</h2>
         <div class="muted">{proj.room}{assigned}</div>
       </div>
-      <a class="btn btn-ghost btn-sm" href="{base}projects/{project_id}/edit"
+      <a class="btn btn-ghost btn-sm" href="{base}projects/{project_id}/edit{_p_suffix(p)}"
          style="display:flex;align-items:center;gap:0.3rem">
         {_icon("edit", 14, "var(--primary-dark)")} Bearbeiten
       </a>
@@ -324,6 +334,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
     <div class="card">
       <h3 style="margin-bottom:0.75rem">Schritt hinzufügen</h3>
       <form method="post" action="{base}projects/{project_id}/steps">
+        <input type="hidden" name="return_p" value="{p}">
         <div class="grid-2">
           <div class="form-group">
             <label>Beschreibung</label>
@@ -368,6 +379,7 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
     <h2>Projekt bearbeiten</h2>
     <div class="card">
       <form method="post" action="{base}projects/{project_id}/edit">
+        <input type="hidden" name="return_p" value="{p}">
         <div class="form-group">
           <label>Name</label>
           <input name="name" required value="{proj.name}">
@@ -388,7 +400,7 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
         </div>
         {_icon_chooser(proj.icon, "icon")}
         <button class="btn btn-primary btn-full" type="submit">Speichern</button>
-        <a class="btn btn-ghost btn-full" href="{base}projects/{project_id}"
+        <a class="btn btn-ghost btn-full" href="{base}projects/{project_id}{_p_suffix(p)}"
            style="margin-top:0.5rem">Abbrechen</a>
       </form>
     </div>"""
@@ -398,7 +410,8 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
 @router.post("/{project_id}/edit")
 async def project_edit(project_id: str, request: Request, name: str = Form(...),
                         room: str = Form(...), assigned_to: str = Form(""),
-                        description: str = Form(""), icon: str = Form("")):
+                        description: str = Form(""), icon: str = Form(""),
+                        return_p: str = Form("")):
     proj = get_project(project_id)
     if not proj:
         raise HTTPException(404)
@@ -408,42 +421,44 @@ async def project_edit(project_id: str, request: Request, name: str = Form(...),
     proj.description = description or None
     proj.icon = icon
     update_project(proj)
-    return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
+    return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
 
 
 @router.get("/{project_id}/delete")
-async def project_delete(project_id: str, request: Request):
+async def project_delete(project_id: str, request: Request, p: str = ""):
     delete_project(project_id)
-    return RedirectResponse(_base(request) + "projects", status_code=303)
+    p = resolve_person(request, p) if p else ""
+    return RedirectResponse(_base(request) + f"projects{_p_suffix(p)}", status_code=303)
 
 
 @router.get("/{project_id}/archive")
-async def project_archive(project_id: str, request: Request):
+async def project_archive(project_id: str, request: Request, p: str = ""):
     proj = get_project(project_id)
     if proj:
         delete_project(project_id)
-    return RedirectResponse(_base(request) + "projects", status_code=303)
+    p = resolve_person(request, p) if p else ""
+    return RedirectResponse(_base(request) + f"projects{_p_suffix(p)}", status_code=303)
 
 
 @router.post("/{project_id}/steps")
 async def step_add(project_id: str, request: Request,
                    name: str = Form(...), points: int = Form(5),
-                   assigned_to: str = Form("")):
+                   assigned_to: str = Form(""), return_p: str = Form("")):
     proj = get_project(project_id)
     if not proj:
         raise HTTPException(404)
     assignee = assigned_to or proj.assigned_to
     add_step(Step(project_id=project_id, name=name, points=points,
                   assigned_to=assignee or None))
-    return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
+    return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
 
 
 @router.post("/{project_id}/steps/{step_id}/assign")
 async def step_assign(project_id: str, step_id: str, request: Request,
-                      assigned_to: str = Form("")):
+                      assigned_to: str = Form(""), return_p: str = Form("")):
     if not assign_step(step_id, assigned_to=assigned_to or None):
         raise HTTPException(404)
-    return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
+    return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
 
 
 @router.post("/{project_id}/steps/{step_id}/done")
@@ -452,10 +467,12 @@ async def step_done(project_id: str, step_id: str, request: Request):
     step = complete_step(step_id, done_by=form.get("done_by") or None)
     if not step:
         raise HTTPException(404)
-    return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
+    return_p = str(form.get("return_p") or "")
+    return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
 
 
 @router.get("/{project_id}/steps/{step_id}/delete")
-async def step_delete(project_id: str, step_id: str, request: Request):
+async def step_delete(project_id: str, step_id: str, request: Request, p: str = ""):
     delete_step(step_id)
-    return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
+    p = resolve_person(request, p) if p else ""
+    return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(p)}", status_code=303)

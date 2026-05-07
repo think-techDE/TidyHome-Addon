@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_notify_services, get_persons
-from render import _base, _ICON_LABELS, _TASK_ICONS, _room_icon, render
+from render import (_base, _ha_user, _ICON_LABELS, ROOM_ICON_CHOICES,
+                    ROOM_ICON_LABELS, _room_icon, person_suffix, render)
 from scheduler import notify_person_now, parse_time
 from storage import (get_admins, get_person_settings, get_room_icons, list_person_settings,
                      save_admins, save_person_settings, save_room_icons, ROLES)
@@ -94,7 +95,7 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
         </div>
         <div style="display:flex;gap:0.5rem">
           <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
-          <a class="btn btn-ghost btn-sm" href="{base}notify-now/{pn}">Testen</a>
+          <a class="btn btn-ghost btn-sm" href="{base}notify-now/{pn}{person_suffix(pn)}">Testen</a>
         </div>
       </form>
     </div>"""
@@ -107,10 +108,7 @@ async def settings_form(request: Request, p: str = ""):
     areas = await get_areas()
 
     # HA-User aus Header bestimmen
-    ha_user = (
-        request.headers.get("X-Remote-User-Display-Name") or
-        request.headers.get("X-Remote-User-Name", "")
-    ).strip()
+    ha_user = _ha_user(request)
     is_admin = ha_user in admins
 
     admin_link = (
@@ -128,6 +126,13 @@ async def settings_form(request: Request, p: str = ""):
                 f'style="font-size:0.9rem;padding:0.5rem 1.1rem">{pn}</a>'
                 for pn in persons
             )
+            own_controls = (
+                f'<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem">'
+                f'<a href="{base}" class="btn btn-primary btn-sm">Zurück zu mir</a>'
+                f'<a href="{base}settings{person_suffix(ha_user)}" class="btn btn-ghost btn-sm">Mein Profil</a>'
+                f'</div>'
+                if ha_user else ""
+            )
             content = f"""
             <h2>Einstellungen</h2>
             {admin_link}
@@ -136,6 +141,7 @@ async def settings_form(request: Request, p: str = ""):
               <p class="muted" style="margin-bottom:1rem">
                 Als Admin kannst du die Ansicht für jede Person öffnen.
               </p>
+              {own_controls}
               <div style="display:flex;flex-wrap:wrap;gap:0.5rem">{pills}</div>
             </div>"""
             return render(content, request, page="settings", person=ha_user)
@@ -187,7 +193,7 @@ async def settings_save(request: Request):
                          notify_time=notify_time, enabled=enabled,
                          hidden_rooms=hidden_rooms, weekly_goal=weekly_goal,
                          role=role, can_see_children=can_see_children)
-    return RedirectResponse(_base(request) + "settings", status_code=303)
+    return RedirectResponse(_base(request) + f"settings{person_suffix(person)}", status_code=303)
 
 
 @router.get("/admin", response_class=HTMLResponse)
@@ -219,19 +225,24 @@ async def admin_form(request: Request, saved: str = ""):
         </div>""" if saved == "1" else ""
 
     admin_section = f"""
-    <div class="card" style="margin-bottom:1rem">
-      <h3 style="margin-bottom:0.75rem">Admin-Rechte vergeben</h3>
+    <section class="card admin-section">
+      <div class="admin-section-head">
+        <div>
+          <h3>Admin-Rechte</h3>
+          <p class="muted">Wer den Admin-Bereich öffnen und Ansichten wechseln darf.</p>
+        </div>
+      </div>
       {saved_banner}
       <form method="post" action="{base}admin/admins">
-        <div style="margin-bottom:1rem">{person_cbs}</div>
-        <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
+        <div class="admin-list">{person_cbs}</div>
+        <button class="btn btn-primary btn-sm admin-save" type="submit">Admin-Rechte speichern</button>
       </form>
-    </div>"""
+    </section>"""
 
     # ── Geräte-Verwaltung ─────────────────────────────────────────────────
     if not admins:
         device_section = """
-        <div class="card" style="background:var(--warning-bg);border:1px solid var(--warning)">
+        <section class="card admin-section" style="background:var(--warning-bg);border:1px solid var(--warning)">
           <p style="color:var(--warning);margin:0;font-size:0.85rem">
             Noch keine Admins festgelegt. Wähle oben mindestens eine Person aus.
           </p>
@@ -278,59 +289,66 @@ async def admin_form(request: Request, saved: str = ""):
                 hint = '<div class="muted" style="margin-bottom:0.75rem;font-size:0.78rem">HA-Services konnten nicht geladen werden – bitte manuell eintragen.</div>'
 
             cards += f"""
-            <div class="card" style="margin-bottom:0.75rem">
+            <details class="admin-details">
+              <summary>
+                <span>{pn}{admin_b}</span>
+                <span class="muted">{len(selected_svcs)} Gerät(e)</span>
+              </summary>
               <form method="post" action="{base}admin">
                 <input type="hidden" name="person" value="{pn}">
-                <div style="font-weight:700;margin-bottom:0.75rem">{pn}{admin_b}</div>
                 {hint if not available_svcs else ''}
                 {svc_content}
                 <button class="btn btn-primary btn-sm" style="margin-top:0.5rem" type="submit">Speichern</button>
               </form>
-            </div>"""
-        device_section = cards
+            </details>"""
+        device_section = f"""
+        <section class="card admin-section">
+          <div class="admin-section-head">
+            <div>
+              <h3>Benachrichtigungen</h3>
+              <p class="muted">Notify-Geräte pro Person verwalten.</p>
+            </div>
+          </div>
+          <div class="admin-list">{cards}</div>
+        </section>"""
 
     # ── Raum-Icons ────────────────────────────────────────────────────────
     stored_icons = get_room_icons()
-    icon_options = '<option value="">🔮 Automatisch</option>'
-    for key in _TASK_ICONS:
-        label = _ICON_LABELS.get(key, key)
-        icon_options += f'<option value="{key}">{label}</option>'
-
     room_icon_rows = ""
     for r in areas:
         current_key = stored_icons.get(r, "")
         preview = _room_icon(r, 36, stored_icons)
         # Build options with current selection
-        opts = '<option value="">🔮 Automatisch</option>'
-        for key in _TASK_ICONS:
-            label = _ICON_LABELS.get(key, key)
+        opts = '<option value="">Automatisch</option>'
+        if current_key and current_key not in ROOM_ICON_CHOICES:
+            legacy_label = _ICON_LABELS.get(current_key, current_key)
+            opts += f'<option value="{current_key}" selected>Bisher: {legacy_label}</option>'
+        for key in ROOM_ICON_CHOICES:
+            label = ROOM_ICON_LABELS.get(key, key)
             sel = " selected" if key == current_key else ""
             opts += f'<option value="{key}"{sel}>{label}</option>'
         safe_name = r.replace(" ", "_")
         room_icon_rows += f"""
-        <div style="display:flex;align-items:center;gap:0.75rem;
-                    padding:0.65rem 0;border-bottom:1px solid var(--border)">
+        <div class="admin-row">
           {preview}
-          <span style="flex:1;font-weight:600;font-size:0.9rem">{r}</span>
-          <select name="icon__{safe_name}"
-                  style="width:auto;max-width:160px;padding:0.35rem 0.5rem;
-                         border:1px solid var(--border);border-radius:0.5rem;
-                         font-size:0.82rem;background:var(--surface);color:var(--text)">
-            {opts}
-          </select>
-        </div>"""
+          <div class="admin-row-main">
+            <span class="admin-row-title">{r}</span>
+            <span class="admin-row-sub">Icon für Raumlisten und Übersichten</span>
+          </div>
+          <select class="admin-compact-select" name="icon__{safe_name}">{opts}</select>
+        </section>"""
 
     room_icons_section = f"""
-    <div class="card" style="margin-bottom:1rem">
+    <section class="card admin-section">
       <h3 style="margin-bottom:0.5rem">Raum-Icons</h3>
       <p class="muted" style="margin-bottom:1rem;font-size:0.8rem">
-        Gilt für alle Personen. 🔮 = automatisch aus Raumname.
+        Eigene Raum-Symbole statt Aufgaben-Icons. Automatisch nutzt den Raumnamen.
       </p>
       <form method="post" action="{base}admin/room-icons">
-        {room_icon_rows}
-        <button class="btn btn-primary btn-sm" style="margin-top:0.875rem" type="submit">Speichern</button>
+        <div class="admin-list">{room_icon_rows}</div>
+        <button class="btn btn-primary btn-sm admin-save" type="submit">Raum-Icons speichern</button>
       </form>
-    </div>"""
+    </section>"""
 
     # ── Personeneinstellungen (Benachrichtigungen + Räume) ────────────────────
     person_settings_cards = "".join(
@@ -339,20 +357,31 @@ async def admin_form(request: Request, saved: str = ""):
         for pn in persons
     )
 
-    content = (
-        f"<h2>Admin</h2>{admin_section}"
-        f"<h2 style='margin-bottom:0.75rem'>Geräte-Verwaltung</h2>{device_section}"
-        f"<h2 style='margin-bottom:0.75rem;margin-top:1rem'>Raum-Icons</h2>"
-        f"{room_icons_section}"
-        f"<h2 style='margin-bottom:0.75rem;margin-top:1rem'>Personeneinstellungen</h2>"
-        f"{person_settings_cards}"
-    )
+    content = f"""
+    <div class="admin-hero">
+      <div>
+        <h2>Admin</h2>
+        <p class="muted">Rechte, Räume, Benachrichtigungen und Personen an einem Ort.</p>
+      </div>
+      <span class="admin-badge">{len(persons)} Personen</span>
+    </div>
+    <div class="admin-stack">
+      {admin_section}
+      {room_icons_section}
+      {device_section}
+      <section class="admin-section">
+        <div class="admin-section-head">
+          <div>
+            <h3>Personeneinstellungen</h3>
+            <p class="muted">Rollen, Ziele, Räume und Test-Benachrichtigungen pro Person.</p>
+          </div>
+        </div>
+        <div class="admin-person-grid">{person_settings_cards}</div>
+      </section>
+    </div>"""
 
     # Admin-Person aus Header für die Nav-Pill
-    ha_user = (
-        request.headers.get("X-Remote-User-Display-Name") or
-        request.headers.get("X-Remote-User-Name", "")
-    ).strip()
+    ha_user = _ha_user(request)
     return render(content, request, page="settings", person=ha_user)
 
 
@@ -395,6 +424,6 @@ async def admin_save_devices(request: Request):
 
 
 @router.get("/notify-now/{person}")
-async def notify_now(person: str, request: Request):
+async def notify_now(person: str, request: Request, p: str = ""):
     await notify_person_now(person)
-    return RedirectResponse(_base(request) + "settings", status_code=303)
+    return RedirectResponse(_base(request) + f"settings{person_suffix(p or person)}", status_code=303)
