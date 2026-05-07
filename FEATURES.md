@@ -13,21 +13,19 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Wiederkehrende Intervalle (täglich bis jährlich)
 - ✅ Fälligkeitsanzeige (überfällig / heute / bald / ok) mit Farbkodierung
 - ✅ Badge-Semantik: "Geplant" / "Heute" / "Überfällig" als Status; Timing separat ("Morgen", "In 3 Tagen")
-- ✅ 3-Zeilen-Layout: Name+Badge / Datum / Aktionen – klare Dichte auf Mobile
 - ✅ Kategorie-Icons pro Aufgabe (nach Name/Raum automatisch vergeben)
-- ✅ Filter nach Raum, Person, Überfällig, Meine
+- ✅ Filter nach Raum, Person, Überfällig, Meine, Aufwand
 - ✅ Wichtig-Flag (Stern-Badge, orange Markierung, wird oben sortiert)
 - ✅ Einmalige Aufgaben (nach Erledigung automatisch archiviert, 1×-Badge)
 - ✅ Neue Aufgaben automatisch dem angemeldeten Nutzer zugeordnet
 - ✅ Aufgaben mehreren Personen gleichzeitig zuweisbar (Mehrfach-Checkbox)
-- 📋 Aufwand-Feld (gering / mittel / hoch)
-- 📋 Startdatum wählbar
-- 📋 Fälligkeit manuell verschieben (einmalige Ausnahme ohne Intervall zu ändern)
+- ✅ Aufwand-Feld (wenig / mittel / viel) mit Badge und Filter
+- ✅ Startdatum wählbar (Aufgabe erst ab diesem Datum sichtbar und fällig)
+- ✅ Fälligkeit einmalig verschieben (Snooze) ohne Intervall zu ändern
 - 📋 Aufgaben-Pausen: Intervalle temporär einfrieren
 - 📋 Kalenderstreifen (Wochenübersicht mit Aufgaben pro Tag)
 - 💡 Fotos pro Aufgabe (Hinweisfoto wo/was, Vorher/Nachher bei Erledigung)
 - 💡 Aufgaben-Vorlagen (häufige Sets speichern, z.B. "Frühjahrsputz")
-- 💡 Fälligkeit manuell verschieben (einmalige Ausnahme ohne Intervall zu ändern)
 - 💡 Aufgaben verknüpfen (Vorgänger/Nachfolger, z.B. erst lüften dann putzen)
 - 💡 Tags / Kategorien zusätzlich zu Räumen
 
@@ -35,7 +33,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 
 - ✅ Projekte anlegen (Name, Raum, Person, Beschreibung)
 - ✅ Projekte bearbeiten und löschen
-- ✅ Schritte hinzufügen, abhaken und löschen (Routing-Fix v1.1.4)
+- ✅ Schritte hinzufügen, abhaken und löschen
 - ✅ Teilschritte hinzufügen (Name, Punkte)
 - ✅ Teilschritte abhaken mit Personenzuordnung
 - ✅ Fortschrittsbalken pro Projekt
@@ -90,6 +88,13 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - 💡 Aufgaben-Protokoll: welche Aufgaben wurden in welchem Einsatz erledigt
 - 💡 Export der Zeiterfassung (CSV) für Abrechnung oder Steuererklärung
 
+## Familie & Kommunikation
+
+- 📋 Kommentare / Notizen zu Aufgaben und Projekten hinterlassen
+- 📋 Erinnerung senden: andere Person auf offene Aufgabe hinweisen
+- 📋 Einkaufsliste als eigener Bereich (ähnlich wie Projekte, ohne Intervall)
+- 📋 Urlaubsmodus: Intervalle einfrieren, keine Notifications
+
 ## Barrierefreiheit & Neurodiversität
 
 - 💡 Fokus-Modus: reduzierte Ansicht mit nur 1–3 Aufgaben pro Tag (für ADHS / Reizüberflutung)
@@ -99,37 +104,27 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - 💡 Positive Verstärkung: ermutigende Meldungen bei Erledigung
 - 💡 Strukturhilfe: Aufgaben automatisch in kleine Teilschritte vorschlagen
 
-## Familie & Kommunikation
-
-- 📋 Kommentare / Notizen zu Aufgaben und Projekten hinterlassen
-- 📋 Erinnerung senden: andere Person auf offene Aufgabe hinweisen
-- 📋 Einkaufsliste als eigener Bereich (ähnlich wie Projekte, ohne Intervall)
-- 📋 Urlaubsmodus: Intervalle einfrieren, keine Notifications
-
 ## Design & Navigation
 
 - ✅ Responsive Web-UI über HA Ingress
 - ✅ Farbkodierung nach Dringlichkeit
 - ✅ Warm-Rose/Mauve Farbschema
 - ✅ Bottom-Navigation (Zuhause / Aufgaben / Projekte / Punkte / Einstellungen)
-- ✅ Dashboard: Begrüßung, Tagesstatistik, Raumkarten-Grid
-- ✅ Raumkarten mit Fortschrittsbalken und Aufgaben/Projekt-Anzahl
+- ✅ Dashboard: Begrüßung, Tagesstatistik, Raumkarten
+- ✅ Dashboard: Schnellaktions-Buttons "+ Aufgabe" und "+ Projekt"
+- ✅ Dashboard: Räume gefiltert nach eigenen Aufgaben/Projekten; fremde Räume für Admins/Eltern abgesetzt
 - ✅ Dark Mode (folgt automatisch System-/HA-Theme)
 - ✅ Person bleibt beim Navigieren zwischen Seiten erhalten
-- ✅ Modern UI Refresh: ruhiger, Home-Assistant-näherer Look mit neutralen Flächen und Mauve als Akzent
-- ✅ Design-Tokens für Light/Dark Mode (Background, Surface, Border, Text, Muted, Statusfarben)
-- ✅ Externes Stylesheet `assets/app.css`; FOUC-Fix via inline Critical CSS + `color-scheme` Meta
+- ✅ Modern UI Refresh: ruhiger, Home-Assistant-näherer Look
+- ✅ Design-Tokens für Light/Dark Mode
+- ✅ Externes Stylesheet assets/app.css; FOUC-Fix via inline Critical CSS
 - ✅ Dashboard: Ring-Charts (Erledigt/Überfällig/Zustand) als einzelne Karten
-- ✅ Dashboard als handlungsorientierte Heute-Ansicht mit nächsten Aufgaben und Raumüberblick
-- ✅ Aufgabenliste: 3-Zeilen-Layout, Badge-Semantik, OpenMoji-Icons, SVG-Aktions-Buttons
-- ✅ Icon-Chooser im Formular: manuelle Auswahl aus 44 OpenMoji-Icons oder automatische Erkennung
-- ✅ Projektkarten mit sichtbarem nächsten Schritt, Fortschritt und besserer Trennung aktiver/abgeschlossener Projekte
-- ✅ SVG-Bottom-Navigation statt Emoji-Mix
-- ✅ Filter als horizontale Chip-Leiste (Alle, Meine, Überfällig, Räume)
-- ✅ Formulare: SVG-Icons, full-width Personenzuweisung, Back-Button, Option-Cards
-- ✅ Empty States mit Icon und Hinweistext bei leerer Aufgaben-/Projektliste
-- ✅ Barrierefreie Kontraste und reduzierte Schatten, besonders im Dark Mode
-- 📋 Abzeichen / Achievements (erste Aufgabe, 10er-Serie, Monatsbester …)
+- ✅ Aufgabenliste: kompaktes Layout, Badge-Semantik, OpenMoji-Icons, SVG-Aktions-Buttons
+- ✅ Icon-Chooser im Formular: manuelle Auswahl oder automatische Erkennung
+- ✅ Projektkarten mit sichtbarem Fortschritt
+- ✅ Filter als kompakte Chip-Leiste
+- ✅ Empty States mit Icon und Hinweistext
+- 📋 Abzeichen / Achievements
 
 ## Home Assistant Integration
 
@@ -150,6 +145,6 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Docker-Build mit HA Base-Image
 - ✅ Dual-Remote Git (Gitea + GitHub)
 - ✅ CHANGELOG.md für HA Update-Dialog
-- ✅ Statisches Stylesheet `assets/app.css` mit lokalem Asset-Fallback
+- ✅ Statisches Stylesheet assets/app.css mit lokalem Asset-Fallback
 - 💡 Mehrsprachigkeit (Deutsch / Englisch)
 - 💡 Daten-Export (CSV / JSON-Backup der gesamten Datenbank)

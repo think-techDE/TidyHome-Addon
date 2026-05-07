@@ -18,12 +18,17 @@ def get_scores_table():
     return _db.table("scores")
 
 
-def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = False) -> list[Task]:
+def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = False,
+               effort: str = None) -> list[Task]:
     table = get_tasks_table()
     Q = Query()
 
     rows = table.search(Q.room == room) if room else table.all()
     tasks = [Task(**r) for r in rows if r.get("active", True)]
+
+    # Aufgaben mit Startdatum in der Zukunft ausblenden
+    today = date.today().isoformat()
+    tasks = [t for t in tasks if not t.start_date or t.start_date <= today]
 
     # assigned_to ist jetzt eine Liste – Python-seitig filtern
     if assigned_to:
@@ -31,6 +36,9 @@ def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = F
 
     if overdue_only:
         tasks = [t for t in tasks if t.is_overdue()]
+
+    if effort:
+        tasks = [t for t in tasks if t.effort == effort]
 
     tasks.sort(key=lambda t: (not t.important, t.days_until_due()))
     return tasks
@@ -59,7 +67,8 @@ def update_task(task: Task) -> Task:
 def edit_task(task_id: str, name: str, room: str, interval_days: int,
               assigned_to: list[str], points: int,
               important: bool = False, onetime: bool = False,
-              icon: str = "") -> Task | None:
+              icon: str = "", effort: str = "",
+              start_date: str = "", snooze_until: str = "") -> Task | None:
     task = get_task(task_id)
     if not task:
         return None
@@ -71,6 +80,18 @@ def edit_task(task_id: str, name: str, room: str, interval_days: int,
     task.important = important
     task.onetime = onetime
     task.icon = icon
+    task.effort = effort
+    task.start_date = start_date or None
+    task.snooze_until = snooze_until or None
+    return update_task(task)
+
+
+def snooze_task(task_id: str, until_date: str) -> Task | None:
+    """Verschiebt die Fälligkeit einer Aufgabe einmalig auf until_date."""
+    task = get_task(task_id)
+    if not task:
+        return None
+    task.snooze_until = until_date or None
     return update_task(task)
 
 
@@ -88,6 +109,7 @@ def mark_done(task_id: str, done_by: str = None, done_at: str = None) -> Task | 
 
     done_date = done_at or date.today().isoformat()
     task.last_done = done_date
+    task.snooze_until = None  # Snooze nach Erledigung aufheben
     person = done_by or (task.assigned_to[0] if task.assigned_to else None)
 
     if person:

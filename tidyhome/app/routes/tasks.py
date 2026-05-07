@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -7,18 +9,22 @@ from render import (INTERVALS, _base, _icon, _icon_chooser, _selected, _task_ico
                     interval_label, person_suffix, render, resolve_person, urgency_class)
 from storage import (create_task, delete_task, edit_task, filter_tasks_by_role,
                      get_admins, get_person_settings, get_task, list_people_by_role,
-                     list_tasks, mark_done)
+                     list_tasks, mark_done, snooze_task)
 
 router = APIRouter(prefix="/tasks")
+
+_EFFORT_LABELS = {"low": "Wenig", "medium": "Mittel", "high": "Viel"}
+_EFFORT_BADGE  = {"low": "ok", "medium": "today", "high": "overdue"}
 
 
 @router.get("", response_class=HTMLResponse)
 async def tasks_list(request: Request, room: str = None, person: str = None,
-                     overdue: str = None, mine: str = None, p: str = ""):
+                     overdue: str = None, mine: str = None, effort: str = None,
+                     p: str = ""):
     p = resolve_person(request, p)
     admins = get_admins()
     tasks = list_tasks(room=room, assigned_to=person,
-                       overdue_only=(overdue == "1"))
+                       overdue_only=(overdue == "1"), effort=effort or None)
 
     # "Meine" filter
     if mine == "1" and p:
@@ -34,12 +40,14 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     psuffix = f"&p={p}" if p else ""
 
     # Filter bar
-    all_active = not room and not overdue and not mine
+    all_active = not room and not overdue and not mine and not effort
     filters = '<div class="filters">'
     filters += f'<a class="filter-btn {"active" if all_active else ""}" href="tasks{("?p="+p) if p else ""}">Alle</a>'
     if p:
         filters += f'<a class="filter-btn {"active" if mine == "1" else ""}" href="tasks?mine=1{psuffix}">Meine</a>'
     filters += f'<a class="filter-btn {"active" if overdue == "1" else ""}" href="tasks?overdue=1{psuffix}">Überfällig</a>'
+    for ef, label in _EFFORT_LABELS.items():
+        filters += f'<a class="filter-btn {"active" if effort == ef else ""}" href="tasks?effort={ef}{psuffix}">{label}</a>'
     for r in areas:
         filters += f'<a class="filter-btn {"active" if room == r else ""}" href="tasks?room={r}{psuffix}">{r}</a>'
     filters += '</div>'
@@ -59,11 +67,11 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
         tasks = filter_tasks_by_role(tasks, p, admins)
 
     cal = _icon("calendar", 13, "var(--muted)")
+    base = _base(request)
 
     def _task_row(t: Task) -> str:
         due = t.days_until_due()
 
-        # Badge: Status-Label (was) – Datum: konkretes Timing (wann)
         if due < 0:
             badge_text, badge_cls = "Überfällig", "overdue"
             date_text = f"{abs(due)}d überfällig"
@@ -74,14 +82,26 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             badge_text, badge_cls = "Geplant", "ok"
             date_text = "Morgen" if due == 1 else f"In {due} Tagen"
 
+        # Snooze-Hinweis überschreibt den Datumstext
+        if t.snooze_until:
+            try:
+                snooze_d = date.fromisoformat(t.snooze_until)
+                if snooze_d > date.today():
+                    date_text = f"Verschoben bis {snooze_d.strftime('%-d. %b')}"
+                    badge_text, badge_cls = "Verschoben", "ok"
+            except ValueError:
+                pass
+
         important_cls = " important" if t.important else ""
-        star = (
-            f'{_icon("star", 13, "var(--warning)", 2.5)}'
-        ) if t.important else ""
+        star = f'{_icon("star", 13, "var(--warning)", 2.5)}' if t.important else ""
         onetime_badge = (
             '<span class="badge" style="background:var(--muted);color:#fff;'
             'font-size:0.62rem;flex-shrink:0">1×</span>'
         ) if t.onetime else ""
+        effort_badge = (
+            f'<span class="badge {_EFFORT_BADGE[t.effort]}" '
+            f'style="font-size:0.62rem;flex-shrink:0">{_EFFORT_LABELS[t.effort]}</span>'
+        ) if t.effort in _EFFORT_LABELS else ""
 
         assigned_txt = ""
         if t.assigned_to and not show_grouped:
@@ -96,6 +116,10 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             + (f'<input type="hidden" name="return_p" value="{p}">' if p else "")
             + f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
             f'</form>'
+        )
+        snooze_btn = (
+            f'<a class="icon-btn" href="tasks/{t.id}/snooze{person_suffix(p)}" '
+            f'title="Verschieben">{_icon("clock", 16)}</a>'
         )
         edit_btn = (
             f'<a class="icon-btn" href="tasks/{t.id}/edit{person_suffix(p)}" title="Bearbeiten">'
@@ -114,7 +138,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             <div class="task-header">
               <span class="task-name">{star}{t.name}</span>
               <div style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0">
-                {onetime_badge}
+                {effort_badge}{onetime_badge}
                 <span class="badge {badge_cls}">{badge_text}</span>
               </div>
             </div>
@@ -124,7 +148,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             </div>
           </div>
           <div class="task-actions">
-            {done_btn}{edit_btn}{del_btn}
+            {done_btn}{snooze_btn}{edit_btn}{del_btn}
           </div>
         </div>"""
 
@@ -162,15 +186,15 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
 
     psuffix_q = f"?p={p}" if p else ""
     content = f"""
-    <div class="page-header">
+    <div class="section-title">
       <h2>Aufgaben <span class="muted" style="font-weight:400">({len(tasks)})</span></h2>
       <a class="btn btn-primary btn-sm" href="tasks/new{psuffix_q}"
          style="display:flex;align-items:center;gap:0.3rem">
-        {_icon("plus", 14, "white")} Neu
+        {_icon("plus", 14)} Neu
       </a>
     </div>
     {filters}
-    <div class="card card-flush list-card">{rows}</div>"""
+    <div class="card card-flush">{rows}</div>"""
 
     return render(content, request, page="tasks", person=p)
 
@@ -196,13 +220,15 @@ async def task_edit(task_id: str, request: Request,
                     name: str = Form(...), room: str = Form(...),
                     interval_days: int = Form(...), points: int = Form(10),
                     important: str = Form(""), onetime: str = Form(""),
-                    icon: str = Form("")):
+                    icon: str = Form(""), effort: str = Form(""),
+                    start_date: str = Form(""), snooze_until: str = Form("")):
     form = await request.form()
     assigned_to = list(form.getlist("assigned_to"))
     if not edit_task(task_id, name=name, room=room, interval_days=interval_days,
                      assigned_to=assigned_to, points=points,
                      important=(important == "1"), onetime=(onetime == "1"),
-                     icon=icon):
+                     icon=icon, effort=effort,
+                     start_date=start_date, snooze_until=snooze_until):
         raise HTTPException(404)
     return_p = str(form.get("return_p") or "")
     return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
@@ -212,13 +238,15 @@ async def task_edit(task_id: str, request: Request,
 async def task_create(request: Request, name: str = Form(...), room: str = Form(...),
                       interval_days: int = Form(...), points: int = Form(10),
                       important: str = Form(""), onetime: str = Form(""),
-                      icon: str = Form("")):
+                      icon: str = Form(""), effort: str = Form(""),
+                      start_date: str = Form("")):
     form = await request.form()
     assigned_to = list(form.getlist("assigned_to"))
     task = Task(name=name, room=room, interval_days=interval_days,
                 assigned_to=assigned_to, points=points,
                 important=(important == "1"), onetime=(onetime == "1"),
-                icon=icon)
+                icon=icon, effort=effort,
+                start_date=start_date or None)
     create_task(task)
     return_p = str(form.get("return_p") or "")
     return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
@@ -228,6 +256,81 @@ async def task_create(request: Request, name: str = Form(...), room: str = Form(
 async def task_done(task_id: str, request: Request):
     form = await request.form()
     if not mark_done(task_id, done_by=form.get("done_by") or None):
+        raise HTTPException(404)
+    return_p = str(form.get("return_p") or "")
+    return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
+
+
+@router.get("/{task_id}/snooze", response_class=HTMLResponse)
+async def task_snooze_form(task_id: str, request: Request, p: str = ""):
+    p = resolve_person(request, p)
+    task = get_task(task_id)
+    if not task:
+        raise HTTPException(404)
+    base = _base(request)
+    psuffix_q = f"?p={p}" if p else ""
+    today = date.today()
+
+    quick_btns = ""
+    for days, label in [(1, "+1 Tag"), (3, "+3 Tage"), (7, "+1 Woche"), (14, "+2 Wochen"), (30, "+1 Monat")]:
+        d = (today + timedelta(days=days)).isoformat()
+        quick_btns += (
+            f'<button type="submit" name="until" value="{d}" class="btn btn-ghost btn-sm">'
+            f'{label}</button>'
+        )
+
+    cur_snooze = task.snooze_until or ""
+    clear_btn = ""
+    if task.snooze_until:
+        clear_btn = (
+            f'<form method="post" action="tasks/{task_id}/snooze" style="margin-top:0.5rem">'
+            f'<input type="hidden" name="return_p" value="{p}">'
+            f'<input type="hidden" name="until" value="">'
+            f'<button class="btn btn-ghost btn-sm btn-full" type="submit">'
+            f'Verschiebung aufheben</button></form>'
+        )
+
+    content = f"""
+    <div class="page-header">
+      <h2>Verschieben</h2>
+      <a class="icon-btn" href="tasks{psuffix_q}" title="Abbrechen">{_icon("chevron_l", 20)}</a>
+    </div>
+    <div class="card" style="margin-bottom:0.75rem">
+      <div style="font-weight:600;margin-bottom:0.2rem">{task.name}</div>
+      <div class="task-meta">{task.room} · Fällig: {task.next_due().strftime('%-d. %b %Y')}</div>
+    </div>
+    <div class="card">
+      <div style="font-size:0.8rem;font-weight:650;color:var(--muted);
+                  margin-bottom:0.65rem;text-transform:uppercase;letter-spacing:0.05em">
+        Schnell verschieben
+      </div>
+      <form method="post" action="tasks/{task_id}/snooze">
+        <input type="hidden" name="return_p" value="{p}">
+        <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1rem">
+          {quick_btns}
+        </div>
+        <div style="font-size:0.8rem;font-weight:650;color:var(--muted);
+                    margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">
+          Eigenes Datum
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <input type="date" name="until" value="{cur_snooze}"
+                 min="{(today + timedelta(days=1)).isoformat()}"
+                 style="flex:1">
+          <button class="btn btn-primary btn-sm" type="submit">OK</button>
+        </div>
+      </form>
+      {clear_btn}
+    </div>"""
+
+    return render(content, request, page="tasks", person=p)
+
+
+@router.post("/{task_id}/snooze")
+async def task_snooze(task_id: str, request: Request):
+    form = await request.form()
+    until = str(form.get("until") or "")
+    if not snooze_task(task_id, until):
         raise HTTPException(404)
     return_p = str(form.get("return_p") or "")
     return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
@@ -244,14 +347,17 @@ async def _task_form(request: Request, title: str, action: str,
                      submit_label: str, task=None, person: str = "") -> HTMLResponse:
     areas   = await get_areas()
     persons = await get_persons()
-    cur_room      = task.room if task else ""
-    cur_interval  = task.interval_days if task else 7
-    cur_persons   = task.assigned_to if task else ([person] if person else [])
-    cur_points    = task.points if task else 10
-    cur_name      = task.name if task else ""
-    cur_important = task.important if task else False
-    cur_onetime   = task.onetime if task else False
-    cur_icon      = task.icon if task else ""
+    cur_room       = task.room if task else ""
+    cur_interval   = task.interval_days if task else 7
+    cur_persons    = task.assigned_to if task else ([person] if person else [])
+    cur_points     = task.points if task else 10
+    cur_name       = task.name if task else ""
+    cur_important  = task.important if task else False
+    cur_onetime    = task.onetime if task else False
+    cur_icon       = task.icon if task else ""
+    cur_effort     = task.effort if task else ""
+    cur_start_date = task.start_date or "" if task else ""
+    cur_snooze     = task.snooze_until or "" if task else ""
 
     room_opts = "".join(
         f'<option value="{r}"{_selected(r, cur_room)}>{r}</option>' for r in areas)
@@ -266,10 +372,42 @@ async def _task_form(request: Request, title: str, action: str,
         f'<option value="{d}"{_selected(d, cur_interval)}>{label}</option>'
         for d, label in INTERVALS.items())
 
+    effort_btns = ""
+    for ef, label in _EFFORT_LABELS.items():
+        active = "ri-active" if cur_effort == ef else ""
+        effort_btns += (
+            f'<label class="option-card {active}" style="padding:0.45rem 0.7rem;cursor:pointer">'
+            f'<input type="radio" name="effort" value="{ef}" style="display:none"'
+            f'{" checked" if cur_effort == ef else ""}>'
+            f'<span class="badge {_EFFORT_BADGE[ef]}" style="pointer-events:none">{label}</span>'
+            f'</label>'
+        )
+    effort_btns += (
+        f'<label class="option-card {"ri-active" if not cur_effort else ""}" '
+        f'style="padding:0.45rem 0.7rem;cursor:pointer">'
+        f'<input type="radio" name="effort" value="" style="display:none"'
+        f'{" checked" if not cur_effort else ""}>'
+        f'<span style="font-size:0.8rem;color:var(--muted)">—</span>'
+        f'</label>'
+    )
+
     important_checked = "checked" if cur_important else ""
     onetime_checked   = "checked" if cur_onetime   else ""
     from render import _icon as _i
     star_svg = _i("star", 15, "var(--warning)")
+
+    # Snooze-Sektion nur beim Bearbeiten anzeigen
+    snooze_section = ""
+    if task:
+        snooze_section = f"""
+        <div class="form-group">
+          <label>Fälligkeit einmalig verschieben</label>
+          <input type="date" name="snooze_until" value="{cur_snooze}"
+                 min="{(date.today() + timedelta(days=1)).isoformat()}">
+          <div class="task-meta" style="margin-top:0.3rem">
+            Leer lassen = keine Verschiebung aktiv
+          </div>
+        </div>"""
 
     psuffix_q = f"?p={person}" if person else ""
     content = f"""
@@ -297,6 +435,14 @@ async def _task_form(request: Request, title: str, action: str,
             <label>Punkte</label>
             <input name="points" type="number" value="{cur_points}" min="1" max="100">
           </div>
+          <div class="form-group">
+            <label>Startdatum (optional)</label>
+            <input type="date" name="start_date" value="{cur_start_date}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Aufwand</label>
+          <div style="display:flex;flex-wrap:wrap;gap:0.4rem">{effort_btns}</div>
         </div>
         <div class="form-group">
           <label>Zugewiesen an</label>
@@ -320,6 +466,7 @@ async def _task_form(request: Request, title: str, action: str,
             </span>
           </label>
         </div>
+        {snooze_section}
         <button class="btn btn-primary btn-full" type="submit">{submit_label}</button>
         <a class="btn btn-ghost btn-full" href="tasks{psuffix_q}"
            style="margin-top:0.5rem">Abbrechen</a>

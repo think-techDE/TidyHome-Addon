@@ -1,3 +1,12 @@
+## 1.3.0
+
+- Neu: Aufwand-Feld pro Aufgabe (Wenig / Mittel / Viel) – Badge in der Zeile, Filter-Chip in der Liste
+- Neu: Startdatum fuer Aufgaben – Aufgabe erst ab diesem Datum sichtbar und faellig
+- Neu: Faelligkeit einmalig verschieben (Snooze) – Schnell-Seite mit +1/+3/+7/+14/+30 Tage oder eigenem Datum
+- Neu: Snooze-Button direkt in der Aufgabenzeile; Verschiebung wird nach Erledigung automatisch aufgehoben
+- Neu: "Verschoben bis"-Badge und Datumstext wenn eine Aufgabe gesnoozed ist
+- Doku: FEATURES.md und ROADMAP.md auf aktuellen Stand gebracht
+
 ## 1.2.10
 
 - Fix: Leere Seite nach Update behoben (html opacity:0 verhinderte Darstellung; jetzt nur body)

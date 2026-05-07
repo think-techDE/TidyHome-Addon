@@ -25,16 +25,29 @@ class Task(BaseModel):
     active: bool = True
     important: bool = False
     onetime: bool = False  # einmalige Aufgabe: nach Erledigung archiviert
+    effort: str = ""      # "" | "low" | "medium" | "high"
+    start_date: Optional[str] = None    # ISO date: Aufgabe erst ab diesem Datum sichtbar
+    snooze_until: Optional[str] = None  # ISO date: Fälligkeit einmalig verschieben
     last_done: Optional[str] = None  # ISO date string
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
     def next_due(self) -> date:
+        from datetime import timedelta
         if self.last_done:
             base = date.fromisoformat(self.last_done)
+            calculated = base + timedelta(days=self.interval_days)
+        elif self.start_date:
+            # Erste Fälligkeit = Startdatum selbst
+            calculated = date.fromisoformat(self.start_date)
         else:
             base = date.fromisoformat(self.created_at[:10])
-        from datetime import timedelta
-        return base + timedelta(days=self.interval_days)
+            calculated = base + timedelta(days=self.interval_days)
+        # Snooze überschreibt die berechnete Fälligkeit
+        if self.snooze_until:
+            snooze = date.fromisoformat(self.snooze_until)
+            if snooze > calculated:
+                return snooze
+        return calculated
 
     def is_overdue(self) -> bool:
         return self.next_due() <= date.today()

@@ -1,6 +1,6 @@
 name: TidyHome
 description: Haushalt organisieren und gamifizieren – direkt in Home Assistant
-version: "1.2.10"
+version: "1.3.0"
 slug: tidyhome
 init: false
 arch:
