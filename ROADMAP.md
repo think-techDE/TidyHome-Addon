@@ -1,6 +1,6 @@
 # TidyHome – Roadmap
 
-Stand: 2026-05-07 · Aktuelle Version: 1.0.1
+Stand: 2026-05-07 · Aktuelle Version: 1.0.4
 
 ---
 
@@ -41,22 +41,31 @@ Stand: 2026-05-07 · Aktuelle Version: 1.0.1
 
 ---
 
-## Phase 5 – Komfort-Features
+## ✅ Phase 5 – Komfort-Features (v1.0.2–1.0.4)
+
+- **Logo & Assets**: SVG-Logo, PNG-Icon für HA Add-on Store, Favicon in der Web-UI
+- **Admin-Verwaltung per Checkbox**: Personen aus HA als Admin markierbar (kein Freitext mehr)
+- **Geräte-Verwaltung per Checkbox**: Notify-Services automatisch aus HA geladen
+- **Wichtig-Flag**: Stern-Badge + orange Markierung, wichtige Aufgaben oben sortiert
+- **Projekte auto-archivieren**: automatisch abschließen wenn alle Schritte erledigt; eigener "Abgeschlossen"-Tab
+- **Leaderboard-Tabs**: Gesamt / Dieser Monat / Letzter Monat (via `score_log`-Tabelle)
+- **CHANGELOG.md**: Versionshistorie für HA Update-Dialog
+
+---
+
+## Phase 6 – Weitere Komfort-Features
 
 Ziel: Nützliche Erweiterungen für den Alltag.
 
 - **Urlaubsmodus**: globaler Toggle → Intervall-Berechnung eingefroren, keine Notifications
 - **Einmalige Aufgaben**: `task_type = onetime`, nach Erledigung archiviert
-- **Wichtig-Flag**: hervorgehoben in der Aufgabenliste
 - **Aufwand-Feld**: gering / mittel / hoch als Chip
-- **Leaderboard-Tabs**: Monat / Letzter Monat / Gesamt
-- **Projekte auto-archivieren**: wenn alle Schritte erledigt
 - **Benachrichtigungen für Projekte**: offene Schritte in Daily-Push erwähnen
 - **Räume pro Person ausblenden**: individuelle Raumauswahl in den Einstellungen
 
 ---
 
-## Phase 6 – Gamification & Statistik
+## Phase 7 – Gamification & Statistik
 
 Ziel: Motivation langfristig erhalten.
 
@@ -67,7 +76,7 @@ Ziel: Motivation langfristig erhalten.
 
 ---
 
-## Phase 7 – Familie & Kommunikation
+## Phase 8 – Familie & Kommunikation
 
 Ziel: Gemeinsames Arbeiten erleichtern.
 
@@ -77,7 +86,7 @@ Ziel: Gemeinsames Arbeiten erleichtern.
 
 ---
 
-## Phase 8 – Barrierefreiheit & Neurodiversität
+## Phase 9 – Barrierefreiheit & Neurodiversität
 
 Ziel: Die App für Menschen mit ADHS, Depressionen, Autismus u.a. zugänglich machen.
 
@@ -91,7 +100,7 @@ Ziel: Die App für Menschen mit ADHS, Depressionen, Autismus u.a. zugänglich ma
 
 ---
 
-## Phase 9 – Haushaltshilfe-Verwaltung
+## Phase 10 – Haushaltshilfe-Verwaltung
 
 Ziel: Bezahlte Haushaltshilfen verwalten, Zeiten erfassen und Kosten tracken.
 
@@ -104,7 +113,7 @@ Ziel: Bezahlte Haushaltshilfen verwalten, Zeiten erfassen und Kosten tracken.
 
 ---
 
-## Phase 10 – Foto-Dokumentation
+## Phase 11 – Foto-Dokumentation
 
 Ziel: Visuelle Hinweise und Vorher/Nachher-Dokumentation.
 
@@ -115,7 +124,7 @@ Ziel: Visuelle Hinweise und Vorher/Nachher-Dokumentation.
 
 ---
 
-## Phase 11 – Integrationen & Erweiterungen
+## Phase 12 – Integrationen & Erweiterungen
 
 Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
 
@@ -129,16 +138,21 @@ Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
 
 ---
 
-## Bereits umgesetzt (v1.0.1)
+## Bereits umgesetzt (v1.0.4)
 
 - Aufgaben-CRUD (anlegen, bearbeiten, löschen, abhaken)
 - Wiederkehrende Intervalle (1/2/7/14/30/90/180/365 Tage)
+- Wichtig-Flag: Stern-Badge, orange Markierung, Sortierung oben
 - Ordnungsprojekte mit Teilschritten und Fortschrittsbalken
+- Projekte auto-abschließen wenn alle Schritte erledigt; Archivieren-Tab
 - HA-Räume und Personen per Template-API
-- Punkte und Bestenliste (getrennt: Aufgaben vs. Projektschritte)
+- Punkte und Bestenliste (Gesamt / Dieser Monat / Letzter Monat)
+- Getrennte Statistik: Haushaltsaufgaben vs. Projektschritte
 - Per-Person Push-Benachrichtigungen mit eigenem Zeitplan
-- Admin-Rollentrennung (Geräte vs. persönliche Einstellungen)
+- Admin-Verwaltung per Checkbox (Personen aus HA)
+- Geräte-Verwaltung per Checkbox (Notify-Services aus HA)
 - HA Ingress-Navigation
 - Rose/Mauve Design-System, Bottom-Navigation, Dashboard
 - Modulare Codebasis (`routes/`, `render`, `scheduler`, `config`)
 - SVG-Logo + PNG-Icon, Favicon in der Web-UI
+- CHANGELOG.md für HA Update-Dialog

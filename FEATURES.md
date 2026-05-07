@@ -14,7 +14,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Fälligkeitsanzeige (überfällig / heute / bald / ok) mit Farbkodierung
 - ✅ Filter nach Raum, Person, Überfällig
 - 📋 Einmalige Aufgaben (kein Intervall, nach Erledigung archiviert)
-- 📋 Wichtig-Flag (hervorgehoben in der Liste)
+- ✅ Wichtig-Flag (Stern-Badge, orange Markierung, wird oben sortiert)
 - 📋 Aufwand-Feld (gering / mittel / hoch)
 - 📋 Startdatum wählbar
 - 📋 Kalenderstreifen (Wochenübersicht mit Aufgaben pro Tag)
@@ -32,7 +32,8 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Teilschritte abhaken mit Personenzuordnung
 - ✅ Fortschrittsbalken pro Projekt
 - ✅ Teilschritte löschen
-- 📋 Projekte archivieren wenn alle Schritte erledigt
+- ✅ Projekte automatisch abschließen wenn alle Schritte erledigt
+- ✅ Abgeschlossene Projekte in eigenem Tab mit Archivieren-Button
 - 💡 Fotos pro Projekt und Schritt (Vorher/Nachher, Hinweisfotos)
 
 ## Gamification & Punkte
@@ -41,7 +42,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Punkte bei Projektschritte-Erledigung
 - ✅ Bestenliste (Gesamt)
 - ✅ Getrennte Statistik: Haushaltsaufgaben vs. Projektschritte
-- 📋 Bestenliste nach Zeitraum (Monat / Letzter Monat / Gesamt)
+- ✅ Bestenliste nach Zeitraum (Gesamt / Dieser Monat / Letzter Monat)
 - 💡 Wochenziele pro Person (z.B. 5 Aufgaben / Woche)
 - 💡 Abzeichen / Achievements (erste Aufgabe, 10er-Serie, Monatsbester …)
 - 💡 Persönliche Statistik-Seite (Verlauf, Streak, Lieblingsraum)
@@ -68,8 +69,8 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 ## Benutzerverwaltung & Einstellungen
 
 - ✅ Personen aus Home Assistant geladen
-- ✅ Admin-Rolle in Add-on-Konfiguration festlegbar
-- ✅ Admins verwalten Geräte-Zuordnung
+- ✅ Admin-Rolle per Checkbox in der UI festlegbar (Personen aus HA)
+- ✅ Admins verwalten Geräte-Zuordnung (Notify-Services per Checkbox)
 - ✅ Jeder Nutzer stellt eigene Benachrichtigungszeit ein
 - 📋 Urlaubsmodus (Intervalle einfrieren, keine Notifications)
 - 💡 Räume pro Person individuell ausblenden (z.B. Kinderzimmer nur für Eltern sichtbar)
