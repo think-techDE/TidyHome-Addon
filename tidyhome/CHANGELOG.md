@@ -1,3 +1,9 @@
+## 1.1.9
+
+- Header: Admin-Pill ist jetzt ein echtes Dropdown-Menue mit "Mein Profil",
+  "Person wechseln" und "Admin-Bereich"
+- Header: Glocke und Drei-Punkte-Menue entfernt (waren ohne Funktion)
+
 ## 1.1.8
 
 - Admin-Bereich erreichbar: neuer Button "Admin-Bereich öffnen" auf der Einstellungsseite (nur für Admins sichtbar)

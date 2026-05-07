@@ -586,17 +586,21 @@ def render(content: str, request: Request, page: str = "home",
     psuffix = f"?p={person}" if person else ""
     admins = get_admins()
 
-    # Person nav pill
+    # Person nav pill / dropdown
     if not person:
-        person_nav = '<a href="settings" class="h-pill">Wer bin ich?</a>'
+        person_nav = f'<a href="{base}settings" class="h-pill">Wer bin ich?</a>'
     elif person in admins:
-        person_nav = f'<a href="settings{psuffix}" class="h-pill">{person} ▾</a>'
+        person_nav = f'''
+        <details class="hpill-menu">
+          <summary class="h-pill">{person} ▾</summary>
+          <div class="hpill-dropdown">
+            <a href="{base}settings?p={person}">Mein Profil</a>
+            <a href="{base}settings">Person wechseln</a>
+            <a href="{base}admin">Admin-Bereich</a>
+          </div>
+        </details>'''
     else:
         person_nav = f'<span class="h-pill">{person}</span>'
-
-    # Header icons
-    bell_icon = _icon("bell", 20, "var(--muted)")
-    more_icon = _icon("more", 20, "var(--muted)")
 
     # Bottom navigation with SVG icons
     nav_items = ""
@@ -637,10 +641,6 @@ def render(content: str, request: Request, page: str = "home",
   </div>
   <div style="display:flex;gap:0.5rem;align-items:center">
     {person_nav}
-    <button style="background:none;border:none;cursor:pointer;color:var(--muted);
-                   display:flex;align-items:center;padding:0.3rem">{bell_icon}</button>
-    <button style="background:none;border:none;cursor:pointer;color:var(--muted);
-                   display:flex;align-items:center;padding:0.3rem">{more_icon}</button>
   </div>
 </header>
 <main>
