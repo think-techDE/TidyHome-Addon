@@ -65,6 +65,7 @@ class Step(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     project_id: str
     name: str
+    assigned_to: Optional[str] = None
     points: int = 5
     completed: bool = False
     completed_by: Optional[str] = None

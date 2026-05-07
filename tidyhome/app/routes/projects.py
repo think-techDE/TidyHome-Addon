@@ -4,16 +4,33 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from ha_client import get_areas, get_persons
 from models import Project, Step
 from render import _base, _icon, _icon_chooser, _proj_icon, _selected, render, resolve_person
-from storage import (add_step, complete_step, create_project, delete_project,
-                     delete_step, get_person_settings, get_project, list_projects,
-                     list_steps, update_project)
+from storage import (add_step, assign_step, complete_step, create_project,
+                     delete_project, delete_step, get_admins, get_person_settings,
+                     get_project, list_projects, list_steps, update_project)
 
 router = APIRouter(prefix="/projects")
+
+
+def _step_assignee(step: Step, project: Project) -> str:
+    return step.assigned_to or project.assigned_to or ""
+
+
+def _can_see_project(project: Project, steps: list[Step], person: str, admins: list[str]) -> bool:
+    if not person or person in admins:
+        return True
+    return project.assigned_to == person or any(_step_assignee(s, project) == person for s in steps)
+
+
+def _visible_steps(project: Project, steps: list[Step], person: str, admins: list[str]) -> list[Step]:
+    if not person or person in admins:
+        return steps
+    return [s for s in steps if _step_assignee(s, project) == person]
 
 
 @router.get("", response_class=HTMLResponse)
 async def projects_list(request: Request, room: str = None, show: str = "active", p: str = ""):
     p = resolve_person(request, p)
+    admins = get_admins()
     areas = await get_areas()
     all_projects = list_projects(room=room)
 
@@ -21,6 +38,10 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
         hidden = set(get_person_settings(p).get("hidden_rooms", []))
         if hidden:
             all_projects = [pr for pr in all_projects if pr.room not in hidden]
+        all_projects = [
+            pr for pr in all_projects
+            if _can_see_project(pr, list_steps(pr.id), p, admins)
+        ]
 
     active_projects = [pr for pr in all_projects if not pr.completed]
     done_projects   = [pr for pr in all_projects if pr.completed]
@@ -50,7 +71,8 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
     else:
         for proj in projects:
             steps = list_steps(proj.id)
-            done, total = proj.progress(steps)
+            visible = _visible_steps(proj, steps, p, admins)
+            done, total = proj.progress(visible)
             pct = int(done / total * 100) if total else 0
             assigned = f"<span class='task-meta'>→ {proj.assigned_to}</span>" if proj.assigned_to else ""
             fill_class = "green" if proj.completed else ""
@@ -83,7 +105,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
                           font-size:0.9rem;display:block;margin-bottom:0.15rem">
                   {proj.name}
                 </a>
-                <div class="task-meta">{proj.room} · {done}/{total} Schritte {assigned}</div>
+                <div class="task-meta">{proj.room} · {done}/{total} sichtbare Schritte {assigned}</div>
                 <div class="progress-track" style="margin-top:0.4rem">
                   <div class="progress-fill {fill_class}" style="width:{pct}%"></div>
                 </div>
@@ -156,11 +178,15 @@ async def project_create(request: Request, name: str = Form(...), room: str = Fo
 @router.get("/{project_id}", response_class=HTMLResponse)
 async def project_detail(project_id: str, request: Request, p: str = ""):
     p = resolve_person(request, p)
+    admins = get_admins()
     proj = get_project(project_id)
     if not proj:
         raise HTTPException(404)
     base = _base(request)
-    steps = list_steps(project_id)
+    all_steps = list_steps(project_id)
+    if not _can_see_project(proj, all_steps, p, admins):
+        raise HTTPException(404)
+    steps = _visible_steps(proj, all_steps, p, admins)
     done, total = proj.progress(steps)
     pct = int(done / total * 100) if total else 0
     persons = await get_persons()
@@ -175,6 +201,13 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
     fill_cls = "green" if pct == 100 else ""
     step_rows = ""
     for s in steps:
+        assignee = _step_assignee(s, proj)
+        step_person_names = list(person_names)
+        if assignee and assignee not in step_person_names:
+            step_person_names.insert(0, assignee)
+        step_person_opts = f'<option value=""{_selected("", assignee)}>— Niemand —</option>' + "".join(
+            f'<option value="{pn}"{_selected(pn, assignee)}>{pn}</option>'
+            for pn in step_person_names)
         if s.completed:
             who = f" · {s.completed_by}" if s.completed_by else ""
             step_rows += f"""
@@ -184,7 +217,7 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
               </span>
               <div class="project-step-main">
                 <span class="project-step-title">{s.name}</span>
-                <span class="project-step-meta">{s.points} Pkt{who}</span>
+                <span class="project-step-meta">{s.points} Pkt · → {assignee or "Niemand"}{who}</span>
               </div>
             </div>"""
         else:
@@ -195,10 +228,14 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
                 <span class="project-step-meta">{s.points} Pkt</span>
               </div>
               <div class="project-step-actions">
-                <form class="project-step-form" method="post" action="{base}projects/{project_id}/steps/{s.id}/done">
-                  <select class="project-step-person" name="done_by" aria-label="Erledigt von">
-                  {person_opts}
+                <form class="project-step-form" method="post" action="{base}projects/{project_id}/steps/{s.id}/assign">
+                  <select class="project-step-person" name="assigned_to" aria-label="Zugewiesen an"
+                          onchange="this.form.submit()">
+                  {step_person_opts}
                   </select>
+                </form>
+                <form class="inline" method="post" action="{base}projects/{project_id}/steps/{s.id}/done">
+                  <input type="hidden" name="done_by" value="{assignee}">
                   <button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>
                 </form>
                 <a class="icon-btn danger"
@@ -255,6 +292,10 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
             <label>Punkte</label>
             <input name="points" type="number" value="5" min="1" max="100">
           </div>
+        </div>
+        <div class="form-group">
+          <label>Zugewiesen an</label>
+          <select name="assigned_to">{person_opts}</select>
         </div>
         <div class="project-step-add-actions">
           <button class="btn btn-primary btn-sm" type="submit">
@@ -345,17 +386,31 @@ async def project_archive(project_id: str, request: Request):
 
 @router.post("/{project_id}/steps")
 async def step_add(project_id: str, request: Request,
-                   name: str = Form(...), points: int = Form(5)):
-    if not get_project(project_id):
+                   name: str = Form(...), points: int = Form(5),
+                   assigned_to: str = Form("")):
+    proj = get_project(project_id)
+    if not proj:
         raise HTTPException(404)
-    add_step(Step(project_id=project_id, name=name, points=points))
+    assignee = assigned_to or proj.assigned_to
+    add_step(Step(project_id=project_id, name=name, points=points,
+                  assigned_to=assignee or None))
+    return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
+
+
+@router.post("/{project_id}/steps/{step_id}/assign")
+async def step_assign(project_id: str, step_id: str, request: Request,
+                      assigned_to: str = Form("")):
+    if not assign_step(step_id, assigned_to=assigned_to or None):
+        raise HTTPException(404)
     return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
 
 
 @router.post("/{project_id}/steps/{step_id}/done")
 async def step_done(project_id: str, step_id: str, request: Request):
     form = await request.form()
-    complete_step(step_id, done_by=form.get("done_by") or None)
+    step = complete_step(step_id, done_by=form.get("done_by") or None)
+    if not step:
+        raise HTTPException(404)
     return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
 
 
