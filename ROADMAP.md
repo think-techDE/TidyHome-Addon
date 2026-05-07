@@ -77,7 +77,34 @@ Ziel: Gemeinsames Arbeiten erleichtern.
 
 ---
 
-## Phase 8 – Foto-Dokumentation
+## Phase 8 – Barrierefreiheit & Neurodiversität
+
+Ziel: Die App für Menschen mit ADHS, Depressionen, Autismus u.a. zugänglich machen.
+
+- **Fokus-Modus**: reduzierte Ansicht mit nur 1–3 Aufgaben pro Tag (weniger Reizüberflutung)
+- **Sanfte Sprache**: "noch offen" statt "überfällig", keine negativen Formulierungen
+- **Energielevel-Modus**: Aufgaben nach Aufwand filtern je nach Tagesverfassung
+- **Aufgaben-Pausen**: Intervalle gezielt einfrieren (z.B. bei depressiven Episoden)
+- **Positive Verstärkung**: ermutigende Meldungen bei Erledigung, keine Straf-Mechanismen
+- **Erinnerungsabstand**: sanftere Benachrichtigungsfrequenz pro Person einstellbar
+- **Strukturhilfe**: Aufgaben automatisch in kleine Teilschritte vorschlagen
+
+---
+
+## Phase 9 – Haushaltshilfe-Verwaltung
+
+Ziel: Bezahlte Haushaltshilfen verwalten, Zeiten erfassen und Kosten tracken.
+
+- **Rolle "Haushaltshilfe"**: eigene Kennzeichnung, durch Admin verwaltbar
+- **Zeiterfassung**: Arbeitsbeginn/-ende stempeln oder manuell eintragen
+- **Stundensatz**: durch Admin hinterlegt, für die Haushaltshilfe nicht sichtbar
+- **Kostenübersicht**: Stunden × Stundensatz, filterbar nach Monat / Zeitraum
+- **Aufgaben-Protokoll**: welche Aufgaben wurden in welchem Einsatz erledigt
+- **CSV-Export**: für Abrechnung oder Steuererklärung (haushaltsnahe Dienstleistungen)
+
+---
+
+## Phase 10 – Foto-Dokumentation
 
 Ziel: Visuelle Hinweise und Vorher/Nachher-Dokumentation.
 
@@ -88,9 +115,9 @@ Ziel: Visuelle Hinweise und Vorher/Nachher-Dokumentation.
 
 ---
 
-## Phase 9 – Integrationen & Erweiterungen
+## Phase 11 – Integrationen & Erweiterungen
 
-Ziel: Tiefer in das HA-Ökosystem einbinden.
+Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
 
 - **HA-Sensoren/Entities**: Aufgabenstatus als HA-Entity (für Automationen)
 - **Trash Card**: Müllkalender-Termine als Aufgaben-Trigger
