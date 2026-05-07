@@ -1,3 +1,10 @@
+## 1.1.2
+
+- Aufgaben: 3-Zeilen-Layout (Name+Badge / Datum / Aktionen), klarere Dichte auf Mobile
+- Aufgaben: Badge-Semantik überarbeitet – "Geplant" / "Heute" / "Überfällig" + separates Timing
+- Dashboard: Ring-Charts als einzelne Karten statt gemeinsame Box
+- Formular: "Zugewiesen an" full-width, SVG-Stern statt Emoji, 1×-Badge, Back-Button
+
 ## 1.1.1
 
 - CSS nach assets/app.css ausgelagert (bessere Performance, saubereres Dark Mode)
