@@ -114,7 +114,10 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
               <span class="task-meta">{date_text}</span>
               {assigned_txt}
             </div>
-            <div class="task-actions">{done_btn}{edit_btn}{del_btn}</div>
+            <div class="task-actions">
+              {done_btn}
+              <div style="display:flex">{edit_btn}{del_btn}</div>
+            </div>
           </div>
         </div>"""
 
