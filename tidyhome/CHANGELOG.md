@@ -1,3 +1,11 @@
+## 1.2.3
+
+- Admin-Dashboard und Standardlisten zeigen wieder nur eigene Aufgaben und eigene Projektanteile
+- Admins können Aufgaben in Raumansichten weiterhin nach Personen gruppiert sehen
+- Admins können Projekte über "Nach Personen" gruppiert nach Zuständigkeit ansehen
+- Eltern sehen standardmäßig eigene Aufgaben und in Raumansichten zusätzlich Aufgaben von Personen mit Rolle "Kind"
+- Projekt-Detailansichten bleiben standardmäßig persönlich gefiltert; Admins können aus der Personenansicht heraus vollständig prüfen
+
 ## 1.2.2
 
 - Projektschritte speichern jetzt eine eigene zugewiesene Person
