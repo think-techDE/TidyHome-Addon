@@ -1,3 +1,9 @@
+## 1.2.0
+
+- Dashboard: "Nächste Aufgaben" nutzt jetzt dasselbe Design wie die Aufgabenliste
+  (Icon-Bubble, Status-Badge Überfällig/Heute/Geplant, Wichtig-Stern, 1×-Badge)
+- Dashboard: Raumlinks und "Erledigt"-Formulare verwenden absolute Ingress-URLs (kein 404 mehr)
+
 ## 1.1.9
 
 - Header: Admin-Pill ist jetzt ein echtes Dropdown-Menue mit "Mein Profil",

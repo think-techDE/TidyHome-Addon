@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 from ha_client import get_areas
-from render import _icon, _ring_chart, _room_icon, render, resolve_person
+from render import _base, _icon, _ring_chart, _room_icon, _task_icon, render, resolve_person
 from storage import get_person_settings, list_tasks, list_projects, get_room_icons
 
 router = APIRouter()
@@ -66,6 +66,7 @@ async def dashboard(request: Request, p: str = ""):
     </div>"""
 
     # ── Nächste Aufgaben ─────────────────────────────────────────────────────
+    base = _base(request)
     upcoming = sorted(all_tasks, key=lambda t: t.days_until_due())[:5]
     cal_icon = _icon("calendar", 13, "var(--muted)")
     chev     = _icon("chevron_r", 16, "var(--muted)")
@@ -74,31 +75,53 @@ async def dashboard(request: Request, p: str = ""):
         task_rows = ""
         for t in upcoming:
             d = t.days_until_due()
-            if d < 0:    dtxt = f"{abs(d)}d überfällig"; dcls = "color:var(--danger)"
-            elif d == 0: dtxt = "Heute";                 dcls = "color:var(--warning)"
-            elif d == 1: dtxt = "Morgen";                dcls = "color:var(--muted)"
-            else:        dtxt = f"In {d} Tagen";         dcls = "color:var(--muted)"
+            if d < 0:
+                badge_text, badge_cls = "Überfällig", "overdue"
+                date_text = f"{abs(d)}d überfällig"
+            elif d == 0:
+                badge_text, badge_cls = "Heute", "today"
+                date_text = "Heute"
+            else:
+                badge_text, badge_cls = "Geplant", "ok"
+                date_text = "Morgen" if d == 1 else f"In {d} Tagen"
 
-            # Mark-done form
+            important_cls = " important" if t.important else ""
+            star = _icon("star", 13, "var(--warning)", 2.5) if t.important else ""
+            onetime_badge = (
+                '<span class="badge" style="background:var(--muted);color:#fff;'
+                'font-size:0.62rem;flex-shrink:0">1×</span>'
+            ) if t.onetime else ""
+
             done_btn = (
-                f'<form class="inline" method="post" action="tasks/{t.id}/done">'
-                f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
+                f'<form class="inline" method="post" action="{base}tasks/{t.id}/done">'
+                + (f'<input type="hidden" name="done_by" value="{p}">' if p else "")
+                + f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
                 f'</form>'
             )
+
             task_rows += f"""
-            <div class="task-row" style="padding:0.75rem 1.25rem">
-              <div style="flex:1;min-width:0">
-                <div class="task-name" style="font-size:0.88rem">{t.name}</div>
-                <div class="task-date">{cal_icon}<span style="{dcls}">{dtxt}</span></div>
+            <div class="task-row{important_cls}">
+              {_task_icon(t.name, t.room, icon=t.icon)}
+              <div class="task-body">
+                <div class="task-header">
+                  <span class="task-name">{star}{t.name}</span>
+                  <div style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0">
+                    {onetime_badge}
+                    <span class="badge {badge_cls}">{badge_text}</span>
+                  </div>
+                </div>
+                <div class="task-date">{cal_icon}
+                  <span class="task-meta">{date_text}</span>
+                </div>
+                <div class="task-actions">{done_btn}</div>
               </div>
-              {done_btn}
             </div>"""
 
         next_tasks_section = f"""
         <div style="display:flex;justify-content:space-between;align-items:center;
                     margin-bottom:0.6rem">
           <h2 style="margin:0;font-size:0.95rem">Nächste Aufgaben</h2>
-          <a href="tasks{('?p=' + p) if p else ''}" style="font-size:0.78rem;
+          <a href="{base}tasks{('?p=' + p) if p else ''}" style="font-size:0.78rem;
              color:var(--primary);text-decoration:none;font-weight:600;
              display:flex;align-items:center;gap:0.1rem">
              Alle{chev}
@@ -127,7 +150,7 @@ async def dashboard(request: Request, p: str = ""):
                 f'{r_overdue}×</span>'
             ) if r_overdue else ""
             room_rows += f"""
-            <a href="tasks?room={r}{('&p=' + p) if p else ''}"
+            <a href="{base}tasks?room={r}{('&p=' + p) if p else ''}"
                style="display:flex;align-items:center;gap:0.875rem;
                       padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);
                       text-decoration:none;color:var(--text)">
