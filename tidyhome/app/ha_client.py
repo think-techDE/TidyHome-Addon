@@ -113,6 +113,20 @@ async def get_persons() -> list[str]:
     return persons or _default_persons()
 
 
+async def get_notify_services() -> list[str]:
+    """Gibt alle verfügbaren notify-Services aus HA zurück (z.B. notify.mobile_app_iphone)."""
+    data = await _get("/services")
+    if not data:
+        return []
+    services = []
+    for domain_block in data:
+        if domain_block.get("domain") == "notify":
+            for svc_name in domain_block.get("services", {}).keys():
+                if svc_name != "notify":  # 'notify.notify' überspringen
+                    services.append(f"notify.{svc_name}")
+    return sorted(services)
+
+
 def _default_rooms() -> list[str]:
     return ["Küche", "Wohnzimmer", "Schlafzimmer", "Bad", "Flur", "Keller", "Garten", "Garage"]
 

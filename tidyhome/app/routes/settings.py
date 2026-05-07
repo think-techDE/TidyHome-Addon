@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from ha_client import get_persons
+from ha_client import get_notify_services, get_persons
 from render import _base, render
 from scheduler import notify_person_now, parse_time
 from storage import (get_admins, get_person_settings, list_person_settings,
@@ -109,29 +109,60 @@ async def admin_form(request: Request, saved: str = ""):
           </p>
         </div>"""
     else:
-        info = """<div class="info-box">
-          <strong>Services finden:</strong> HA → Entwicklerwerkzeuge → Dienste →
-          nach <code>notify.</code> suchen. Mehrere kommagetrennt eingeben.
-        </div>"""
+        available_svcs = await get_notify_services()
         cards = ""
         for pn in persons:
             cfg = get_person_settings(pn)
-            svc_val = ", ".join(cfg.get("services") or [])
+            selected_svcs = set(cfg.get("services") or [])
             admin_b = f' <span class="admin-badge">Admin</span>' if pn in admins else ""
+
+            if available_svcs:
+                # Checkboxen für alle bekannten Services
+                checkboxes = ""
+                for svc in available_svcs:
+                    checked = "checked" if svc in selected_svcs else ""
+                    short = svc.replace("notify.", "")
+                    checkboxes += f"""
+                    <label style="display:flex;align-items:center;gap:0.6rem;
+                                   padding:0.45rem 0;border-bottom:1px solid var(--border);
+                                   cursor:pointer;font-size:0.85rem">
+                      <input type="checkbox" name="services" value="{svc}" {checked}
+                             style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
+                      <span style="flex:1">{short}</span>
+                      <span class="muted" style="font-size:0.72rem">{svc}</span>
+                    </label>"""
+                # Manuelles Zusatzfeld für nicht erkannte Services
+                extra = ", ".join(s for s in selected_svcs if s not in available_svcs)
+                extra_field = f"""
+                <div class="form-group" style="margin-top:0.75rem">
+                  <label>Weitere Services (manuell)</label>
+                  <input name="extra_services" value="{extra}"
+                         placeholder="notify.anderer_service">
+                </div>"""
+                svc_content = checkboxes + extra_field
+                hint = ""
+            else:
+                # Fallback: Freitext wenn HA keine Services liefert
+                svc_val = ", ".join(selected_svcs)
+                svc_content = f"""
+                <div class="form-group">
+                  <label>Notify-Services</label>
+                  <input name="extra_services" value="{svc_val}"
+                         placeholder="notify.mobile_app_iphone, notify.alexa_kueche">
+                </div>"""
+                hint = '<div class="muted" style="margin-bottom:0.75rem;font-size:0.78rem">HA-Services konnten nicht geladen werden – bitte manuell eintragen.</div>'
+
             cards += f"""
             <div class="card" style="margin-bottom:0.75rem">
               <form method="post" action="admin">
                 <input type="hidden" name="person" value="{pn}">
                 <div style="font-weight:700;margin-bottom:0.75rem">{pn}{admin_b}</div>
-                <div class="form-group">
-                  <label>Notify-Services</label>
-                  <input name="services" value="{svc_val}"
-                         placeholder="notify.mobile_app_iphone, notify.alexa_kueche">
-                </div>
-                <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
+                {hint if not available_svcs else ''}
+                {svc_content}
+                <button class="btn btn-primary btn-sm" style="margin-top:0.5rem" type="submit">Speichern</button>
               </form>
             </div>"""
-        device_section = f"{info}{cards}"
+        device_section = cards
 
     content = f"<h2>Admin</h2>{admin_section}<h2 style='margin-bottom:0.75rem'>Geräte-Verwaltung</h2>{device_section}"
     return render(content, request)
@@ -146,12 +177,16 @@ async def admin_save_admins(request: Request):
 
 
 @router.post("/admin")
-async def admin_save_devices(request: Request, person: str = Form(...),
-                              services: str = Form("")):
-    admins = get_admins()
-    if not admins:
+async def admin_save_devices(request: Request):
+    if not get_admins():
         raise HTTPException(403)
-    svc_list = [s.strip() for s in services.split(",") if s.strip()]
+    form = await request.form()
+    person = form.get("person", "")
+    # Checkboxen (mehrere Werte mit gleichem Key)
+    checked = list(form.getlist("services"))
+    # Manuelles Zusatzfeld
+    extra = [s.strip() for s in form.get("extra_services", "").split(",") if s.strip()]
+    svc_list = sorted(set(checked + extra))
     cfg = get_person_settings(person)
     save_person_settings(person=person, services=svc_list,
                          notify_time=cfg.get("notify_time", "08:00"),
