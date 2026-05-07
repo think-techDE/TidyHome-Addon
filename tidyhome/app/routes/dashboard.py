@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 
 from ha_client import get_areas
 from render import render, ROOM_ICONS
-from storage import list_tasks, list_projects
+from storage import get_person_settings, list_tasks, list_projects
 
 router = APIRouter()
 
@@ -15,11 +15,21 @@ async def dashboard(request: Request, p: str = ""):
     areas = await get_areas()
     today = date.today().isoformat()
 
+    # Räume ausblenden für aktive Person
+    hidden_rooms: set[str] = set()
+    if p:
+        hidden_rooms = set(get_person_settings(p).get("hidden_rooms", []))
+    visible_areas = [r for r in areas if r not in hidden_rooms]
+
     all_tasks = list_tasks()
+    if hidden_rooms:
+        all_tasks = [t for t in all_tasks if t.room not in hidden_rooms]
     overdue = [t for t in all_tasks if t.days_until_due() < 0]
     due_today = [t for t in all_tasks if t.days_until_due() == 0]
     done_today = [t for t in all_tasks if t.last_done == today]
     all_projects = list_projects()
+    if hidden_rooms:
+        all_projects = [pr for pr in all_projects if pr.room not in hidden_rooms]
 
     total = len(all_tasks)
     health_pct = int((total - len(overdue)) / total * 100) if total else 100
@@ -58,7 +68,7 @@ async def dashboard(request: Request, p: str = ""):
     </div>"""
 
     room_cards = ""
-    for r in areas:
+    for r in visible_areas:
         icon = ROOM_ICONS.get(r, "🏠")
         r_tasks = [t for t in all_tasks if t.room == r]
         r_projects = [pr for pr in all_projects if pr.room == r]

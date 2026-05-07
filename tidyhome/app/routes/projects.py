@@ -5,8 +5,8 @@ from ha_client import get_areas, get_persons
 from models import Project, Step
 from render import _base, _selected, render
 from storage import (add_step, complete_step, create_project, delete_project,
-                     delete_step, get_project, list_projects, list_steps,
-                     update_project)
+                     delete_step, get_person_settings, get_project, list_projects,
+                     list_steps, update_project)
 
 router = APIRouter(prefix="/projects")
 
@@ -15,6 +15,12 @@ router = APIRouter(prefix="/projects")
 async def projects_list(request: Request, room: str = None, show: str = "active", p: str = ""):
     areas = await get_areas()
     all_projects = list_projects(room=room)
+
+    # Räume ausblenden für aktive Person
+    if p:
+        hidden = set(get_person_settings(p).get("hidden_rooms", []))
+        if hidden:
+            all_projects = [pr for pr in all_projects if pr.room not in hidden]
 
     active_projects = [pr for pr in all_projects if not pr.completed]
     done_projects   = [pr for pr in all_projects if pr.completed]

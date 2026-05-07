@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import datetime
 
-from storage import list_tasks, list_person_settings, get_person_settings
+from storage import list_tasks, list_person_settings, get_person_settings, list_projects, list_steps
 from ha_client import send_notification
 
 logger = logging.getLogger("tidyhome")
@@ -18,14 +18,41 @@ def parse_time(raw: str) -> str:
 
 async def _do_notify(person: str, services: list[str]) -> None:
     tasks = [t for t in list_tasks(assigned_to=person) if t.days_until_due() <= 0]
-    if not tasks:
-        logger.info("Keine faelligen Aufgaben fuer %s", person)
+
+    # Offene Projektschritte fuer diese Person
+    open_proj: list[tuple[str, int]] = []
+    for proj in list_projects(assigned_to=person):
+        if proj.completed:
+            continue
+        open_steps = [s for s in list_steps(proj.id) if not s.completed]
+        if open_steps:
+            open_proj.append((proj.name, len(open_steps)))
+
+    if not tasks and not open_proj:
+        logger.info("Nichts faellig fuer %s", person)
         return
-    lines = [
-        f"* {t.name} ({'heute' if t.days_until_due() == 0 else f'{abs(t.days_until_due())}d ueberfaellig'})"
-        for t in tasks
-    ]
-    title = f"TidyHome: {len(tasks)} Aufgabe(n) faellig"
+
+    lines: list[str] = []
+    if tasks:
+        lines.append(f"{len(tasks)} faellige Aufgabe(n):")
+        for t in tasks:
+            suffix = "heute" if t.days_until_due() == 0 else f"{abs(t.days_until_due())}d ueberfaellig"
+            lines.append(f"  * {t.name} ({suffix})")
+    if open_proj:
+        if lines:
+            lines.append("")
+        lines.append("Offene Projektschritte:")
+        for pname, count in open_proj:
+            lines.append(f"  * {pname}: {count} Schritt(e) offen")
+
+    task_count = len(tasks)
+    proj_count = len(open_proj)
+    parts = []
+    if task_count:
+        parts.append(f"{task_count} Aufgabe(n)")
+    if proj_count:
+        parts.append(f"{proj_count} Projekt(e)")
+    title = "TidyHome: " + " · ".join(parts)
     message = "\n".join(lines)
     for svc in services:
         ok = await send_notification(svc.strip(), title, message)

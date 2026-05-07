@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from ha_client import get_notify_services, get_persons
+from ha_client import get_areas, get_notify_services, get_persons
 from render import _base, render
 from scheduler import notify_person_now, parse_time
 from storage import (get_admins, get_person_settings, list_person_settings,
@@ -13,6 +13,7 @@ router = APIRouter()
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_form(request: Request, p: str = ""):
     persons = await get_persons()
+    areas = await get_areas()
     admins = get_admins()
     cards = ""
     for pn in persons:
@@ -20,12 +21,27 @@ async def settings_form(request: Request, p: str = ""):
         time_val = cfg.get("notify_time", "08:00")
         checked = "checked" if cfg.get("enabled") else ""
         services = cfg.get("services") or []
+        hidden_rooms = set(cfg.get("hidden_rooms") or [])
         svc_info = (
             f'<div class="muted" style="margin-bottom:0.75rem">Geräte: {", ".join(services)}</div>'
             if services else
             '<div class="muted" style="margin-bottom:0.75rem">Keine Geräte (Admin konfiguriert diese)</div>'
         )
         admin_b = f' <span class="admin-badge">Admin</span>' if pn in admins else ""
+
+        # Raum-Checkboxen
+        room_boxes = ""
+        for r in areas:
+            is_hidden = r in hidden_rooms
+            room_boxes += f"""
+            <label style="display:flex;align-items:center;gap:0.5rem;
+                           padding:0.3rem 0;cursor:pointer;font-size:0.84rem">
+              <input type="checkbox" name="hidden_rooms" value="{r}"
+                     {'checked' if is_hidden else ''}
+                     style="width:1rem;height:1rem;accent-color:var(--primary)">
+              {r}
+            </label>"""
+
         cards += f"""
         <div class="card" style="margin-bottom:0.75rem">
           <form method="post" action="settings">
@@ -45,6 +61,10 @@ async def settings_form(request: Request, p: str = ""):
                 </label>
               </div>
             </div>
+            <div class="form-group">
+              <label>Räume ausblenden</label>
+              <div style="display:flex;flex-wrap:wrap;gap:0 1.5rem">{room_boxes}</div>
+            </div>
             <div style="display:flex;gap:0.5rem">
               <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
               <a class="btn btn-ghost btn-sm" href="notify-now/{pn}">🔔 Testen</a>
@@ -56,11 +76,16 @@ async def settings_form(request: Request, p: str = ""):
 
 
 @router.post("/settings")
-async def settings_save(request: Request, person: str = Form(...),
-                         notify_time: str = Form("08:00"), enabled: str = Form("")):
+async def settings_save(request: Request):
+    form = await request.form()
+    person = form.get("person", "")
+    notify_time = parse_time(form.get("notify_time", "08:00"))
+    enabled = form.get("enabled", "") == "1"
+    hidden_rooms = list(form.getlist("hidden_rooms"))
     cfg = get_person_settings(person)
     save_person_settings(person=person, services=cfg.get("services") or [],
-                         notify_time=parse_time(notify_time), enabled=(enabled == "1"))
+                         notify_time=notify_time, enabled=enabled,
+                         hidden_rooms=hidden_rooms)
     return RedirectResponse(_base(request) + "settings", status_code=303)
 
 

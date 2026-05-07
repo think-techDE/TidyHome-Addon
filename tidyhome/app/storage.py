@@ -60,7 +60,7 @@ def update_task(task: Task) -> Task:
 
 def edit_task(task_id: str, name: str, room: str, interval_days: int,
               assigned_to: str | None, points: int,
-              important: bool = False) -> Task | None:
+              important: bool = False, onetime: bool = False) -> Task | None:
     task = get_task(task_id)
     if not task:
         return None
@@ -70,6 +70,7 @@ def edit_task(task_id: str, name: str, room: str, interval_days: int,
     task.assigned_to = assigned_to
     task.points = points
     task.important = important
+    task.onetime = onetime
     return update_task(task)
 
 
@@ -91,6 +92,10 @@ def mark_done(task_id: str, done_by: str = None, done_at: str = None) -> Task | 
 
     if person:
         _add_score(person, task.points, task_type="task")
+
+    # Einmalige Aufgaben nach Erledigung archivieren
+    if task.onetime:
+        task.active = False
 
     return update_task(task)
 
@@ -260,13 +265,16 @@ def get_settings_table():
 def get_person_settings(person: str) -> dict:
     Q = Query()
     row = get_settings_table().get(Q.person == person)
-    return row or {"person": person, "services": [], "notify_time": "08:00", "enabled": False}
+    return row or {"person": person, "services": [], "notify_time": "08:00",
+                   "enabled": False, "hidden_rooms": []}
 
 
-def save_person_settings(person: str, services: list[str], notify_time: str, enabled: bool) -> dict:
+def save_person_settings(person: str, services: list[str], notify_time: str,
+                         enabled: bool, hidden_rooms: list[str] | None = None) -> dict:
     Q = Query()
     data = {"person": person, "services": services,
-            "notify_time": notify_time, "enabled": enabled}
+            "notify_time": notify_time, "enabled": enabled,
+            "hidden_rooms": hidden_rooms or []}
     if get_settings_table().get(Q.person == person):
         get_settings_table().update(data, Q.person == person)
     else:

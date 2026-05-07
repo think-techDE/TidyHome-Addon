@@ -4,8 +4,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from ha_client import get_areas, get_persons
 from models import Task
 from render import INTERVALS, _base, _selected, interval_label, render, urgency_class
-from storage import (create_task, delete_task, edit_task, get_task, list_tasks,
-                     mark_done)
+from storage import (create_task, delete_task, edit_task, get_task, get_person_settings,
+                     list_tasks, mark_done)
 
 router = APIRouter(prefix="/tasks")
 
@@ -15,6 +15,12 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
                      overdue: str = None, p: str = ""):
     tasks = list_tasks(room=room, assigned_to=person, overdue_only=(overdue == "1"))
     areas = await get_areas()
+
+    # Räume ausblenden für aktive Person
+    if p:
+        hidden = set(get_person_settings(p).get("hidden_rooms", []))
+        if hidden:
+            tasks = [t for t in tasks if t.room not in hidden]
 
     filters = '<div class="filters">'
     filters += f'<a class="filter-btn {"active" if not room and not overdue else ""}" href="tasks">Alle</a>'
@@ -36,13 +42,14 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             else:          due_text = f"In {due}d"
             assigned = f"<span class='task-meta'>→ {t.assigned_to}</span>" if t.assigned_to else ""
             star = '<span title="Wichtig" style="font-size:1rem">⭐</span>' if t.important else ""
+            onetime_badge = '<span class="badge" style="background:var(--muted);color:#fff;font-size:0.65rem">1×</span>' if t.onetime else ""
             border = "border-left:3px solid var(--warning);" if t.important else ""
             rows += f"""
             <div class="task-row" style="{border}">
               <div style="flex:1;min-width:0">
                 <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
                   {star}<span class="task-name">{t.name}</span>
-                  <span class="badge {uc}">{due_text}</span>
+                  <span class="badge {uc}">{due_text}</span>{onetime_badge}
                 </div>
                 <div class="task-meta" style="margin-top:0.2rem">
                   {t.room} · {interval_label(t.interval_days)} · {t.points} Pkt {assigned}
@@ -85,10 +92,11 @@ async def task_edit_form(task_id: str, request: Request, p: str = ""):
 async def task_edit(task_id: str, request: Request,
                     name: str = Form(...), room: str = Form(...),
                     interval_days: int = Form(...), assigned_to: str = Form(""),
-                    points: int = Form(10), important: str = Form("")):
+                    points: int = Form(10), important: str = Form(""),
+                    onetime: str = Form("")):
     if not edit_task(task_id, name=name, room=room, interval_days=interval_days,
                      assigned_to=assigned_to or None, points=points,
-                     important=(important == "1")):
+                     important=(important == "1"), onetime=(onetime == "1")):
         raise HTTPException(404)
     return RedirectResponse(_base(request) + "tasks", status_code=303)
 
@@ -96,10 +104,11 @@ async def task_edit(task_id: str, request: Request,
 @router.post("")
 async def task_create(request: Request, name: str = Form(...), room: str = Form(...),
                       interval_days: int = Form(...), assigned_to: str = Form(""),
-                      points: int = Form(10), important: str = Form("")):
+                      points: int = Form(10), important: str = Form(""),
+                      onetime: str = Form("")):
     task = Task(name=name, room=room, interval_days=interval_days,
                 assigned_to=assigned_to or None, points=points,
-                important=(important == "1"))
+                important=(important == "1"), onetime=(onetime == "1"))
     create_task(task)
     return RedirectResponse(_base(request) + "tasks", status_code=303)
 
@@ -128,6 +137,7 @@ async def _task_form(request: Request, title: str, action: str,
     cur_points = task.points if task else 10
     cur_name = task.name if task else ""
     cur_important = task.important if task else False
+    cur_onetime = task.onetime if task else False
 
     room_opts = "".join(
         f'<option value="{r}"{_selected(r, cur_room)}>{r}</option>' for r in areas)
@@ -140,6 +150,7 @@ async def _task_form(request: Request, title: str, action: str,
         for d, label in INTERVALS.items())
 
     important_checked = "checked" if cur_important else ""
+    onetime_checked = "checked" if cur_onetime else ""
 
     content = f"""
     <h2>{title}</h2>
@@ -173,6 +184,14 @@ async def _task_form(request: Request, title: str, action: str,
             <input type="checkbox" name="important" value="1" {important_checked}
                    style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
             ⭐ Als wichtig markieren (wird oben in der Liste angezeigt)
+          </label>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;
+                        text-transform:none;font-size:0.9rem;letter-spacing:0;font-weight:500">
+            <input type="checkbox" name="onetime" value="1" {onetime_checked}
+                   style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
+            1× Einmalige Aufgabe (wird nach Erledigung automatisch archiviert)
           </label>
         </div>
         <button class="btn btn-primary btn-full" type="submit">{submit_label}</button>

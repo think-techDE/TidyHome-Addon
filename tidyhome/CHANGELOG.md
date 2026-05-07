@@ -1,3 +1,10 @@
+## 1.0.5
+
+- Einmalige Aufgaben: nach Erledigung automatisch archiviert (1×-Badge in der Liste)
+- Räume pro Person ausblenden: individuelle Raumauswahl in den Einstellungen
+- Benachrichtigungen enthalten jetzt auch offene Projektschritte der Person
+- Raumkarten auf dem Dashboard berücksichtigen ausgeblendete Räume
+
 ## 1.0.4
 
 - Wichtig-Flag fuer Aufgaben: Stern-Badge und orange Markierung, wichtige Aufgaben werden zuerst angezeigt

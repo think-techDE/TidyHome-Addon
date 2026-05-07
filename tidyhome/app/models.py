@@ -13,6 +13,7 @@ class Task(BaseModel):
     points: int = 10
     active: bool = True
     important: bool = False
+    onetime: bool = False  # einmalige Aufgabe: nach Erledigung archiviert
     last_done: Optional[str] = None  # ISO date string
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
