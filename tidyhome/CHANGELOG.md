@@ -1,3 +1,11 @@
+## 1.2.2
+
+- Projektschritte speichern jetzt eine eigene zugewiesene Person
+- Änderungen der Person im Projektschritt werden direkt gespeichert
+- Neue Projektschritte übernehmen standardmäßig die Projektperson
+- Beim Abhaken wird die Schrittperson als erledigende Person verwendet
+- Aufgaben-, Projekt- und Dashboard-Ansichten filtern für Nicht-Admins nach persönlicher Zuweisung
+
 ## 1.2.1
 
 - Projekt-Detailansicht: Beim Abhaken eines Projektschritts wird die dem Projekt zugewiesene Person vorausgewählt
