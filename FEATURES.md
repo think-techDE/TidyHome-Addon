@@ -108,6 +108,15 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Raumkarten mit Fortschrittsbalken und Aufgaben/Projekt-Anzahl
 - ✅ Dark Mode (folgt automatisch System-/HA-Theme)
 - ✅ Person bleibt beim Navigieren zwischen Seiten erhalten
+- 📋 Modern UI Refresh: ruhiger, Home-Assistant-näherer Look mit neutralen Flächen und Mauve als Akzent
+- 📋 Design-Tokens für Light/Dark Mode (Background, Surface, Border, Text, Muted, Statusfarben)
+- 📋 Dashboard als handlungsorientierte Heute-Ansicht mit nächsten Aufgaben, Statusringen und kompakter Health-Anzeige
+- 📋 Aufgabenliste mit Statuskante, klaren Badges, Icon-Aktionen und dichter mobiler Darstellung
+- 📋 Projektkarten mit sichtbarem nächsten Schritt, Fortschritt und besserer Trennung aktiver/abgeschlossener Projekte
+- 📋 Konsistente Icons statt Emoji-Mix in Navigation, Aktionen und Statusanzeigen
+- 📋 Filter als horizontale Chip-/Segment-Leiste (Alle, Heute, Überfällig, Meine, Räume)
+- 📋 Formulare überarbeiten: ruhigere Labels, bessere Toggle-Optionen für Wichtig/Einmalig, klare Primäraktionen
+- 📋 Barrierefreie Kontraste und reduzierte Schatten, besonders im Dark Mode
 
 ## Home Assistant Integration
 
