@@ -58,10 +58,10 @@ async def dashboard(request: Request, p: str = ""):
     )
 
     rings_row = f"""
-    <div class="card" style="padding:1.25rem 1rem">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;align-items:start">
-        {ring_done}{ring_overdue}{ring_health}
-      </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.55rem;margin-bottom:1rem">
+      <div class="card" style="padding:1rem 0.5rem;margin-bottom:0">{ring_done}</div>
+      <div class="card" style="padding:1rem 0.5rem;margin-bottom:0">{ring_overdue}</div>
+      <div class="card" style="padding:1rem 0.5rem;margin-bottom:0">{ring_health}</div>
     </div>"""
 
     # ── Nächste Aufgaben ─────────────────────────────────────────────────────
@@ -153,8 +153,7 @@ async def dashboard(request: Request, p: str = ""):
 
     content = f"""
     <h2 style="font-size:1.25rem;font-weight:800;margin-bottom:0.875rem">{greeting}</h2>
-    {rings_row}
-    {next_tasks_section}
+    {rings_row}{next_tasks_section}
     {room_block}"""
 
     return render(content, request, page="home", person=p)

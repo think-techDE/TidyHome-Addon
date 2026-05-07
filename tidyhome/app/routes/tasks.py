@@ -249,9 +249,15 @@ async def _task_form(request: Request, title: str, action: str,
 
     important_checked = "checked" if cur_important else ""
     onetime_checked   = "checked" if cur_onetime   else ""
+    from render import _icon as _i
+    star_svg = _i("star", 15, "var(--warning)")
 
+    psuffix_q = f"?p={person}" if person else ""
     content = f"""
-    <h2>{title}</h2>
+    <div class="page-header">
+      <h2>{title}</h2>
+      <a class="icon-btn" href="tasks{psuffix_q}" title="Abbrechen">{_i("chevron_l", 20)}</a>
+    </div>
     <div class="card">
       <form method="post" action="{action}">
         <div class="form-group">
@@ -268,30 +274,34 @@ async def _task_form(request: Request, title: str, action: str,
             <select name="interval_days">{interval_opts}</select>
           </div>
           <div class="form-group">
-            <label>Zugewiesen an</label>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:0.5rem">{person_boxes}</div>
-          </div>
-          <div class="form-group">
             <label>Punkte</label>
             <input name="points" type="number" value="{cur_points}" min="1" max="100">
           </div>
         </div>
         <div class="form-group">
+          <label>Zugewiesen an</label>
+          <div style="display:flex;flex-wrap:wrap;gap:0.45rem">{person_boxes}</div>
+        </div>
+        <div class="form-group">
           <label class="option-card">
-            <input type="checkbox" name="important" value="1" {important_checked}
-                   style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
-            ⭐ Als wichtig markieren
+            <input type="checkbox" name="important" value="1" {important_checked}>
+            <span style="display:flex;align-items:center;gap:0.4rem">
+              {star_svg} Als wichtig markieren
+            </span>
           </label>
         </div>
         <div class="form-group">
           <label class="option-card">
-            <input type="checkbox" name="onetime" value="1" {onetime_checked}
-                   style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
-            1× Einmalige Aufgabe (nach Erledigung archiviert)
+            <input type="checkbox" name="onetime" value="1" {onetime_checked}>
+            <span style="display:flex;align-items:center;gap:0.4rem">
+              <span class="badge ok" style="font-size:0.62rem;padding:0.15rem 0.4rem">1×</span>
+              Einmalige Aufgabe (nach Erledigung archiviert)
+            </span>
           </label>
         </div>
         <button class="btn btn-primary btn-full" type="submit">{submit_label}</button>
-        <a class="btn btn-ghost btn-full" href="tasks" style="margin-top:0.5rem">Abbrechen</a>
+        <a class="btn btn-ghost btn-full" href="tasks{psuffix_q}"
+           style="margin-top:0.5rem">Abbrechen</a>
       </form>
     </div>"""
     return render(content, request, page="tasks", person=person)
