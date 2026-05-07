@@ -79,9 +79,42 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
 async def settings_form(request: Request, p: str = ""):
     admins = get_admins()
     areas = await get_areas()
-    p = resolve_person(request, p)
+
+    # HA-User aus Header bestimmen
+    ha_user = (
+        request.headers.get("X-Remote-User-Display-Name") or
+        request.headers.get("X-Remote-User-Name", "")
+    ).strip()
+    is_admin = ha_user in admins
 
     if not p:
+        if is_admin:
+            # Admin ohne ?p= → Personenpicker anzeigen
+            persons = await get_persons()
+            pills = "".join(
+                f'<a href="settings?p={pn}" class="btn btn-ghost btn-sm" '
+                f'style="font-size:0.9rem;padding:0.5rem 1.1rem">{pn}</a>'
+                for pn in persons
+            )
+            content = f"""
+            <h2>Person wechseln</h2>
+            <div class="card">
+              <p class="muted" style="margin-bottom:1rem">
+                Als Admin kannst du die Ansicht für jede Person öffnen.
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:0.5rem">{pills}</div>
+            </div>"""
+            return render(content, request, page="settings", person=ha_user)
+        else:
+            # Kein Admin, kein p → eigene Person aus HA-Header
+            p = ha_user
+    else:
+        # p angegeben aber kein Admin → immer eigene Person
+        if not is_admin:
+            p = ha_user or p
+
+    if not p:
+        # Fallback: kein HA-Header und kein p (lokale Entwicklung)
         persons = await get_persons()
         pills = "".join(
             f'<a href="settings?p={pn}" class="btn btn-ghost btn-sm" '
@@ -91,17 +124,9 @@ async def settings_form(request: Request, p: str = ""):
         content = f"""
         <h2>Wer bist du?</h2>
         <div class="card">
-          <p class="muted" style="margin-bottom:1rem">
-            Wähle deinen Namen um deine persönlichen Einstellungen zu öffnen.
-          </p>
           <div style="display:flex;flex-wrap:wrap;gap:0.5rem">{pills}</div>
         </div>"""
-        return render(content, request, page="settings", person=p)
-
-    # Nicht-Admin: kann keine andere Person aufrufen
-    if p not in admins:
-        card = _person_settings_card(p, areas, admins, action="settings")
-        return render(f"<h2>Einstellungen</h2>{card}", request, page="settings", person=p)
+        return render(content, request, page="settings", person="")
 
     card = _person_settings_card(p, areas, admins, action="settings")
     content = f"<h2>Einstellungen</h2>{card}"
