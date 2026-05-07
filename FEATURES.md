@@ -56,6 +56,15 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - 📋 Benachrichtigung auch für Projekte mit offenen Schritten
 - 💡 Erinnerung an andere Person schicken ("Küche ist noch offen")
 
+## Haushaltshilfe
+
+- 💡 Person als "Haushaltshilfe" markierbar (eigene Rolle, durch Admin verwaltbar)
+- 💡 Zeiterfassung: Arbeitsbeginn / -ende pro Einsatz eintragen oder stempeln
+- 💡 Stundensatz hinterlegen (durch Admin, nicht sichtbar für die Haushaltshilfe)
+- 💡 Kostenübersicht für Admins: Stunden × Stundensatz pro Monat / Zeitraum
+- 💡 Aufgaben-Protokoll: welche Aufgaben wurden in welchem Einsatz erledigt
+- 💡 Export der Zeiterfassung (CSV) für Abrechnung oder Steuererklärung
+
 ## Benutzerverwaltung & Einstellungen
 
 - ✅ Personen aus Home Assistant geladen
