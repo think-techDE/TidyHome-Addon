@@ -46,28 +46,29 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
         elif due == 0: due_text = "Heute"
         elif due == 1: due_text = "Morgen"
         else:          due_text = f"In {due}d"
-        assigned = (f"<span class='task-meta'>→ {', '.join(t.assigned_to)}</span>"
+        assigned = (f"<span class='task-meta'>· {', '.join(t.assigned_to)}</span>"
                     if t.assigned_to and not show_grouped else "")
-        star = '<span title="Wichtig" style="font-size:1rem">⭐</span>' if t.important else ""
-        onetime_badge = '<span class="badge" style="background:var(--muted);color:#fff;font-size:0.65rem">1×</span>' if t.onetime else ""
-        border = "border-left:3px solid var(--warning);" if t.important else ""
+        important_badge = '<span class="badge soon">Wichtig</span>' if t.important else ""
+        onetime_badge = '<span class="badge" style="background:var(--surface-2);color:var(--muted)">1x</span>' if t.onetime else ""
         return f"""
-        <div class="task-row" style="{border}">
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
-              {star}<span class="task-name">{t.name}</span>
-              <span class="badge {uc}">{due_text}</span>{onetime_badge}
+        <div class="task-row {'important' if t.important else ''}">
+          <div class="task-main">
+            <div class="task-top">
+              <span class="task-name">{t.name}</span>
+              <span class="badge {uc}">{due_text}</span>{important_badge}{onetime_badge}
             </div>
             <div class="task-meta" style="margin-top:0.2rem">
               {t.room} · {interval_label(t.interval_days)} · {t.points} Pkt {assigned}
             </div>
           </div>
-          <form class="inline" method="post" action="tasks/{t.id}/done">
-            <button class="btn btn-success btn-sm" title="Erledigt">✓</button>
-          </form>
-          <a class="btn btn-ghost btn-sm" href="tasks/{t.id}/edit" title="Bearbeiten">✎</a>
-          <a class="btn btn-danger btn-sm" href="tasks/{t.id}/delete"
-             onclick="return confirm('Löschen?')" title="Löschen">✕</a>
+          <div class="task-actions">
+            <form class="inline" method="post" action="tasks/{t.id}/done">
+              <button class="btn btn-success btn-icon" title="Erledigt">✓</button>
+            </form>
+            <a class="btn btn-ghost btn-icon" href="tasks/{t.id}/edit" title="Bearbeiten">✎</a>
+            <a class="btn btn-danger btn-icon" href="tasks/{t.id}/delete"
+               onclick="return confirm('Löschen?')" title="Löschen">×</a>
+          </div>
         </div>"""
 
     rows = ""
@@ -83,7 +84,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             else:
                 grouped["— Nicht zugeordnet —"].append(t)
         for person_name, ptasks in sorted(grouped.items()):
-            rows += f'<div style="padding:0.6rem 1.25rem 0.2rem;font-size:0.75rem;font-weight:700;color:var(--primary-dark);text-transform:uppercase;letter-spacing:0.05em;background:var(--primary-light)">👤 {person_name}</div>'
+            rows += f'<div style="padding:0.65rem 1rem 0.25rem;font-size:0.73rem;font-weight:800;color:var(--primary-dark);text-transform:uppercase;letter-spacing:0;background:var(--primary-soft)">{person_name}</div>'
             for t in ptasks:
                 rows += _task_row(t)
     else:
@@ -173,11 +174,10 @@ async def _task_form(request: Request, title: str, action: str,
     room_opts = "".join(
         f'<option value="{r}"{_selected(r, cur_room)}>{r}</option>' for r in areas)
     person_boxes = "".join(
-        f'<label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;'
-        f'cursor:pointer;font-size:0.88rem">'
+        f'<label class="option-card" style="padding:0.55rem 0.7rem">'
         f'<input type="checkbox" name="assigned_to" value="{pn}"'
         f'{" checked" if pn in cur_persons else ""}'
-        f' style="width:1rem;height:1rem;accent-color:var(--primary)">{pn}</label>'
+        f'><span>{pn}</span></label>'
         for pn in persons
     )
     interval_opts = "".join(
@@ -206,7 +206,7 @@ async def _task_form(request: Request, title: str, action: str,
           </div>
           <div class="form-group">
             <label>Zugewiesen an</label>
-            <div style="display:flex;flex-wrap:wrap;gap:0 1.5rem;padding:0.4rem 0">{person_boxes}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:0.5rem">{person_boxes}</div>
           </div>
           <div class="form-group">
             <label>Punkte</label>
@@ -214,19 +214,19 @@ async def _task_form(request: Request, title: str, action: str,
           </div>
         </div>
         <div class="form-group">
-          <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;
-                        text-transform:none;font-size:0.9rem;letter-spacing:0;font-weight:500">
+          <label class="option-card">
             <input type="checkbox" name="important" value="1" {important_checked}
-                   style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
-            ⭐ Als wichtig markieren (wird oben in der Liste angezeigt)
+                   >
+            <span><strong>Wichtig markieren</strong><br>
+            <span class="muted">Wird hervorgehoben und oben einsortiert.</span></span>
           </label>
         </div>
         <div class="form-group">
-          <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;
-                        text-transform:none;font-size:0.9rem;letter-spacing:0;font-weight:500">
+          <label class="option-card">
             <input type="checkbox" name="onetime" value="1" {onetime_checked}
-                   style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
-            1× Einmalige Aufgabe (wird nach Erledigung automatisch archiviert)
+                   >
+            <span><strong>Einmalige Aufgabe</strong><br>
+            <span class="muted">Wird nach Erledigung automatisch archiviert.</span></span>
           </label>
         </div>
         <button class="btn btn-primary btn-full" type="submit">{submit_label}</button>
