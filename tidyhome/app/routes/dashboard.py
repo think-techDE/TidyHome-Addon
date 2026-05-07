@@ -110,21 +110,24 @@ async def dashboard(request: Request, p: str = ""):
             )
 
             task_rows += f"""
-            <div class="task-row{important_cls}">
-              {_task_icon(t.name, t.room, icon=t.icon)}
-              <div class="task-body">
-                <div class="task-header">
-                  <span class="task-name">{star}{t.name}</span>
-                  <div style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0">
+            <div class="dash-task{important_cls}">
+              {_task_icon(t.name, t.room, icon=t.icon, size=36)}
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:0.35rem;
+                            justify-content:space-between;margin-bottom:0.18rem">
+                  <span class="task-name" style="font-size:0.87rem;line-height:1.3">
+                    {star}{t.name}
+                  </span>
+                  <div style="display:flex;align-items:center;gap:0.25rem;flex-shrink:0">
                     {onetime_badge}
-                    <span class="badge {badge_cls}">{badge_text}</span>
+                    <span class="badge {badge_cls}" style="font-size:0.65rem">{badge_text}</span>
                   </div>
                 </div>
                 <div class="task-date">{cal_icon}
                   <span class="task-meta">{date_text}</span>
                 </div>
-                <div class="task-actions">{done_btn}</div>
               </div>
+              {done_btn}
             </div>"""
 
         next_tasks_section = f"""
@@ -137,7 +140,7 @@ async def dashboard(request: Request, p: str = ""):
              Alle{chev}
           </a>
         </div>
-        <div class="card card-flush list-card" style="margin-bottom:1rem">{task_rows}</div>"""
+        <div class="card card-flush" style="margin-bottom:1rem">{task_rows}</div>"""
     else:
         next_tasks_section = f"""
         <div class="card" style="text-align:center;padding:1.5rem;margin-bottom:1rem">
@@ -169,7 +172,7 @@ async def dashboard(request: Request, p: str = ""):
             </a>"""
         room_block = (
             f'<h2 style="font-size:0.95rem;margin-bottom:0.6rem">Räume</h2>'
-            f'<div class="card card-flush list-card">{room_rows}</div>'
+            f'<div class="card card-flush">{room_rows}</div>'
         )
     else:
         room_block = (

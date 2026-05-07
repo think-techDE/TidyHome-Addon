@@ -159,7 +159,9 @@
   .room-card:hover { border-color: var(--primary-border); }
   .room-row { display:flex; align-items:center; gap:0.875rem;
               padding:0.95rem 1.25rem; background:var(--card);
-              text-decoration:none; color:var(--text); }
+              text-decoration:none; color:var(--text);
+              border-bottom:1px solid var(--border); }
+  .room-row:last-child { border-bottom:none; }
   .room-icon { width: 2.2rem; height: 2.2rem; border-radius:0.65rem; display:grid; place-items:center;
                 background:var(--primary-soft); color:var(--primary-dark); font-weight:800;
                 font-size:0.72rem; margin-bottom: 0.55rem; letter-spacing:0; }
@@ -219,6 +221,12 @@
   /* Task date row */
   .task-date { display: flex; align-items: center; gap: 0.3rem;
                font-size: 0.74rem; color: var(--muted); margin-top: 0.2rem; }
+  /* Compact dashboard task rows */
+  .dash-task { display:flex; align-items:center; gap:0.7rem;
+               padding:0.65rem 1rem; border-bottom:1px solid var(--border);
+               background:var(--card); }
+  .dash-task:last-child { border-bottom:none; }
+  .dash-task.important { border-left:3px solid var(--warning); padding-left:calc(1rem - 3px); }
   /* Project list rows */
   .proj-row { display: flex; align-items: center; gap: 0.875rem;
               padding: 1rem; border-bottom: 1px solid var(--border); }

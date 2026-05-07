@@ -1,3 +1,9 @@
+## 1.2.7
+
+- Dashboard: Aufgaben-Zeilen kompakter – Icon 36px, Name+Badge+Erledigt-Button in einer Zeile, kein separater Aktions-Block
+- Dashboard: Klare Trenner zwischen Aufgaben und Räumen per border-bottom statt unsichtbarem 1px-Gap
+- Dashboard: Räume nutzen jetzt saubere border-bottom-Trenner ohne list-card-Wrapper
+
 ## 1.2.6
 
 - Admin: Raum-Icons jetzt als visueller Picker – kompaktes Karten-Grid mit allen Icon-Optionen zum Anklicken
