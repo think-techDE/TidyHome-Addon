@@ -1,3 +1,11 @@
+## 1.0.7
+
+- Person wird automatisch anhand des HA-Logins erkannt (kein manuelles Auswählen mehr nötig)
+- Admins können per Klick auf den Namen zwischen Personen wechseln
+- Nicht-Admins sehen direkt ihre eigene Ansicht ohne Auswahlmöglichkeit
+- Einstellungen anderer Personen nur noch im Admin-Panel sichtbar
+- Person bleibt beim Navigieren zwischen Seiten erhalten
+
 ## 1.0.6
 
 - Dark Mode: folgt automatisch dem System-/HA-Theme
