@@ -86,7 +86,7 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
         </div>
         <div style="display:flex;gap:0.5rem">
           <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
-          <a class="btn btn-ghost btn-sm" href="notify-now/{pn}">🔔 Testen</a>
+          <a class="btn btn-ghost btn-sm" href="notify-now/{pn}">Testen</a>
         </div>
       </form>
     </div>"""
@@ -196,7 +196,7 @@ async def admin_form(request: Request, saved: str = ""):
     saved_banner = """
         <div style="background:var(--success-bg);color:var(--success);padding:0.6rem 0.875rem;
                     border-radius:0.6rem;margin-bottom:1rem;font-size:0.84rem;font-weight:600">
-          ✓ Admin-Einstellungen gespeichert
+          Admin-Einstellungen gespeichert
         </div>""" if saved == "1" else ""
 
     admin_section = f"""
