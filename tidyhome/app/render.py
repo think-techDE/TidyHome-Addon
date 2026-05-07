@@ -432,8 +432,13 @@ def render(content: str, request: Request, page: str = "home",
 <title>TidyHome</title>
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 <style>
-  :root {{ background:#f6f7f9; color:#20242a; }}
-  @media (prefers-color-scheme:dark) {{ :root {{ background:#101114; color:#f4f1f2; }} }}
+  html,body{{background:#f6f7f9;color:#20242a}}
+  header{{background:rgba(255,255,255,0.88);border-bottom:1px solid #dde2e8}}
+  .bottom-nav{{background:rgba(255,255,255,0.94);border-top:1px solid #dde2e8}}
+  @media(prefers-color-scheme:dark){{
+    html,body{{background:#101114;color:#f4f1f2}}
+    header,.bottom-nav{{background:rgba(24,26,31,0.92);border-color:#30333b}}
+  }}
 </style>
 <link rel="stylesheet" href="assets/app.css">
 </head>
