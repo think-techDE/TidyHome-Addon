@@ -2,7 +2,7 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_notify_services, get_persons
-from render import _base, render
+from render import _base, render, resolve_person
 from scheduler import notify_person_now, parse_time
 from storage import (get_admins, get_person_settings, list_person_settings,
                      save_admins, save_person_settings)
@@ -79,6 +79,7 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
 async def settings_form(request: Request, p: str = ""):
     admins = get_admins()
     areas = await get_areas()
+    p = resolve_person(request, p)
 
     if not p:
         persons = await get_persons()

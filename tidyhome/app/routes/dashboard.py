@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 from ha_client import get_areas
-from render import render, ROOM_ICONS
+from render import render, resolve_person, ROOM_ICONS
 from storage import get_person_settings, list_tasks, list_projects
 
 router = APIRouter()
@@ -12,6 +12,7 @@ router = APIRouter()
 
 @router.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, p: str = ""):
+    p = resolve_person(request, p)
     areas = await get_areas()
     today = date.today().isoformat()
 

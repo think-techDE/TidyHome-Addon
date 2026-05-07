@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
-from render import render
+from render import render, resolve_person
 from storage import get_person_settings, get_person_stats, get_scores
 
 router = APIRouter()
@@ -15,6 +15,7 @@ _PERIODS = [
 
 @router.get("/scores", response_class=HTMLResponse)
 async def scores(request: Request, period: str = "all", p: str = ""):
+    p = resolve_person(request, p)
     data = get_scores(period=period)
 
     tabs = '<div class="filters">'

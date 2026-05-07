@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Project, Step
-from render import _base, _selected, render
+from render import _base, _selected, render, resolve_person
 from storage import (add_step, complete_step, create_project, delete_project,
                      delete_step, get_person_settings, get_project, list_projects,
                      list_steps, update_project)
@@ -13,6 +13,7 @@ router = APIRouter(prefix="/projects")
 
 @router.get("", response_class=HTMLResponse)
 async def projects_list(request: Request, room: str = None, show: str = "active", p: str = ""):
+    p = resolve_person(request, p)
     areas = await get_areas()
     all_projects = list_projects(room=room)
 
@@ -77,6 +78,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
 
 @router.get("/new", response_class=HTMLResponse)
 async def project_new_form(request: Request, p: str = ""):
+    p = resolve_person(request, p)
     areas = await get_areas()
     persons = await get_persons()
     room_opts = "".join(f'<option value="{r}">{r}</option>' for r in areas)
@@ -122,6 +124,7 @@ async def project_create(request: Request, name: str = Form(...), room: str = Fo
 
 @router.get("/{project_id}", response_class=HTMLResponse)
 async def project_detail(project_id: str, request: Request, p: str = ""):
+    p = resolve_person(request, p)
     proj = get_project(project_id)
     if not proj:
         raise HTTPException(404)
@@ -206,6 +209,7 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
 
 @router.get("/{project_id}/edit", response_class=HTMLResponse)
 async def project_edit_form(project_id: str, request: Request, p: str = ""):
+    p = resolve_person(request, p)
     proj = get_project(project_id)
     if not proj:
         raise HTTPException(404)

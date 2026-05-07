@@ -31,6 +31,20 @@ def _base(request: Request) -> str:
     return path + "/"
 
 
+def resolve_person(request: Request, p_param: str = "") -> str:
+    """Effektive Person: Admins können per ?p= wechseln, alle anderen
+    werden automatisch über den HA-Ingress-Header erkannt."""
+    ha_user = (
+        request.headers.get("X-Remote-User-Display-Name") or
+        request.headers.get("X-Remote-User-Name", "")
+    ).strip()
+    # Admin mit explizitem Override: Ansicht wechseln erlaubt
+    if p_param and ha_user in get_admins():
+        return p_param
+    # Alle anderen: HA-Identity, Fallback auf p_param
+    return ha_user or p_param
+
+
 def _selected(value, current) -> str:
     return " selected" if str(value) == str(current) else ""
 

@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Task
-from render import INTERVALS, _base, _selected, interval_label, render, urgency_class
+from render import INTERVALS, _base, _selected, interval_label, render, resolve_person, urgency_class
 from storage import (create_task, delete_task, edit_task, get_task, get_person_settings,
                      list_tasks, mark_done)
 
@@ -13,6 +13,7 @@ router = APIRouter(prefix="/tasks")
 @router.get("", response_class=HTMLResponse)
 async def tasks_list(request: Request, room: str = None, person: str = None,
                      overdue: str = None, p: str = ""):
+    p = resolve_person(request, p)
     tasks = list_tasks(room=room, assigned_to=person, overdue_only=(overdue == "1"))
     areas = await get_areas()
 
@@ -76,11 +77,13 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
 
 @router.get("/new", response_class=HTMLResponse)
 async def task_new_form(request: Request, p: str = ""):
+    p = resolve_person(request, p)
     return await _task_form(request, "Neue Aufgabe", "tasks", "Aufgabe anlegen", person=p)
 
 
 @router.get("/{task_id}/edit", response_class=HTMLResponse)
 async def task_edit_form(task_id: str, request: Request, p: str = ""):
+    p = resolve_person(request, p)
     task = get_task(task_id)
     if not task:
         raise HTTPException(404)
