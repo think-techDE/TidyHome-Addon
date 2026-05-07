@@ -12,46 +12,56 @@ router = APIRouter(prefix="/projects")
 
 
 @router.get("", response_class=HTMLResponse)
-async def projects_list(request: Request, room: str = None, p: str = ""):
+async def projects_list(request: Request, room: str = None, show: str = "active", p: str = ""):
     areas = await get_areas()
-    projects = list_projects(room=room)
+    all_projects = list_projects(room=room)
+
+    active_projects = [pr for pr in all_projects if not pr.completed]
+    done_projects   = [pr for pr in all_projects if pr.completed]
+    projects = done_projects if show == "done" else active_projects
 
     filters = '<div class="filters">'
-    filters += f'<a class="filter-btn {"active" if not room else ""}" href="projects">Alle</a>'
+    filters += f'<a class="filter-btn {"active" if show == "active" and not room else ""}" href="projects">Offen</a>'
+    filters += f'<a class="filter-btn {"active" if show == "done" else ""}" href="projects?show=done">✅ Abgeschlossen ({len(done_projects)})</a>'
     for r in areas:
-        filters += f'<a class="filter-btn {"active" if room == r else ""}" href="projects?room={r}">{r}</a>'
+        active_cls = "active" if room == r and show != "done" else ""
+        filters += f'<a class="filter-btn {active_cls}" href="projects?room={r}">{r}</a>'
     filters += '</div>'
 
     rows = ""
     if not projects:
-        rows = '<div class="empty">Noch keine Ordnungsprojekte.</div>'
+        hint = "Noch keine abgeschlossenen Projekte." if show == "done" else "Noch keine Ordnungsprojekte."
+        rows = f'<div class="empty">{hint}</div>'
     else:
         for proj in projects:
             steps = list_steps(proj.id)
             done, total = proj.progress(steps)
             pct = int(done / total * 100) if total else 0
             assigned = f"<span class='task-meta'>→ {proj.assigned_to}</span>" if proj.assigned_to else ""
+            completed_badge = '<span class="badge ok">✓ Fertig</span>' if proj.completed else ""
+            opacity = "opacity:0.7;" if proj.completed else ""
+            fill_class = "green" if proj.completed else ""
             rows += f"""
-            <div class="task-row">
+            <div class="task-row" style="{opacity}">
               <div style="flex:1;min-width:0">
-                <div style="display:flex;align-items:center;gap:0.5rem">
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
                   <a href="projects/{proj.id}" class="task-name"
                      style="text-decoration:none;color:inherit">{proj.name}</a>
-                  {assigned}
+                  {completed_badge}{assigned}
                 </div>
                 <div class="task-meta" style="margin-top:0.2rem">{proj.room} · {done}/{total} Schritte</div>
                 <div class="progress-track" style="margin-top:0.4rem">
-                  <div class="progress-fill" style="width:{pct}%"></div>
+                  <div class="progress-fill {fill_class}" style="width:{pct}%"></div>
                 </div>
               </div>
-              <a class="btn btn-ghost btn-sm" href="projects/{proj.id}/edit">✎</a>
+              {'<a class="btn btn-danger btn-sm" href="projects/' + proj.id + '/archive" title="Archivieren">📁</a>' if proj.completed else '<a class="btn btn-ghost btn-sm" href="projects/' + proj.id + '/edit">✎</a>'}
               <a class="btn btn-danger btn-sm" href="projects/{proj.id}/delete"
                  onclick="return confirm('Projekt löschen?')">✕</a>
             </div>"""
 
     content = f"""
     <div class="page-header">
-      <h2>Ordnungsprojekte ({len(projects)})</h2>
+      <h2>Ordnungsprojekte ({len(active_projects)} offen)</h2>
       <a class="btn btn-primary btn-sm" href="projects/new">+ Neu</a>
     </div>
     {filters}
@@ -248,6 +258,14 @@ async def project_edit(project_id: str, request: Request, name: str = Form(...),
 @router.get("/{project_id}/delete")
 async def project_delete(project_id: str, request: Request):
     delete_project(project_id)
+    return RedirectResponse(_base(request) + "projects", status_code=303)
+
+
+@router.get("/{project_id}/archive")
+async def project_archive(project_id: str, request: Request):
+    proj = get_project(project_id)
+    if proj:
+        delete_project(project_id)  # sets active=False
     return RedirectResponse(_base(request) + "projects", status_code=303)
 
 

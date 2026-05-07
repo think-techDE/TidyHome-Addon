@@ -12,6 +12,7 @@ class Task(BaseModel):
     assigned_to: Optional[str] = None
     points: int = 10
     active: bool = True
+    important: bool = False
     last_done: Optional[str] = None  # ISO date string
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
@@ -38,6 +39,7 @@ class Project(BaseModel):
     assigned_to: Optional[str] = None
     description: Optional[str] = None
     active: bool = True
+    completed: bool = False
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
     def progress(self, steps: list["Step"]) -> tuple[int, int]:

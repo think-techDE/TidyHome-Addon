@@ -34,7 +34,7 @@ def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = F
     if overdue_only:
         tasks = [t for t in tasks if t.is_overdue()]
 
-    tasks.sort(key=lambda t: t.days_until_due())
+    tasks.sort(key=lambda t: (not t.important, t.days_until_due()))
     return tasks
 
 
@@ -59,7 +59,8 @@ def update_task(task: Task) -> Task:
 
 
 def edit_task(task_id: str, name: str, room: str, interval_days: int,
-              assigned_to: str | None, points: int) -> Task | None:
+              assigned_to: str | None, points: int,
+              important: bool = False) -> Task | None:
     task = get_task(task_id)
     if not task:
         return None
@@ -68,6 +69,7 @@ def edit_task(task_id: str, name: str, room: str, interval_days: int,
     task.interval_days = interval_days
     task.assigned_to = assigned_to
     task.points = points
+    task.important = important
     return update_task(task)
 
 
@@ -94,6 +96,7 @@ def mark_done(task_id: str, done_by: str = None, done_at: str = None) -> Task | 
 
 
 def _add_score(person: str, points: int, task_type: str = "task"):
+    # Gesamtpunkte aktualisieren
     table = get_scores_table()
     Q = Query()
     row = table.get(Q.person == person)
@@ -112,12 +115,55 @@ def _add_score(person: str, points: int, task_type: str = "task"):
         else:
             entry["tasks_done"] = 1
         table.insert(entry)
+    # Einzelnen Eintrag ins Log schreiben (für Zeitraum-Auswertung)
+    _db.table("score_log").insert({
+        "person": person,
+        "points": points,
+        "type": task_type,
+        "date": date.today().isoformat(),
+    })
 
 
-def get_scores() -> list[dict]:
-    table = get_scores_table()
-    scores = table.all()
-    return sorted(scores, key=lambda s: s["points"], reverse=True)
+def get_scores(period: str = "all") -> list[dict]:
+    if period == "all":
+        scores = get_scores_table().all()
+        return sorted(scores, key=lambda s: s["points"], reverse=True)
+
+    # Zeitraum-Filterung über score_log
+    today = date.today()
+    if period == "month":
+        from_date = today.replace(day=1).isoformat()
+        to_date = None
+    elif period == "last_month":
+        if today.month == 1:
+            from_date = date(today.year - 1, 12, 1).isoformat()
+            to_date = date(today.year, 1, 1).isoformat()
+        else:
+            from_date = date(today.year, today.month - 1, 1).isoformat()
+            to_date = today.replace(day=1).isoformat()
+    else:
+        from_date = None
+        to_date = None
+
+    log = _db.table("score_log").all()
+    entries = [
+        e for e in log
+        if (from_date is None or e["date"] >= from_date)
+        and (to_date is None or e["date"] < to_date)
+    ]
+
+    agg: dict[str, dict] = {}
+    for e in entries:
+        p = e["person"]
+        if p not in agg:
+            agg[p] = {"person": p, "points": 0, "tasks_done": 0, "project_steps_done": 0}
+        agg[p]["points"] += e["points"]
+        if e.get("type") == "project":
+            agg[p]["project_steps_done"] += 1
+        else:
+            agg[p]["tasks_done"] += 1
+
+    return sorted(agg.values(), key=lambda s: s["points"], reverse=True)
 
 
 def get_projects_table():
@@ -191,6 +237,13 @@ def complete_step(step_id: str, done_by: str = None) -> Step | None:
     get_steps_table().update(step.model_dump(), Q.id == step_id)
     if done_by:
         _add_score(done_by, step.points, task_type="project")
+    # Projekt auto-abschließen wenn alle Schritte erledigt
+    all_steps = list_steps(step.project_id)
+    if all_steps and all(s.completed for s in all_steps):
+        proj = get_project(step.project_id)
+        if proj and not proj.completed:
+            proj.completed = True
+            update_project(proj)
     return step
 
 

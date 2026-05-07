@@ -35,11 +35,13 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             elif due == 1: due_text = "Morgen"
             else:          due_text = f"In {due}d"
             assigned = f"<span class='task-meta'>→ {t.assigned_to}</span>" if t.assigned_to else ""
+            star = '<span title="Wichtig" style="font-size:1rem">⭐</span>' if t.important else ""
+            border = "border-left:3px solid var(--warning);" if t.important else ""
             rows += f"""
-            <div class="task-row">
+            <div class="task-row" style="{border}">
               <div style="flex:1;min-width:0">
                 <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
-                  <span class="task-name">{t.name}</span>
+                  {star}<span class="task-name">{t.name}</span>
                   <span class="badge {uc}">{due_text}</span>
                 </div>
                 <div class="task-meta" style="margin-top:0.2rem">
@@ -83,9 +85,10 @@ async def task_edit_form(task_id: str, request: Request, p: str = ""):
 async def task_edit(task_id: str, request: Request,
                     name: str = Form(...), room: str = Form(...),
                     interval_days: int = Form(...), assigned_to: str = Form(""),
-                    points: int = Form(10)):
+                    points: int = Form(10), important: str = Form("")):
     if not edit_task(task_id, name=name, room=room, interval_days=interval_days,
-                     assigned_to=assigned_to or None, points=points):
+                     assigned_to=assigned_to or None, points=points,
+                     important=(important == "1")):
         raise HTTPException(404)
     return RedirectResponse(_base(request) + "tasks", status_code=303)
 
@@ -93,9 +96,10 @@ async def task_edit(task_id: str, request: Request,
 @router.post("")
 async def task_create(request: Request, name: str = Form(...), room: str = Form(...),
                       interval_days: int = Form(...), assigned_to: str = Form(""),
-                      points: int = Form(10)):
+                      points: int = Form(10), important: str = Form("")):
     task = Task(name=name, room=room, interval_days=interval_days,
-                assigned_to=assigned_to or None, points=points)
+                assigned_to=assigned_to or None, points=points,
+                important=(important == "1"))
     create_task(task)
     return RedirectResponse(_base(request) + "tasks", status_code=303)
 
@@ -123,6 +127,7 @@ async def _task_form(request: Request, title: str, action: str,
     cur_person = task.assigned_to if task else ""
     cur_points = task.points if task else 10
     cur_name = task.name if task else ""
+    cur_important = task.important if task else False
 
     room_opts = "".join(
         f'<option value="{r}"{_selected(r, cur_room)}>{r}</option>' for r in areas)
@@ -133,6 +138,8 @@ async def _task_form(request: Request, title: str, action: str,
     interval_opts = "".join(
         f'<option value="{d}"{_selected(d, cur_interval)}>{label}</option>'
         for d, label in INTERVALS.items())
+
+    important_checked = "checked" if cur_important else ""
 
     content = f"""
     <h2>{title}</h2>
@@ -159,6 +166,14 @@ async def _task_form(request: Request, title: str, action: str,
             <label>Punkte</label>
             <input name="points" type="number" value="{cur_points}" min="1" max="100">
           </div>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;
+                        text-transform:none;font-size:0.9rem;letter-spacing:0;font-weight:500">
+            <input type="checkbox" name="important" value="1" {important_checked}
+                   style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
+            ⭐ Als wichtig markieren (wird oben in der Liste angezeigt)
+          </label>
         </div>
         <button class="btn btn-primary btn-full" type="submit">{submit_label}</button>
         <a class="btn btn-ghost btn-full" href="tasks" style="margin-top:0.5rem">Abbrechen</a>

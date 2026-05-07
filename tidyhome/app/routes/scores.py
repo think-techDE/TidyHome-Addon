@@ -6,13 +6,27 @@ from storage import get_scores
 
 router = APIRouter()
 
+_PERIODS = [
+    ("all",        "Gesamt"),
+    ("month",      "Dieser Monat"),
+    ("last_month", "Letzter Monat"),
+]
+
 
 @router.get("/scores", response_class=HTMLResponse)
-async def scores(request: Request, p: str = ""):
-    data = get_scores()
+async def scores(request: Request, period: str = "all", p: str = ""):
+    data = get_scores(period=period)
+
+    tabs = '<div class="filters">'
+    for key, label in _PERIODS:
+        active = "active" if period == key else ""
+        tabs += f'<a class="filter-btn {active}" href="scores?period={key}">{label}</a>'
+    tabs += '</div>'
+
     rows = ""
     if not data:
-        rows = '<div class="empty">Noch keine Punkte vergeben.</div>'
+        hint = "Noch keine Punkte in diesem Zeitraum." if period != "all" else "Noch keine Punkte vergeben."
+        rows = f'<div class="empty">{hint}</div>'
     else:
         for i, s in enumerate(data):
             medal = ["🥇", "🥈", "🥉"][i] if i < 3 else f"{i + 1}."
@@ -26,5 +40,13 @@ async def scores(request: Request, p: str = ""):
               <span class="score-pts">{s["points"]} Pkt</span>
             </div>"""
 
-    content = f'<h2>Bestenliste</h2><div class="card card-flush" style="padding:0 1.25rem">{rows}</div>'
+    note = ""
+    if period != "all":
+        note = '<div class="muted" style="margin-top:0.5rem;font-size:0.75rem">Nur Aktivitäten seit Einführung des Zeitraum-Trackings werden gezählt.</div>'
+
+    content = f"""
+    <h2>Bestenliste</h2>
+    {tabs}
+    <div class="card card-flush" style="padding:0 1.25rem">{rows}</div>
+    {note}"""
     return render(content, request, page="scores", person=p)
