@@ -5,7 +5,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from config import logger
+from config import BOOTSTRAP_ADMINS, logger
 from routes.dashboard import router as dashboard_router
 from routes.projects import router as projects_router
 from routes.scores import router as scores_router
@@ -25,7 +25,13 @@ app.include_router(settings_router)
 
 
 @app.on_event("startup")
-async def _start_scheduler():
+async def _startup():
+    from storage import get_admins, save_admins
+    if not get_admins() and BOOTSTRAP_ADMINS:
+        save_admins(list(BOOTSTRAP_ADMINS))
+        logger.info("Admins aus Konfiguration geseedet: %s", BOOTSTRAP_ADMINS)
+    elif not get_admins():
+        logger.warning("Keine Admins konfiguriert – bitte in der App festlegen.")
     asyncio.create_task(scheduler_loop())
 
 

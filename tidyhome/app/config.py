@@ -5,6 +5,7 @@ log_level = os.environ.get("LOG_LEVEL", "info").upper()
 logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
 logger = logging.getLogger("tidyhome")
 
-_admins_raw = os.environ.get("ADMINS", "")
-ADMINS: set[str] = {a.strip() for a in _admins_raw.split(",") if a.strip()}
-logger.info("Admins: %s", ADMINS or "(keine)")
+# Admins aus der Add-on-Konfiguration – nur als Bootstrap beim ersten Start.
+# Danach werden Admins in der App-UI verwaltet (TinyDB).
+_raw = os.environ.get("ADMINS", "")
+BOOTSTRAP_ADMINS: set[str] = {a.strip() for a in _raw.split(",") if a.strip()}

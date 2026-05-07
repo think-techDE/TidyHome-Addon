@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from config import ADMINS
 from ha_client import get_persons
 from render import _base, render
 from scheduler import notify_person_now, parse_time
-from storage import get_person_settings, list_person_settings, save_person_settings
+from storage import (get_admins, get_person_settings, list_person_settings,
+                     save_admins, save_person_settings)
 
 router = APIRouter()
 
@@ -13,6 +13,7 @@ router = APIRouter()
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_form(request: Request, p: str = ""):
     persons = await get_persons()
+    admins = get_admins()
     cards = ""
     for pn in persons:
         cfg = get_person_settings(pn)
@@ -24,7 +25,7 @@ async def settings_form(request: Request, p: str = ""):
             if services else
             '<div class="muted" style="margin-bottom:0.75rem">Keine Geräte (Admin konfiguriert diese)</div>'
         )
-        admin_b = f' <span class="admin-badge">Admin</span>' if pn in ADMINS else ""
+        admin_b = f' <span class="admin-badge">Admin</span>' if pn in admins else ""
         cards += f"""
         <div class="card" style="margin-bottom:0.75rem">
           <form method="post" action="settings">
@@ -39,8 +40,7 @@ async def settings_form(request: Request, p: str = ""):
               <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:0.1rem">
                 <label style="display:flex;align-items:center;gap:0.5rem;
                               cursor:pointer;text-transform:none;font-size:0.85rem;letter-spacing:0;margin:0">
-                  <input type="checkbox" name="enabled" value="1" {checked}
-                         style="width:auto">
+                  <input type="checkbox" name="enabled" value="1" {checked} style="width:auto">
                   Aktiv
                 </label>
               </div>
@@ -65,50 +65,91 @@ async def settings_save(request: Request, person: str = Form(...),
 
 
 @router.get("/admin", response_class=HTMLResponse)
-async def admin_form(request: Request):
-    if not ADMINS:
-        content = """
-        <h2>Admin</h2>
-        <div class="card" style="background:var(--danger-bg);border:1px solid var(--danger)">
-          <p style="color:var(--danger);margin:0">
-            Keine Admins konfiguriert. Trage in der Add-on-Konfiguration unter
-            <strong>admins</strong> die Personen ein (kommagetrennt).
+async def admin_form(request: Request, saved: str = ""):
+    admins = get_admins()
+    persons = await get_persons()
+
+    # ── Admin-Verwaltung ──────────────────────────────────────────────────
+    checkboxes = ""
+    for pn in persons:
+        is_admin = pn in admins
+        checkboxes += f"""
+        <label style="display:flex;align-items:center;gap:0.75rem;
+                       padding:0.65rem 0;border-bottom:1px solid var(--border);
+                       cursor:pointer;font-size:0.9rem;font-weight:{'600' if is_admin else '400'}">
+          <input type="checkbox" name="admins" value="{pn}"
+                 {'checked' if is_admin else ''}
+                 style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
+          {pn}
+          {'<span class="admin-badge" style="margin-left:0.25rem">Admin</span>' if is_admin else ''}
+        </label>"""
+
+    saved_banner = """
+        <div style="background:var(--success-bg);color:var(--success);padding:0.6rem 0.875rem;
+                    border-radius:0.6rem;margin-bottom:1rem;font-size:0.84rem;font-weight:600">
+          ✓ Admin-Einstellungen gespeichert
+        </div>""" if saved == "1" else ""
+
+    admin_section = f"""
+    <div class="card" style="margin-bottom:1rem">
+      <h3 style="margin-bottom:0.75rem">Admin-Rechte vergeben</h3>
+      {saved_banner}
+      <form method="post" action="admin/admins">
+        <div style="margin-bottom:1rem">{checkboxes}</div>
+        <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
+      </form>
+    </div>"""
+
+    # ── Geräte-Verwaltung ─────────────────────────────────────────────────
+    if not admins:
+        device_section = """
+        <div class="card" style="background:var(--warning-bg);border:1px solid var(--warning)">
+          <p style="color:var(--warning);margin:0;font-size:0.85rem">
+            Noch keine Admins festgelegt. Wähle oben mindestens eine Person aus.
           </p>
         </div>"""
-        return render(content, request)
-
-    persons = await get_persons()
-    info = """<div class="info-box">
-      <strong>Services finden:</strong> HA → Entwicklerwerkzeuge → Dienste → nach
-      <code>notify.</code> suchen. Mehrere kommagetrennt eingeben.
-    </div>"""
-    cards = ""
-    for pn in persons:
-        cfg = get_person_settings(pn)
-        svc_val = ", ".join(cfg.get("services") or [])
-        admin_b = f' <span class="admin-badge">Admin</span>' if pn in ADMINS else ""
-        cards += f"""
-        <div class="card" style="margin-bottom:0.75rem">
-          <form method="post" action="admin">
-            <input type="hidden" name="person" value="{pn}">
-            <div style="font-weight:700;margin-bottom:0.75rem">{pn}{admin_b}</div>
-            <div class="form-group">
-              <label>Notify-Services</label>
-              <input name="services" value="{svc_val}"
-                     placeholder="notify.mobile_app_iphone, notify.alexa_kueche">
-            </div>
-            <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
-          </form>
+    else:
+        info = """<div class="info-box">
+          <strong>Services finden:</strong> HA → Entwicklerwerkzeuge → Dienste →
+          nach <code>notify.</code> suchen. Mehrere kommagetrennt eingeben.
         </div>"""
-    admin_list = ", ".join(sorted(ADMINS))
-    footer = f'<div class="muted" style="margin-top:0.5rem">Admins: {admin_list} · änderbar in der Add-on-Konfiguration</div>'
-    content = f"<h2>Admin — Geräteverwaltung</h2>{info}{cards}{footer}"
+        cards = ""
+        for pn in persons:
+            cfg = get_person_settings(pn)
+            svc_val = ", ".join(cfg.get("services") or [])
+            admin_b = f' <span class="admin-badge">Admin</span>' if pn in admins else ""
+            cards += f"""
+            <div class="card" style="margin-bottom:0.75rem">
+              <form method="post" action="admin">
+                <input type="hidden" name="person" value="{pn}">
+                <div style="font-weight:700;margin-bottom:0.75rem">{pn}{admin_b}</div>
+                <div class="form-group">
+                  <label>Notify-Services</label>
+                  <input name="services" value="{svc_val}"
+                         placeholder="notify.mobile_app_iphone, notify.alexa_kueche">
+                </div>
+                <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
+              </form>
+            </div>"""
+        device_section = f"{info}{cards}"
+
+    content = f"<h2>Admin</h2>{admin_section}<h2 style='margin-bottom:0.75rem'>Geräte-Verwaltung</h2>{device_section}"
     return render(content, request)
 
 
+@router.post("/admin/admins")
+async def admin_save_admins(request: Request):
+    form = await request.form()
+    selected = form.getlist("admins")
+    save_admins(selected)
+    return RedirectResponse(_base(request) + "admin?saved=1", status_code=303)
+
+
 @router.post("/admin")
-async def admin_save(request: Request, person: str = Form(...), services: str = Form("")):
-    if not ADMINS:
+async def admin_save_devices(request: Request, person: str = Form(...),
+                              services: str = Form("")):
+    admins = get_admins()
+    if not admins:
         raise HTTPException(403)
     svc_list = [s.strip() for s in services.split(",") if s.strip()]
     cfg = get_person_settings(person)

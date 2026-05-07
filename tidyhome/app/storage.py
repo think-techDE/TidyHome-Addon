@@ -223,3 +223,24 @@ def save_person_settings(person: str, services: list[str], notify_time: str, ena
 
 def list_person_settings() -> list[dict]:
     return get_settings_table().all()
+
+
+# ── App-weite Einstellungen (Admins) ───────────────────────────────────────
+
+def _get_app_table():
+    return _db.table("app_settings")
+
+
+def get_admins() -> set[str]:
+    Q = Query()
+    row = _get_app_table().get(Q.key == "admins")
+    return set(row["value"]) if row else set()
+
+
+def save_admins(persons: list[str]) -> None:
+    Q = Query()
+    data = {"key": "admins", "value": sorted(persons)}
+    if _get_app_table().get(Q.key == "admins"):
+        _get_app_table().update(data, Q.key == "admins")
+    else:
+        _get_app_table().insert(data)
