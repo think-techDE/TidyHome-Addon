@@ -66,6 +66,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Dashboard (Zuhause): Begrüßung, Tagesstatistik, Raumkarten-Grid
 - ✅ Aufgabenliste auf /tasks (Dashboard wird neue Startseite)
 - ✅ Raumkarten mit Fortschrittsbalken und Aufgaben/Projekt-Anzahl
+- 💡 Dunkles / Helles Design (Dark Mode / Light Mode umschaltbar, folgt optional HA-Theme)
 
 ## Home Assistant Integration
 
