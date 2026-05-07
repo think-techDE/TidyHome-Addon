@@ -183,6 +183,13 @@
                   border:1px solid var(--border); border-radius:0.65rem; background:var(--surface-2);
                   cursor:pointer; color:var(--text); }
   .option-card input { width:1.05rem; height:1.05rem; margin-top:0.05rem; accent-color:var(--primary); }
+  .icon-chooser { display:flex; flex-wrap:wrap; gap:0.35rem; }
+  .icon-choice { width:42px; height:42px; border-radius:10px; border:2px solid transparent;
+                  background:var(--surface-2); cursor:pointer; display:flex; align-items:center;
+                  justify-content:center; transition:all 0.12s; padding:0; flex-shrink:0; }
+  .icon-choice:hover { border-color:var(--primary-border); background:var(--primary-soft); }
+  .icon-choice.active { border-color:var(--primary); background:var(--primary-soft);
+                         box-shadow:0 0 0 3px var(--primary-soft); }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #101114; --surface: #181a1f; --surface-2: #20232a; --card: var(--surface);

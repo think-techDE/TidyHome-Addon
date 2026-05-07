@@ -21,6 +21,7 @@ class Task(BaseModel):
             return [v] if v else []
         return v
     points: int = 10
+    icon: str = ""        # expliziter Icon-Key; leer = automatisch aus Name/Raum
     active: bool = True
     important: bool = False
     onetime: bool = False  # einmalige Aufgabe: nach Erledigung archiviert
@@ -49,6 +50,7 @@ class Project(BaseModel):
     room: str
     assigned_to: Optional[str] = None
     description: Optional[str] = None
+    icon: str = ""        # expliziter Icon-Key; leer = automatisch aus Raum
     active: bool = True
     completed: bool = False
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())

@@ -164,9 +164,9 @@ def _task_icon_key(name: str, room: str = "") -> str:
     return "default"
 
 
-def _task_icon(name: str, room: str = "", size: int = 44) -> str:
+def _task_icon(name: str, room: str = "", size: int = 44, icon: str = "") -> str:
     """Round icon bubble using OpenMoji SVG for a task."""
-    key = _task_icon_key(name, room)
+    key = icon if (icon and icon in _TASK_ICONS) else _task_icon_key(name, room)
     filename, bg = _TASK_ICONS.get(key, _TASK_ICONS["default"])
     img_size = int(size * 0.62)
     return (
@@ -179,20 +179,86 @@ def _task_icon(name: str, room: str = "", size: int = 44) -> str:
     )
 
 
-def _proj_icon(room: str = "", size: int = 46) -> str:
-    """Round icon bubble for a project, based on room."""
-    r = room.lower()
-    if any(w in r for w in ["keller", "lager"]): key = "box"
-    elif any(w in r for w in ["bad", "küche"]): key = "drop"
-    elif any(w in r for w in ["garten", "balkon"]): key = "plant"
-    elif any(w in r for w in ["schlaf", "kinder"]): key = "hanger"
-    else: key = "archive"
-    inner = int(size * 0.46)
+# Human-readable labels for each icon key shown in the chooser
+_ICON_LABELS: dict[str, str] = {
+    "besen": "Fegen", "schwamm": "Schrubben", "putzen": "Putzen",
+    "eimer": "Wischen", "dusche": "Dusche", "bad": "Badewanne",
+    "toilette": "Toilette", "papier": "Klopapier", "kochen": "Kochen",
+    "abwasch": "Abwasch", "kuehlschrank": "Kühlschrank", "lunchbox": "Lunchbox",
+    "waesche": "Wäsche", "buegeln": "Bügeln", "pflanze": "Pflanze",
+    "garten": "Garten", "laub": "Laub", "saen": "Säen",
+    "schnee": "Schnee", "blumen": "Blumen", "muell": "Müll",
+    "recycling": "Recycling", "einkaufen": "Einkaufen", "post": "Post",
+    "tier": "Haustier", "hund": "Hund", "katze": "Katze",
+    "werkzeug": "Werkzeug", "schraube": "Reparatur", "gluehbirne": "Glühbirne",
+    "batterie": "Batterie", "schluessel": "Schlüssel", "buecher": "Lernen",
+    "rucksack": "Schule", "medizin": "Medizin", "bett": "Bett machen",
+    "fenster": "Fenster", "bad_auffuel": "Bad auffüllen", "lager": "Lager",
+    "auto": "Auto", "tanken": "Tanken", "heizung": "Heizung",
+    "default": "Allgemein",
+}
+
+
+def _icon_chooser(current_key: str = "", input_name: str = "icon") -> str:
+    """Icon-Chooser grid für Aufgaben- und Projekt-Formulare."""
+    items = ""
+    for key, (filename, bg) in _TASK_ICONS.items():
+        active = ' active' if key == current_key else ''
+        label = _ICON_LABELS.get(key, key)
+        items += (
+            f'<button type="button" class="icon-choice{active}" data-key="{key}"'
+            f' title="{label}" onclick="pickIcon(this,\'{input_name}\')">'
+            f'<img src="assets/icons/{filename}.svg" width="26" height="26"'
+            f' style="display:block">'
+            f'</button>'
+        )
+    auto_active = ' active' if not current_key else ''
+    auto_btn = (
+        f'<button type="button" class="icon-choice{auto_active}" data-key=""'
+        f' title="Automatisch" onclick="pickIcon(this,\'{input_name}\')"'
+        f' style="font-size:1.1rem">🔮</button>'
+    )
+    js = """<script>
+function pickIcon(el,name){
+  el.closest('.icon-chooser').querySelectorAll('.icon-choice')
+    .forEach(function(e){e.classList.remove('active')});
+  el.classList.add('active');
+  document.getElementById('icon-input-'+name).value=el.dataset.key;
+}
+</script>"""
+    return (
+        f'<div class="form-group">'
+        f'<label>Icon <span class="muted" style="font-weight:400;font-size:0.75rem">'
+        f'— optional, wird sonst automatisch erkannt</span></label>'
+        f'<div class="icon-chooser">{auto_btn}{items}</div>'
+        f'<input type="hidden" name="{input_name}" id="icon-input-{input_name}"'
+        f' value="{current_key}">'
+        f'</div>'
+        f'{js}'
+    )
+
+
+def _proj_icon(room: str = "", size: int = 46, icon: str = "") -> str:
+    """Round icon bubble for a project — uses OpenMoji like task icons."""
+    if icon and icon in _TASK_ICONS:
+        key = icon
+    else:
+        r = room.lower()
+        if any(w in r for w in ["keller", "lager"]):     key = "lager"
+        elif any(w in r for w in ["bad", "toilette"]):   key = "bad"
+        elif any(w in r for w in ["küche"]):             key = "kochen"
+        elif any(w in r for w in ["garten", "balkon"]):  key = "garten"
+        elif any(w in r for w in ["schlaf"]):            key = "bett"
+        elif any(w in r for w in ["kinder"]):            key = "rucksack"
+        else:                                            key = "default"
+    filename, bg = _TASK_ICONS.get(key, _TASK_ICONS["default"])
+    img_size = int(size * 0.62)
     return (
         f'<div style="width:{size}px;height:{size}px;border-radius:50%;'
-        f'background:var(--icon-bg);display:flex;align-items:center;'
-        f'justify-content:center;flex-shrink:0">'
-        f'{_icon(key, inner, "var(--icon-color)")}'
+        f'background:{bg};display:flex;align-items:center;'
+        f'justify-content:center;flex-shrink:0;overflow:hidden">'
+        f'<img src="assets/icons/{filename}.svg" width="{img_size}" height="{img_size}"'
+        f' style="display:block" loading="lazy">'
         f'</div>'
     )
 

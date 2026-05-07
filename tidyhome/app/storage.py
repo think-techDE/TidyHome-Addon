@@ -58,7 +58,8 @@ def update_task(task: Task) -> Task:
 
 def edit_task(task_id: str, name: str, room: str, interval_days: int,
               assigned_to: list[str], points: int,
-              important: bool = False, onetime: bool = False) -> Task | None:
+              important: bool = False, onetime: bool = False,
+              icon: str = "") -> Task | None:
     task = get_task(task_id)
     if not task:
         return None
@@ -69,6 +70,7 @@ def edit_task(task_id: str, name: str, room: str, interval_days: int,
     task.points = points
     task.important = important
     task.onetime = onetime
+    task.icon = icon
     return update_task(task)
 
 

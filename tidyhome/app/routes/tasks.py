@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Task
-from render import (INTERVALS, _base, _icon, _selected, _task_icon,
+from render import (INTERVALS, _base, _icon, _icon_chooser, _selected, _task_icon,
                     interval_label, render, resolve_person, urgency_class)
 from storage import (create_task, delete_task, edit_task, filter_tasks_by_role,
                      get_admins, get_person_settings, get_task, list_tasks, mark_done)
@@ -101,7 +101,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
 
         return f"""
         <div class="task-row{important_cls}">
-          {_task_icon(t.name, t.room)}
+          {_task_icon(t.name, t.room, icon=t.icon)}
           <div class="task-body">
             <div class="task-header">
               <span class="task-name">{star}{t.name}</span>
@@ -185,12 +185,14 @@ async def task_edit_form(task_id: str, request: Request, p: str = ""):
 async def task_edit(task_id: str, request: Request,
                     name: str = Form(...), room: str = Form(...),
                     interval_days: int = Form(...), points: int = Form(10),
-                    important: str = Form(""), onetime: str = Form("")):
+                    important: str = Form(""), onetime: str = Form(""),
+                    icon: str = Form("")):
     form = await request.form()
     assigned_to = list(form.getlist("assigned_to"))
     if not edit_task(task_id, name=name, room=room, interval_days=interval_days,
                      assigned_to=assigned_to, points=points,
-                     important=(important == "1"), onetime=(onetime == "1")):
+                     important=(important == "1"), onetime=(onetime == "1"),
+                     icon=icon):
         raise HTTPException(404)
     return RedirectResponse(_base(request) + "tasks", status_code=303)
 
@@ -198,12 +200,14 @@ async def task_edit(task_id: str, request: Request,
 @router.post("")
 async def task_create(request: Request, name: str = Form(...), room: str = Form(...),
                       interval_days: int = Form(...), points: int = Form(10),
-                      important: str = Form(""), onetime: str = Form("")):
+                      important: str = Form(""), onetime: str = Form(""),
+                      icon: str = Form("")):
     form = await request.form()
     assigned_to = list(form.getlist("assigned_to"))
     task = Task(name=name, room=room, interval_days=interval_days,
                 assigned_to=assigned_to, points=points,
-                important=(important == "1"), onetime=(onetime == "1"))
+                important=(important == "1"), onetime=(onetime == "1"),
+                icon=icon)
     create_task(task)
     return RedirectResponse(_base(request) + "tasks", status_code=303)
 
@@ -233,6 +237,7 @@ async def _task_form(request: Request, title: str, action: str,
     cur_name      = task.name if task else ""
     cur_important = task.important if task else False
     cur_onetime   = task.onetime if task else False
+    cur_icon      = task.icon if task else ""
 
     room_opts = "".join(
         f'<option value="{r}"{_selected(r, cur_room)}>{r}</option>' for r in areas)
@@ -282,6 +287,7 @@ async def _task_form(request: Request, title: str, action: str,
           <label>Zugewiesen an</label>
           <div style="display:flex;flex-wrap:wrap;gap:0.45rem">{person_boxes}</div>
         </div>
+        {_icon_chooser(cur_icon)}
         <div class="form-group">
           <label class="option-card">
             <input type="checkbox" name="important" value="1" {important_checked}>

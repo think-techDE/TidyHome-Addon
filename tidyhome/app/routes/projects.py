@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Project, Step
-from render import _base, _icon, _proj_icon, _selected, render, resolve_person
+from render import _base, _icon, _icon_chooser, _proj_icon, _selected, render, resolve_person
 from storage import (add_step, complete_step, create_project, delete_project,
                      delete_step, get_person_settings, get_project, list_projects,
                      list_steps, update_project)
@@ -75,7 +75,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
             rows += f"""
             <div class="proj-row" style="{opacity}">
               <a href="projects/{proj.id}" style="display:contents;text-decoration:none">
-                {_proj_icon(proj.room)}
+                {_proj_icon(proj.room, icon=proj.icon)}
               </a>
               <div style="flex:1;min-width:0">
                 <a href="projects/{proj.id}"
@@ -135,6 +135,7 @@ async def project_new_form(request: Request, p: str = ""):
           <label>Beschreibung (optional)</label>
           <input name="description" placeholder="Was soll erreicht werden?">
         </div>
+        {_icon_chooser("", "icon")}
         <button class="btn btn-primary btn-full" type="submit">Projekt anlegen</button>
         <a class="btn btn-ghost btn-full" href="projects" style="margin-top:0.5rem">Abbrechen</a>
       </form>
@@ -144,9 +145,10 @@ async def project_new_form(request: Request, p: str = ""):
 
 @router.post("")
 async def project_create(request: Request, name: str = Form(...), room: str = Form(...),
-                          assigned_to: str = Form(""), description: str = Form("")):
+                          assigned_to: str = Form(""), description: str = Form(""),
+                          icon: str = Form("")):
     proj = Project(name=name, room=room, assigned_to=assigned_to or None,
-                   description=description or None)
+                   description=description or None, icon=icon)
     create_project(proj)
     return RedirectResponse(_base(request) + f"projects/{proj.id}", status_code=303)
 
@@ -290,6 +292,7 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
           <label>Beschreibung</label>
           <input name="description" value="{proj.description or ''}">
         </div>
+        {_icon_chooser(proj.icon, "icon")}
         <button class="btn btn-primary btn-full" type="submit">Speichern</button>
         <a class="btn btn-ghost btn-full" href="../{project_id}" style="margin-top:0.5rem">Abbrechen</a>
       </form>
@@ -300,7 +303,7 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
 @router.post("/{project_id}/edit")
 async def project_edit(project_id: str, request: Request, name: str = Form(...),
                         room: str = Form(...), assigned_to: str = Form(""),
-                        description: str = Form("")):
+                        description: str = Form(""), icon: str = Form("")):
     proj = get_project(project_id)
     if not proj:
         raise HTTPException(404)
@@ -308,6 +311,7 @@ async def project_edit(project_id: str, request: Request, name: str = Form(...),
     proj.room = room
     proj.assigned_to = assigned_to or None
     proj.description = description or None
+    proj.icon = icon
     update_project(proj)
     return RedirectResponse(_base(request) + f"projects/{project_id}", status_code=303)
 
