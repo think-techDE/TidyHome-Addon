@@ -6,7 +6,8 @@ from models import Task
 from render import (INTERVALS, _base, _icon, _icon_chooser, _selected, _task_icon,
                     interval_label, render, resolve_person, urgency_class)
 from storage import (create_task, delete_task, edit_task, filter_tasks_by_role,
-                     get_admins, get_person_settings, get_task, list_tasks, mark_done)
+                     get_admins, get_person_settings, get_task, list_people_by_role,
+                     list_tasks, mark_done)
 
 router = APIRouter(prefix="/tasks")
 
@@ -29,9 +30,6 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
         if hidden:
             tasks = [t for t in tasks if t.room not in hidden]
 
-    # Role-based visibility
-    tasks = filter_tasks_by_role(tasks, p, admins)
-
     areas = await get_areas()
     psuffix = f"&p={p}" if p else ""
 
@@ -50,6 +48,15 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     cfg_p = get_person_settings(p) if p else {}
     role_p = cfg_p.get("role", "member")
     show_grouped = room and p and (p in admins or role_p == "parent")
+
+    if show_grouped and role_p == "parent" and p not in admins:
+        child_persons = list_people_by_role("child")
+        tasks = [
+            t for t in tasks
+            if p in t.assigned_to or any(pn in child_persons for pn in t.assigned_to)
+        ]
+    elif not show_grouped:
+        tasks = filter_tasks_by_role(tasks, p, admins)
 
     cal = _icon("calendar", 13, "var(--muted)")
 

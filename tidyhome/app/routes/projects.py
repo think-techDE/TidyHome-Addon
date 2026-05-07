@@ -16,45 +16,62 @@ def _step_assignee(step: Step, project: Project) -> str:
 
 
 def _can_see_project(project: Project, steps: list[Step], person: str, admins: list[str]) -> bool:
-    if not person or person in admins:
+    if not person:
         return True
     return project.assigned_to == person or any(_step_assignee(s, project) == person for s in steps)
 
 
 def _visible_steps(project: Project, steps: list[Step], person: str, admins: list[str]) -> list[Step]:
-    if not person or person in admins:
+    if not person:
         return steps
     return [s for s in steps if _step_assignee(s, project) == person]
 
 
+def _steps_for_person(project: Project, steps: list[Step], person: str) -> list[Step]:
+    return [s for s in steps if _step_assignee(s, project) == person]
+
+
+def _project_people(project: Project, steps: list[Step]) -> list[str]:
+    people = {project.assigned_to} if project.assigned_to else set()
+    people.update(_step_assignee(s, project) for s in steps if _step_assignee(s, project))
+    return sorted(people) or ["— Nicht zugeordnet —"]
+
+
 @router.get("", response_class=HTMLResponse)
-async def projects_list(request: Request, room: str = None, show: str = "active", p: str = ""):
+async def projects_list(request: Request, room: str = None, show: str = "active",
+                        scope: str = "mine", p: str = ""):
     p = resolve_person(request, p)
     admins = get_admins()
     areas = await get_areas()
     all_projects = list_projects(room=room)
 
+    grouped_by_person = p in admins and scope == "people"
+
     if p:
         hidden = set(get_person_settings(p).get("hidden_rooms", []))
         if hidden:
             all_projects = [pr for pr in all_projects if pr.room not in hidden]
-        all_projects = [
-            pr for pr in all_projects
-            if _can_see_project(pr, list_steps(pr.id), p, admins)
-        ]
+        if not grouped_by_person:
+            all_projects = [
+                pr for pr in all_projects
+                if _can_see_project(pr, list_steps(pr.id), p, admins)
+            ]
 
     active_projects = [pr for pr in all_projects if not pr.completed]
     done_projects   = [pr for pr in all_projects if pr.completed]
     projects = done_projects if show == "done" else active_projects
 
     psuffix = f"&p={p}" if p else ""
+    scope_suffix = "&scope=people" if grouped_by_person else ""
 
     filters = '<div class="filters">'
-    filters += f'<a class="filter-btn {"active" if show == "active" and not room else ""}" href="projects{("?p="+p) if p else ""}">Offen</a>'
-    filters += f'<a class="filter-btn {"active" if show == "done" else ""}" href="projects?show=done{psuffix}">Abgeschlossen ({len(done_projects)})</a>'
+    filters += f'<a class="filter-btn {"active" if show == "active" and not room and not grouped_by_person else ""}" href="projects{("?p="+p) if p else ""}">Meine</a>'
+    if p in admins:
+        filters += f'<a class="filter-btn {"active" if grouped_by_person else ""}" href="projects?scope=people{psuffix}">Nach Personen</a>'
+    filters += f'<a class="filter-btn {"active" if show == "done" else ""}" href="projects?show=done{scope_suffix}{psuffix}">Abgeschlossen ({len(done_projects)})</a>'
     for r in areas:
         active_cls = "active" if room == r and show != "done" else ""
-        filters += f'<a class="filter-btn {active_cls}" href="projects?room={r}{psuffix}">{r}</a>'
+        filters += f'<a class="filter-btn {active_cls}" href="projects?room={r}{scope_suffix}{psuffix}">{r}</a>'
     filters += '</div>'
 
     rows = ""
@@ -69,9 +86,8 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
             f'</div>'
         )
     else:
-        for proj in projects:
+        def project_row(proj: Project, visible: list[Step], person_name: str = "") -> str:
             steps = list_steps(proj.id)
-            visible = _visible_steps(proj, steps, p, admins)
             done, total = proj.progress(visible)
             pct = int(done / total * 100) if total else 0
             assigned = f"<span class='task-meta'>→ {proj.assigned_to}</span>" if proj.assigned_to else ""
@@ -94,24 +110,48 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
                 f'{_icon("trash", 16)}</a>'
             )
 
-            rows += f"""
+            person_suffix = f" · {person_name}" if person_name else ""
+            return f"""
             <div class="proj-row" style="{opacity}">
-              <a href="projects/{proj.id}" style="display:contents;text-decoration:none">
+              <a href="projects/{proj.id}{'?scope=people' if grouped_by_person else ''}" style="display:contents;text-decoration:none">
                 {_proj_icon(proj.room, icon=proj.icon)}
               </a>
               <div style="flex:1;min-width:0">
-                <a href="projects/{proj.id}"
+                <a href="projects/{proj.id}{'?scope=people' if grouped_by_person else ''}"
                    style="text-decoration:none;color:inherit;font-weight:600;
                           font-size:0.9rem;display:block;margin-bottom:0.15rem">
                   {proj.name}
                 </a>
-                <div class="task-meta">{proj.room} · {done}/{total} sichtbare Schritte {assigned}</div>
+                <div class="task-meta">{proj.room}{person_suffix} · {done}/{total} sichtbare Schritte {assigned}</div>
                 <div class="progress-track" style="margin-top:0.4rem">
                   <div class="progress-fill {fill_class}" style="width:{pct}%"></div>
                 </div>
               </div>
               <div class="task-actions">{action_btns}{del_btn}</div>
             </div>"""
+
+        if grouped_by_person:
+            from collections import defaultdict
+            grouped: dict[str, list[str]] = defaultdict(list)
+            for proj in projects:
+                steps = list_steps(proj.id)
+                for person_name in _project_people(proj, steps):
+                    visible = _steps_for_person(proj, steps, person_name)
+                    if not visible and proj.assigned_to == person_name:
+                        visible = steps
+                    grouped[person_name].append(project_row(proj, visible, person_name))
+            for person_name, person_rows in sorted(grouped.items()):
+                rows += (
+                    f'<div style="padding:0.5rem 1.25rem;font-size:0.72rem;font-weight:700;'
+                    f'color:var(--primary-dark);text-transform:uppercase;letter-spacing:0.06em;'
+                    f'background:var(--primary-light);display:flex;align-items:center;gap:0.4rem">'
+                    f'{_icon("person", 13, "var(--primary-dark)")} {person_name}</div>'
+                    + "".join(person_rows)
+                )
+        else:
+            for proj in projects:
+                steps = list_steps(proj.id)
+                rows += project_row(proj, _visible_steps(proj, steps, p, admins))
 
     psuffix_q = f"?p={p}" if p else ""
     content = f"""
@@ -176,7 +216,7 @@ async def project_create(request: Request, name: str = Form(...), room: str = Fo
 
 
 @router.get("/{project_id}", response_class=HTMLResponse)
-async def project_detail(project_id: str, request: Request, p: str = ""):
+async def project_detail(project_id: str, request: Request, scope: str = "mine", p: str = ""):
     p = resolve_person(request, p)
     admins = get_admins()
     proj = get_project(project_id)
@@ -184,9 +224,10 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
         raise HTTPException(404)
     base = _base(request)
     all_steps = list_steps(project_id)
-    if not _can_see_project(proj, all_steps, p, admins):
+    grouped_by_person = p in admins and scope == "people"
+    if not grouped_by_person and not _can_see_project(proj, all_steps, p, admins):
         raise HTTPException(404)
-    steps = _visible_steps(proj, all_steps, p, admins)
+    steps = all_steps if grouped_by_person else _visible_steps(proj, all_steps, p, admins)
     done, total = proj.progress(steps)
     pct = int(done / total * 100) if total else 0
     persons = await get_persons()
