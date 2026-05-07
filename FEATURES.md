@@ -120,7 +120,8 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Externes Stylesheet `assets/app.css`; FOUC-Fix via inline Critical CSS + `color-scheme` Meta
 - ✅ Dashboard: Ring-Charts (Erledigt/Überfällig/Zustand) als einzelne Karten
 - ✅ Dashboard als handlungsorientierte Heute-Ansicht mit nächsten Aufgaben und Raumüberblick
-- ✅ Aufgabenliste: 3-Zeilen-Layout, Badge-Semantik, Kategorie-Icons, SVG-Aktions-Buttons
+- ✅ Aufgabenliste: 3-Zeilen-Layout, Badge-Semantik, OpenMoji-Icons, SVG-Aktions-Buttons
+- ✅ Icon-Chooser im Formular: manuelle Auswahl aus 44 OpenMoji-Icons oder automatische Erkennung
 - ✅ Projektkarten mit sichtbarem nächsten Schritt, Fortschritt und besserer Trennung aktiver/abgeschlossener Projekte
 - ✅ SVG-Bottom-Navigation statt Emoji-Mix
 - ✅ Filter als horizontale Chip-Leiste (Alle, Meine, Überfällig, Räume)

@@ -1,3 +1,10 @@
+## 1.1.3
+
+- OpenMoji Icons: 44 farbige Illustrationen für Haushalts- und Familienaufgaben
+- Icon-Chooser: manuelle Icon-Auswahl in Aufgaben- und Projekt-Formularen (🔮 = automatisch)
+- Projekte nutzen jetzt ebenfalls OpenMoji-Bubbles statt SVG-Pfaden
+- Keyword-Erkennung stark erweitert: Haustiere, Kinder, Auto, Reparatur, Garten u.v.m.
+
 ## 1.1.2
 
 - Aufgaben: 3-Zeilen-Layout (Name+Badge / Datum / Aktionen), klarere Dichte auf Mobile

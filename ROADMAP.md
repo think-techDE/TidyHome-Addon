@@ -1,6 +1,6 @@
 # TidyHome – Roadmap
 
-Stand: 2026-05-07 · Aktuelle Version: 1.1.2
+Stand: 2026-05-07 · Aktuelle Version: 1.1.3
 
 ---
 
@@ -73,7 +73,7 @@ Stand: 2026-05-07 · Aktuelle Version: 1.1.2
 
 ---
 
-## ✅ Phase 9 – Modern UI Refresh (v1.1.0–1.1.2)
+## ✅ Phase 9 – Modern UI Refresh (v1.1.0–1.1.3)
 
 - **Design-System aufgefrischt**: neutrale Flächen, Mauve/Rose nur als Akzent, klare Statusfarben
 - **Light/Dark Tokens**: gemeinsame CSS-Variablen; externes Stylesheet `assets/app.css`
@@ -87,6 +87,9 @@ Stand: 2026-05-07 · Aktuelle Version: 1.1.2
 - **Formulare**: SVG-Stern statt Emoji, Personen full-width, verbesserter Back-Button
 - **SVG-Aktions-Buttons**: Erledigt/Bearbeiten/Löschen als konsistente Icon-Buttons
 - **Empty States**: illustrierte Meldungen bei leerer Aufgaben-/Projektliste
+- **OpenMoji Icons**: 44 farbige Illustrationen für Haushalt und Familie, vollständig offline
+- **Icon-Chooser**: manuelle Icon-Auswahl im Formular, überschreibt die automatische Erkennung
+- **Keyword-Erkennung**: Haustiere, Kinder, Auto, Reparatur, Garten, Küche und mehr
 
 ---
 
@@ -186,5 +189,7 @@ Ziel: Tiefer in das HA-Ökosystem einbinden.
 - Dashboard: Ring-Charts als einzelne Karten, nächste Aufgaben, Räume als Liste
 - Kategorie-Icons für Aufgaben; SVG-Aktions-Buttons; Empty States
 - Formulare: SVG-Icons, full-width Personenzuweisung, konsistenter Back-Button
+- OpenMoji Icons (44 SVGs offline): farbige Aufgaben- und Projekt-Bubbles nach Kategorie
+- Icon-Chooser in Aufgaben- und Projekt-Formularen mit 🔮 Auto-Option
 - Modulare Codebasis (`routes/`, `render`, `scheduler`, `config`)
 - SVG-Logo + PNG-Icon, Favicon; CHANGELOG.md für HA Update-Dialog
