@@ -159,6 +159,7 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
     proj = get_project(project_id)
     if not proj:
         raise HTTPException(404)
+    base = _base(request)
     steps = list_steps(project_id)
     done, total = proj.progress(steps)
     pct = int(done / total * 100) if total else 0
@@ -185,7 +186,7 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
             <div class="task-row">
               <span class="task-name" style="flex:1">{s.name}</span>
               <span class="task-meta" style="margin-right:0.5rem">{s.points} Pkt</span>
-              <form class="inline" method="post" action="steps/{s.id}/done">
+              <form class="inline" method="post" action="{base}projects/{project_id}/steps/{s.id}/done">
                 <select name="done_by" style="width:auto;padding:0.22rem 0.4rem;
                   font-size:0.78rem;margin-right:0.3rem;border-radius:0.4rem;
                   border:1.5px solid var(--border);background:var(--card);color:var(--text)">
@@ -194,7 +195,8 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
                 <button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>
               </form>
               <a class="icon-btn danger" style="margin-left:0.1rem"
-                 href="steps/{s.id}/delete" onclick="return confirm('Schritt löschen?')">
+                 href="{base}projects/{project_id}/steps/{s.id}/delete"
+                 onclick="return confirm('Schritt löschen?')">
                  {_icon("trash", 15)}
               </a>
             </div>"""
@@ -217,7 +219,7 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
         <h2>{proj.name}</h2>
         <div class="muted">{proj.room}{assigned}</div>
       </div>
-      <a class="btn btn-ghost btn-sm" href="edit"
+      <a class="btn btn-ghost btn-sm" href="{base}projects/{project_id}/edit"
          style="display:flex;align-items:center;gap:0.3rem">
         {_icon("edit", 14, "var(--primary-dark)")} Bearbeiten
       </a>
@@ -235,7 +237,7 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
     <div class="card card-flush" style="margin-bottom:1rem">{step_rows}</div>
     <div class="card">
       <h3 style="margin-bottom:0.75rem">Schritt hinzufügen</h3>
-      <form method="post" action="steps">
+      <form method="post" action="{base}projects/{project_id}/steps">
         <div class="grid-2">
           <div class="form-group">
             <label>Beschreibung</label>
@@ -250,7 +252,7 @@ async def project_detail(project_id: str, request: Request, p: str = ""):
                 style="display:flex;align-items:center;gap:0.3rem">
           {_icon("plus", 14, "white")} Hinzufügen
         </button>
-        <a class="btn btn-ghost btn-sm" href="projects" style="margin-left:0.5rem">← Alle Projekte</a>
+        <a class="btn btn-ghost btn-sm" href="{base}projects" style="margin-left:0.5rem">← Alle Projekte</a>
       </form>
     </div>"""
     return render(content, request, page="projects", person=p)
@@ -262,6 +264,7 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
     proj = get_project(project_id)
     if not proj:
         raise HTTPException(404)
+    base = _base(request)
     areas   = await get_areas()
     persons = await get_persons()
     room_opts = "".join(
@@ -273,7 +276,7 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
     content = f"""
     <h2>Projekt bearbeiten</h2>
     <div class="card">
-      <form method="post" action="edit">
+      <form method="post" action="{base}projects/{project_id}/edit">
         <div class="form-group">
           <label>Name</label>
           <input name="name" required value="{proj.name}">
@@ -294,7 +297,8 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
         </div>
         {_icon_chooser(proj.icon, "icon")}
         <button class="btn btn-primary btn-full" type="submit">Speichern</button>
-        <a class="btn btn-ghost btn-full" href="../{project_id}" style="margin-top:0.5rem">Abbrechen</a>
+        <a class="btn btn-ghost btn-full" href="{base}projects/{project_id}"
+           style="margin-top:0.5rem">Abbrechen</a>
       </form>
     </div>"""
     return render(content, request, page="projects", person=p)
