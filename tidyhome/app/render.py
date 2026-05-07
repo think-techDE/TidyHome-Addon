@@ -426,9 +426,14 @@ def render(content: str, request: Request, page: str = "home",
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <base href="{base}">
 <title>TidyHome</title>
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<style>
+  :root {{ background:#f6f7f9; color:#20242a; }}
+  @media (prefers-color-scheme:dark) {{ :root {{ background:#101114; color:#f4f1f2; }} }}
+</style>
 <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
