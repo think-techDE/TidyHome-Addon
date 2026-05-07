@@ -1,3 +1,10 @@
+## 1.1.1
+
+- CSS nach assets/app.css ausgelagert (bessere Performance, saubereres Dark Mode)
+- Ring-Charts, SVG-Icons und Card-Layouts vollständig integriert und zusammengeführt
+- Aufgaben: Kategorie-Icons und "Meine"-Filter hinzugefügt
+- Empty States mit Icon und Hinweistext
+
 ## 1.1.0
 
 - Visuelles Redesign: SVG-Icons statt Emoji in Navigation und Aktionsbuttons
