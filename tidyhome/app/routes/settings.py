@@ -10,68 +10,78 @@ from storage import (get_admins, get_person_settings, list_person_settings,
 router = APIRouter()
 
 
+def _person_settings_card(pn: str, areas: list[str], admins: set[str],
+                           action: str = "settings") -> str:
+    """HTML-Karte für die Einstellungen einer einzelnen Person."""
+    cfg = get_person_settings(pn)
+    time_val = cfg.get("notify_time", "08:00")
+    checked = "checked" if cfg.get("enabled") else ""
+    services = cfg.get("services") or []
+    hidden_rooms = set(cfg.get("hidden_rooms") or [])
+    svc_info = (
+        f'<div class="muted" style="margin-bottom:0.75rem">Geräte: {", ".join(services)}</div>'
+        if services else
+        '<div class="muted" style="margin-bottom:0.75rem">Keine Geräte (Admin konfiguriert diese)</div>'
+    )
+    admin_b = f' <span class="admin-badge">Admin</span>' if pn in admins else ""
+
+    room_boxes = ""
+    for r in areas:
+        room_boxes += f"""
+        <label style="display:flex;align-items:center;gap:0.5rem;
+                       padding:0.3rem 0;cursor:pointer;font-size:0.84rem">
+          <input type="checkbox" name="hidden_rooms" value="{r}"
+                 {'checked' if r in hidden_rooms else ''}
+                 style="width:1rem;height:1rem;accent-color:var(--primary)">
+          {r}
+        </label>"""
+
+    return f"""
+    <div class="card" style="margin-bottom:0.75rem">
+      <form method="post" action="{action}">
+        <input type="hidden" name="person" value="{pn}">
+        <div style="font-weight:700;margin-bottom:0.5rem">{pn}{admin_b}</div>
+        {svc_info}
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Benachrichtigungszeit</label>
+            <input name="notify_time" type="time" value="{time_val}">
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:0.1rem">
+            <label style="display:flex;align-items:center;gap:0.5rem;
+                          cursor:pointer;text-transform:none;font-size:0.85rem;letter-spacing:0;margin:0">
+              <input type="checkbox" name="enabled" value="1" {checked} style="width:auto">
+              Aktiv
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Räume ausblenden</label>
+          <div style="display:flex;flex-wrap:wrap;gap:0 1.5rem">{room_boxes}</div>
+        </div>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
+          <a class="btn btn-ghost btn-sm" href="notify-now/{pn}">🔔 Testen</a>
+        </div>
+      </form>
+    </div>"""
+
+
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_form(request: Request, p: str = ""):
-    persons = await get_persons()
-    areas = await get_areas()
     admins = get_admins()
-    cards = ""
-    for pn in persons:
-        cfg = get_person_settings(pn)
-        time_val = cfg.get("notify_time", "08:00")
-        checked = "checked" if cfg.get("enabled") else ""
-        services = cfg.get("services") or []
-        hidden_rooms = set(cfg.get("hidden_rooms") or [])
-        svc_info = (
-            f'<div class="muted" style="margin-bottom:0.75rem">Geräte: {", ".join(services)}</div>'
-            if services else
-            '<div class="muted" style="margin-bottom:0.75rem">Keine Geräte (Admin konfiguriert diese)</div>'
-        )
-        admin_b = f' <span class="admin-badge">Admin</span>' if pn in admins else ""
+    areas = await get_areas()
 
-        # Raum-Checkboxen
-        room_boxes = ""
-        for r in areas:
-            is_hidden = r in hidden_rooms
-            room_boxes += f"""
-            <label style="display:flex;align-items:center;gap:0.5rem;
-                           padding:0.3rem 0;cursor:pointer;font-size:0.84rem">
-              <input type="checkbox" name="hidden_rooms" value="{r}"
-                     {'checked' if is_hidden else ''}
-                     style="width:1rem;height:1rem;accent-color:var(--primary)">
-              {r}
-            </label>"""
-
-        cards += f"""
-        <div class="card" style="margin-bottom:0.75rem">
-          <form method="post" action="settings">
-            <input type="hidden" name="person" value="{pn}">
-            <div style="font-weight:700;margin-bottom:0.5rem">{pn}{admin_b}</div>
-            {svc_info}
-            <div class="grid-2">
-              <div class="form-group">
-                <label>Benachrichtigungszeit</label>
-                <input name="notify_time" type="time" value="{time_val}">
-              </div>
-              <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:0.1rem">
-                <label style="display:flex;align-items:center;gap:0.5rem;
-                              cursor:pointer;text-transform:none;font-size:0.85rem;letter-spacing:0;margin:0">
-                  <input type="checkbox" name="enabled" value="1" {checked} style="width:auto">
-                  Aktiv
-                </label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Räume ausblenden</label>
-              <div style="display:flex;flex-wrap:wrap;gap:0 1.5rem">{room_boxes}</div>
-            </div>
-            <div style="display:flex;gap:0.5rem">
-              <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
-              <a class="btn btn-ghost btn-sm" href="notify-now/{pn}">🔔 Testen</a>
-            </div>
-          </form>
+    if not p:
+        content = """
+        <h2>Einstellungen</h2>
+        <div class="card">
+          <div class="muted">Wähle zuerst eine Person über das Menü aus.</div>
         </div>"""
-    content = f"<h2>Einstellungen</h2>{cards}"
+        return render(content, request, page="settings", person=p)
+
+    card = _person_settings_card(p, areas, admins, action="settings")
+    content = f"<h2>Einstellungen</h2>{card}"
     return render(content, request, page="settings", person=p)
 
 
@@ -189,7 +199,19 @@ async def admin_form(request: Request, saved: str = ""):
             </div>"""
         device_section = cards
 
-    content = f"<h2>Admin</h2>{admin_section}<h2 style='margin-bottom:0.75rem'>Geräte-Verwaltung</h2>{device_section}"
+    # ── Personeneinstellungen (Benachrichtigungen + Räume) ────────────────────
+    areas = await get_areas()
+    person_settings_cards = "".join(
+        _person_settings_card(pn, areas, admins, action="settings")
+        for pn in persons
+    )
+
+    content = (
+        f"<h2>Admin</h2>{admin_section}"
+        f"<h2 style='margin-bottom:0.75rem'>Geräte-Verwaltung</h2>{device_section}"
+        f"<h2 style='margin-bottom:0.75rem;margin-top:1rem'>Personeneinstellungen</h2>"
+        f"{person_settings_cards}"
+    )
     return render(content, request)
 
 
