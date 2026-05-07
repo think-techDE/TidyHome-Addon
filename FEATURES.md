@@ -35,6 +35,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 
 - ✅ Projekte anlegen (Name, Raum, Person, Beschreibung)
 - ✅ Projekte bearbeiten und löschen
+- ✅ Schritte hinzufügen, abhaken und löschen (Routing-Fix v1.1.4)
 - ✅ Teilschritte hinzufügen (Name, Punkte)
 - ✅ Teilschritte abhaken mit Personenzuordnung
 - ✅ Fortschrittsbalken pro Projekt

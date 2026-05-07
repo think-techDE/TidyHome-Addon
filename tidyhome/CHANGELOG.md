@@ -1,3 +1,9 @@
+## 1.1.4
+
+- Fix: Schritte hinzufügen, abhaken und löschen in Projekten funktionieren wieder
+- Fix: Projekt bearbeiten und Zurück-Navigation in der Detailansicht repariert
+- Ursache: relative URLs kollidierten mit dem HA-Ingress base-href
+
 ## 1.1.3
 
 - OpenMoji Icons: 44 farbige Illustrationen für Haushalts- und Familienaufgaben

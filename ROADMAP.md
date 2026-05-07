@@ -1,6 +1,6 @@
 # TidyHome – Roadmap
 
-Stand: 2026-05-07 · Aktuelle Version: 1.1.3
+Stand: 2026-05-07 · Aktuelle Version: 1.1.4
 
 ---
 
@@ -73,7 +73,7 @@ Stand: 2026-05-07 · Aktuelle Version: 1.1.3
 
 ---
 
-## ✅ Phase 9 – Modern UI Refresh (v1.1.0–1.1.3)
+## ✅ Phase 9 – Modern UI Refresh (v1.1.0–1.1.4)
 
 - **Design-System aufgefrischt**: neutrale Flächen, Mauve/Rose nur als Akzent, klare Statusfarben
 - **Light/Dark Tokens**: gemeinsame CSS-Variablen; externes Stylesheet `assets/app.css`
@@ -90,6 +90,7 @@ Stand: 2026-05-07 · Aktuelle Version: 1.1.3
 - **OpenMoji Icons**: 44 farbige Illustrationen für Haushalt und Familie, vollständig offline
 - **Icon-Chooser**: manuelle Icon-Auswahl im Formular, überschreibt die automatische Erkennung
 - **Keyword-Erkennung**: Haustiere, Kinder, Auto, Reparatur, Garten, Küche und mehr
+- **Bugfix**: Projekt-URLs absolut — Schritte hinzufügen/abhaken/löschen und Navigation repariert
 
 ---
 
@@ -191,5 +192,7 @@ Ziel: Tiefer in das HA-Ökosystem einbinden.
 - Formulare: SVG-Icons, full-width Personenzuweisung, konsistenter Back-Button
 - OpenMoji Icons (44 SVGs offline): farbige Aufgaben- und Projekt-Bubbles nach Kategorie
 - Icon-Chooser in Aufgaben- und Projekt-Formularen mit 🔮 Auto-Option
+- Aktionen in Aufgaben über volle Breite: Haken links, Edit/Löschen rechts
+- Bugfix: Projekt-Detailansicht (Schritte, Navigation) mit absoluten URLs
 - Modulare Codebasis (`routes/`, `render`, `scheduler`, `config`)
 - SVG-Logo + PNG-Icon, Favicon; CHANGELOG.md für HA Update-Dialog
