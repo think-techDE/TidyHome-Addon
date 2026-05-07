@@ -1,3 +1,8 @@
+## 1.1.5
+
+- Raum-Icons: OpenMoji-Illustrationen für Küche, Wohnzimmer, Schlafzimmer, Bad, Flur und mehr
+- Aufgabenliste: mehr vertikaler Abstand zwischen den Zeilen
+
 ## 1.1.4
 
 - Fix: Schritte hinzufügen, abhaken und löschen in Projekten funktionieren wieder

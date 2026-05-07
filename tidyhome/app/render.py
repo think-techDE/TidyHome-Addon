@@ -7,11 +7,23 @@ INTERVALS = {
     30: "Monatlich", 90: "Vierteljährlich", 180: "Halbjährlich", 365: "Jährlich",
 }
 
-ROOM_ICONS = {
-    "Küche": "KI", "Wohnzimmer": "WO", "Schlafzimmer": "SZ", "Bad": "BD",
-    "Badezimmer": "BD", "Flur": "FL", "Keller": "KE", "Garten": "GA",
-    "Garage": "GR", "Büro": "BU", "Arbeitszimmer": "AR", "Esszimmer": "EZ",
-    "Kinderzimmer": "KZ", "Balkon": "BA", "Terrasse": "TE",
+# Room name -> (openmoji_filename, bubble_bg)
+ROOM_ICONS: dict[str, tuple[str, str]] = {
+    "Küche":        ("1F373",      "var(--warning-bg)"),
+    "Wohnzimmer":   ("1F6CB",      "var(--primary-soft)"),
+    "Schlafzimmer": ("1F6CF-FE0F", "rgba(59,130,246,0.12)"),
+    "Bad":          ("1F6C0",      "rgba(59,130,246,0.12)"),
+    "Badezimmer":   ("1F6C0",      "rgba(59,130,246,0.12)"),
+    "Flur":         ("1F6AA",      "var(--surface-2)"),
+    "Keller":       ("1F4E6",      "var(--surface-2)"),
+    "Garten":       ("1F333",      "var(--success-bg)"),
+    "Garage":       ("1F697",      "var(--surface-2)"),
+    "Büro":         ("1F4BB",      "var(--primary-soft)"),
+    "Arbeitszimmer":("1F4BB",      "var(--primary-soft)"),
+    "Esszimmer":    ("1F37D-FE0F", "var(--warning-bg)"),
+    "Kinderzimmer": ("1F392",      "var(--primary-soft)"),
+    "Balkon":       ("1FAB4",      "var(--success-bg)"),
+    "Terrasse":     ("2600",       "var(--warning-bg)"),
 }
 
 # ── SVG icon paths (Feather-style 24×24) ─────────────────────────────────────
@@ -253,6 +265,20 @@ def _proj_icon(room: str = "", size: int = 46, icon: str = "") -> str:
         else:                                            key = "default"
     filename, bg = _TASK_ICONS.get(key, _TASK_ICONS["default"])
     img_size = int(size * 0.62)
+    return (
+        f'<div style="width:{size}px;height:{size}px;border-radius:50%;'
+        f'background:{bg};display:flex;align-items:center;'
+        f'justify-content:center;flex-shrink:0;overflow:hidden">'
+        f'<img src="assets/icons/{filename}.svg" width="{img_size}" height="{img_size}"'
+        f' style="display:block" loading="lazy">'
+        f'</div>'
+    )
+
+
+def _room_icon(room: str, size: int = 40) -> str:
+    """Round icon bubble using OpenMoji SVG for a room."""
+    filename, bg = ROOM_ICONS.get(room, ("1F3E0", "var(--primary-soft)"))
+    img_size = int(size * 0.60)
     return (
         f'<div style="width:{size}px;height:{size}px;border-radius:50%;'
         f'background:{bg};display:flex;align-items:center;'

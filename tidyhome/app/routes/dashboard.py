@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 from ha_client import get_areas
-from render import _icon, _ring_chart, render, resolve_person, ROOM_ICONS
+from render import _icon, _ring_chart, _room_icon, render, resolve_person
 from storage import get_person_settings, list_tasks, list_projects
 
 router = APIRouter()
@@ -116,7 +116,6 @@ async def dashboard(request: Request, p: str = ""):
     if visible_areas:
         room_rows = ""
         for r in visible_areas:
-            icon = ROOM_ICONS.get(r, "🏠")
             r_tasks    = [t for t in all_tasks if t.room == r]
             r_projects = [pr for pr in all_projects if pr.room == r]
             r_overdue  = sum(1 for t in r_tasks if t.days_until_due() < 0)
@@ -131,11 +130,7 @@ async def dashboard(request: Request, p: str = ""):
                style="display:flex;align-items:center;gap:0.875rem;
                       padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);
                       text-decoration:none;color:var(--text)">
-              <div style="width:40px;height:40px;border-radius:50%;
-                          background:var(--icon-bg);display:flex;align-items:center;
-                          justify-content:center;font-size:1.2rem;flex-shrink:0">
-                {icon}
-              </div>
+              {_room_icon(r, 40)}
               <span style="flex:1;font-weight:600;font-size:0.9rem">{r}</span>
               <span style="font-size:0.74rem;color:var(--muted)">{sub}</span>
               {badge}

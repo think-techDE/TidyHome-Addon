@@ -1,6 +1,6 @@
 # TidyHome – Roadmap
 
-Stand: 2026-05-07 · Aktuelle Version: 1.1.4
+Stand: 2026-05-07 · Aktuelle Version: 1.1.5
 
 ---
 
