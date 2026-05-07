@@ -64,40 +64,117 @@ def _icon(name: str, size: int = 20, color: str = "currentColor", sw: float = 2.
     )
 
 
-def _task_icon_key(name: str, room: str = "") -> str:
-    n = (name + " " + room).lower()
-    if any(w in n for w in ["staub", "saug"]): return "vacuum"
-    if any(w in n for w in ["müll", "abfall", "entsorg"]): return "trash_bin"
-    if any(w in n for w in ["pflanz", "gieß", "blum"]): return "plant"
-    if any(w in n for w in ["keller", "lager", "box", "karton"]): return "box"
-    if any(w in n for w in ["garderob", "kleid", "wäsch", "bügel"]): return "hanger"
-    if any(w in n for w in ["putz", "wisch", "reinig", "scheuer"]): return "broom"
-    if any(w in n for w in ["wasser", "gieß"]): return "drop"
-    return "tasks"
-
-
-_ICON_PALETTE: dict[str, tuple[str, str]] = {
-    "vacuum":    ("var(--primary-soft)",          "var(--primary-dark)"),
-    "trash_bin": ("var(--surface-2)",             "var(--muted)"),
-    "plant":     ("var(--success-bg)",            "var(--success)"),
-    "broom":     ("var(--primary-soft)",          "var(--primary-dark)"),
-    "hanger":    ("var(--warning-bg)",            "var(--warning)"),
-    "box":       ("var(--warning-bg)",            "var(--warning)"),
-    "drop":      ("rgba(59,130,246,0.12)",        "#3b82f6"),
-    "tasks":     ("var(--primary-soft)",          "var(--primary-dark)"),
+# OpenMoji icon filename + bubble background per task category
+# filename = Unicode hex codepoint as used by openmoji (assets/icons/<filename>.svg)
+_TASK_ICONS: dict[str, tuple[str, str]] = {
+    # key: (openmoji_filename, bubble_bg)
+    "besen":      ("1F9F9",      "var(--primary-soft)"),    # 🧹 Fegen/Staubsaugen
+    "schwamm":    ("1F9FD",      "var(--primary-soft)"),    # 🧽 Schrubben
+    "putzen":     ("1FAE7",      "var(--primary-soft)"),    # 🫧 Putzen allgemein
+    "eimer":      ("1FAA3",      "rgba(59,130,246,0.12)"),  # 🪣 Wischen/Eimer
+    "dusche":     ("1F6BF",      "rgba(59,130,246,0.12)"),  # 🚿 Dusche
+    "bad":        ("1F6C1",      "rgba(59,130,246,0.12)"),  # 🛁 Badewanne
+    "toilette":   ("1F6BD",      "var(--surface-2)"),       # 🚽 Toilette
+    "papier":     ("1F9FB",      "var(--surface-2)"),       # 🧻 Toilettenpapier
+    "kochen":     ("1F373",      "var(--warning-bg)"),      # 🍳 Kochen
+    "abwasch":    ("1F37D-FE0F", "var(--surface-2)"),       # 🍽️ Spülen/Abwasch
+    "kuehlschrank":("1F9CA",     "rgba(59,130,246,0.12)"),  # 🧊 Kühlschrank
+    "lunchbox":   ("1F371",      "var(--warning-bg)"),      # 🍱 Lunchbox/Brotdose
+    "waesche":    ("1F9FA",      "var(--primary-soft)"),    # 🧺 Wäsche waschen
+    "buegeln":    ("1F455",      "var(--primary-soft)"),    # 👕 Bügeln/Kleidung
+    "pflanze":    ("1FAB4",      "var(--success-bg)"),      # 🪴 Zimmerpflanze
+    "garten":     ("1F33F",      "var(--success-bg)"),      # 🌿 Garten
+    "laub":       ("1F342",      "var(--warning-bg)"),      # 🍂 Laub harken
+    "saen":       ("1F331",      "var(--success-bg)"),      # 🌱 Säen/Balkon
+    "schnee":     ("2744-FE0F",  "rgba(59,130,246,0.12)"),  # ❄️ Schnee schippen
+    "blumen":     ("1F490",      "var(--success-bg)"),      # 💐 Blumen
+    "muell":      ("1F5D1-FE0F", "var(--surface-2)"),       # 🗑️ Müll rausbringen
+    "recycling":  ("267B-FE0F",  "var(--success-bg)"),      # ♻️ Recycling/Trennen
+    "einkaufen":  ("1F6D2",      "var(--warning-bg)"),      # 🛒 Einkaufen
+    "post":       ("1F4EC",      "var(--primary-soft)"),    # 📬 Post holen
+    "tier":       ("1F43E",      "var(--warning-bg)"),      # 🐾 Haustier allgemein
+    "hund":       ("1F415",      "var(--warning-bg)"),      # 🐕 Hund
+    "katze":      ("1F408",      "var(--surface-2)"),       # 🐈 Katze
+    "werkzeug":   ("1F9F0",      "var(--warning-bg)"),      # 🧰 Reparatur
+    "schraube":   ("1F527",      "var(--warning-bg)"),      # 🔧 Schraubenschlüssel
+    "gluehbirne": ("1F4A1",      "var(--warning-bg)"),      # 💡 Glühbirne
+    "batterie":   ("1F50B",      "var(--surface-2)"),       # 🔋 Batterie/Filter
+    "schluessel": ("1F511",      "var(--warning-bg)"),      # 🔑 Sicherheit/Schloss
+    "buecher":    ("1F4DA",      "var(--primary-soft)"),    # 📚 Hausaufgaben
+    "rucksack":   ("1F392",      "var(--primary-soft)"),    # 🎒 Schule
+    "medizin":    ("1F48A",      "var(--danger-bg)"),       # 💊 Apotheke/Medizin
+    "bett":       ("1F6CF-FE0F", "var(--primary-soft)"),    # 🛏️ Bett machen
+    "fenster":    ("1FA9F",      "rgba(59,130,246,0.12)"),  # 🪟 Fenster/Lüften
+    "bad_auffuel":("1F9F4",      "var(--primary-soft)"),    # 🧴 Bad auffüllen
+    "lager":      ("1F4E6",      "var(--warning-bg)"),      # 📦 Keller/Lager
+    "auto":       ("1F697",      "var(--surface-2)"),       # 🚗 Auto
+    "tanken":     ("26FD",       "var(--surface-2)"),       # ⛽ Tanken
+    "heizung":    ("1F321-FE0F", "var(--warning-bg)"),      # 🌡️ Heizung/Thermostat
+    "default":    ("1F3E0",      "var(--primary-soft)"),    # 🏠 Allgemein
 }
 
 
+def _task_icon_key(name: str, room: str = "") -> str:
+    n = (name + " " + room).lower()
+    if any(w in n for w in ["staub", "saug", "feg", "besen"]):         return "besen"
+    if any(w in n for w in ["schrub", "schwamm"]):                      return "schwamm"
+    if any(w in n for w in ["putz", "wisch", "reinig", "scheuer"]):     return "putzen"
+    if any(w in n for w in ["eimer", "mopp"]):                          return "eimer"
+    if any(w in n for w in ["dusch"]):                                   return "dusche"
+    if any(w in n for w in ["wanne", "badewanne"]):                     return "bad"
+    if any(w in n for w in ["toilett", "klo", "wc"]):                   return "toilette"
+    if any(w in n for w in ["klopapier", "papierhandtuch", "toilettenpapier"]): return "papier"
+    if any(w in n for w in ["koch", "backen", "herd", "ofen"]):         return "kochen"
+    if any(w in n for w in ["abwasch", "spül", "geschirr", "spülmaschine"]): return "abwasch"
+    if any(w in n for w in ["kühlschrank", "kühlung", "gefrier"]):      return "kuehlschrank"
+    if any(w in n for w in ["lunchbox", "brotdose", "vesper"]):         return "lunchbox"
+    if any(w in n for w in ["wäsch", "waschen", "waschmaschine"]):      return "waesche"
+    if any(w in n for w in ["bügel", "kleid", "garderob", "hänger"]):   return "buegeln"
+    if any(w in n for w in ["pflanz", "blum", "gieß"]) and \
+       any(w in n for w in ["zimmer", "topf", "innen"]):                return "pflanze"
+    if any(w in n for w in ["gieß", "pflanz"]):                         return "pflanze"
+    if any(w in n for w in ["garten", "rasen", "mäh", "unkraut", "hecke"]): return "garten"
+    if any(w in n for w in ["laub", "herbst", "harken"]):               return "laub"
+    if any(w in n for w in ["säen", "aussät", "pflanzen"]):             return "saen"
+    if any(w in n for w in ["schnee", "schaufeln"]):                    return "schnee"
+    if any(w in n for w in ["blumen", "bouquet", "blumenstrauß"]):      return "blumen"
+    if any(w in n for w in ["müll", "abfall", "entsorg", "tonne"]):     return "muell"
+    if any(w in n for w in ["recycling", "recycle", "trennen", "papier", "glas", "kompost"]): return "recycling"
+    if any(w in n for w in ["einkauf", "supermarkt", "shop", "besorg"]): return "einkaufen"
+    if any(w in n for w in ["post", "brief", "paket", "briefkasten"]): return "post"
+    if any(w in n for w in ["hund", "gassi"]):                          return "hund"
+    if any(w in n for w in ["katze", "kater"]):                         return "katze"
+    if any(w in n for w in ["tier", "haustier", "futter", "tierarzt", "pfoten"]): return "tier"
+    if any(w in n for w in ["reparier", "werkzeug", "heimwerk"]):       return "werkzeug"
+    if any(w in n for w in ["schrauben", "montier", "aufbau"]):         return "schraube"
+    if any(w in n for w in ["lampe", "glühbirne", "leuchtmittel"]):     return "gluehbirne"
+    if any(w in n for w in ["batterie", "akku", "filter wechsel"]):     return "batterie"
+    if any(w in n for w in ["schloss", "schlüssel", "abschließ", "sicherheit"]): return "schluessel"
+    if any(w in n for w in ["hausaufgaben", "lernen", "nachhilfe"]):    return "buecher"
+    if any(w in n for w in ["schule", "rucksack", "ranzen"]):           return "rucksack"
+    if any(w in n for w in ["apotheke", "arzt", "medizin", "tabletten"]): return "medizin"
+    if any(w in n for w in ["bett", "bettwäsche", "laken", "kissen"]):  return "bett"
+    if any(w in n for w in ["fenster", "lüften"]):                      return "fenster"
+    if any(w in n for w in ["seife", "duschgel", "shampoo", "creme", "lotion"]): return "bad_auffuel"
+    if any(w in n for w in ["keller", "lager", "box", "karton", "stauraum"]): return "lager"
+    if any(w in n for w in ["auto", "wagen", "kfz", "waschen"]) and \
+       any(w in n for w in ["auto", "wagen", "kfz"]):                   return "auto"
+    if any(w in n for w in ["tanken", "tankstelle", "kraftstoff"]):     return "tanken"
+    if any(w in n for w in ["heizung", "thermostat", "heizkörper", "temperatur"]): return "heizung"
+    return "default"
+
+
 def _task_icon(name: str, room: str = "", size: int = 44) -> str:
-    """Round icon bubble for a task with per-type color."""
+    """Round icon bubble using OpenMoji SVG for a task."""
     key = _task_icon_key(name, room)
-    bg, fg = _ICON_PALETTE.get(key, ("var(--primary-soft)", "var(--primary-dark)"))
-    inner = int(size * 0.46)
+    filename, bg = _TASK_ICONS.get(key, _TASK_ICONS["default"])
+    img_size = int(size * 0.62)
     return (
         f'<div style="width:{size}px;height:{size}px;border-radius:50%;'
         f'background:{bg};display:flex;align-items:center;'
-        f'justify-content:center;flex-shrink:0">'
-        f'{_icon(key, inner, fg)}'
+        f'justify-content:center;flex-shrink:0;overflow:hidden">'
+        f'<img src="assets/icons/{filename}.svg" width="{img_size}" height="{img_size}"'
+        f' style="display:block" loading="lazy">'
         f'</div>'
     )
 
