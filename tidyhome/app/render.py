@@ -457,9 +457,18 @@ def render(content: str, request: Request, page: str = "home",
 <title>TidyHome</title>
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 <style>
-  html,body{{background:#f4f0f2;color:#24181f}}
-  header{{background:rgba(255,255,255,0.90);border-bottom:1px solid #ddd6da}}
-  .bottom-nav{{background:rgba(255,255,255,0.96);border-top:1px solid #ddd6da}}
+  *{{box-sizing:border-box;margin:0;padding:0}}
+  html,body{{background:#f4f0f2;color:#24181f;opacity:0;
+             font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+             padding-bottom:5rem}}
+  header{{background:rgba(255,255,255,0.90);border-bottom:1px solid #ddd6da;
+          padding:0.75rem 1rem;display:flex;align-items:center;
+          justify-content:space-between;position:sticky;top:0;z-index:10}}
+  .bottom-nav{{position:fixed;bottom:0;left:0;right:0;height:4.25rem;
+               background:rgba(255,255,255,0.96);border-top:1px solid #ddd6da;
+               display:flex;z-index:10;overflow:hidden}}
+  .nav-item{{flex:1;display:flex;flex-direction:column;align-items:center;
+             justify-content:center;text-decoration:none;color:transparent}}
   @media(prefers-color-scheme:dark){{
     html,body{{background:#101114;color:#f4f1f2}}
     header,.bottom-nav{{background:rgba(24,26,31,0.92);border-color:#30333b}}

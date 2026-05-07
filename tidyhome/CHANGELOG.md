@@ -1,3 +1,11 @@
+## 1.2.9
+
+- Fix: FOUC (Aufblinken) beim Seitenwechsel beseitigt – kritisches Layout-CSS inline im `<head>` verhindert Flackern vor dem App.css-Laden
+- Fix: `body { opacity: 0 }` inline + `opacity: 1; transition: 0.06s` in app.css sorgen fuer sauberes Einblenden ohne sichtbare Rohstruktur
+- Admin-Bereich: Raum-Icons als visueller Picker mit Icon-Grid statt Dropdown
+- Dashboard: Aufgaben-Zeilen kompakter mit `.dash-task`-Layout (Icon, Name, Badge, Erledigt-Button in einer Zeile)
+- Neue CSS-Variable `--sep` fuer Listentrennlinien (rgba-basiert, garantierter Kontrast in Light und Dark Mode)
+
 ## 1.2.8
 
 - Fix: Trennlinien zwischen Aufgaben, Räumen und Projektschritten jetzt in Dark und Light Mode sichtbar
