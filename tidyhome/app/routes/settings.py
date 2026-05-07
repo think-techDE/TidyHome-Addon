@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_notify_services, get_persons
-from render import _base, _icon_chooser, _room_icon, render
+from render import _base, _ICON_LABELS, _TASK_ICONS, _room_icon, render
 from scheduler import notify_person_now, parse_time
 from storage import (get_admins, get_person_settings, get_room_icons, list_person_settings,
                      save_admins, save_person_settings, save_room_icons, ROLES)
@@ -11,7 +11,8 @@ router = APIRouter()
 
 
 def _person_settings_card(pn: str, areas: list[str], admins: set[str],
-                           base: str = "", action: str = "settings") -> str:
+                           base: str = "", action: str = "settings",
+                           show_admin_fields: bool = False) -> str:
     """HTML-Karte für die Einstellungen einer einzelnen Person."""
     cfg = get_person_settings(pn)
     time_val = cfg.get("notify_time", "08:00")
@@ -39,6 +40,29 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
           {r}
         </label>"""
 
+    admin_fields = ""
+    if show_admin_fields:
+        role_opts = "".join(
+            f'<option value="{k}"{" selected" if k == role else ""}>{v}</option>'
+            for k, v in ROLES.items()
+        )
+        admin_fields = f"""
+        <div class="grid-2" style="margin-top:0.5rem">
+          <div class="form-group">
+            <label>Rolle</label>
+            <select name="role">{role_opts}</select>
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:0.75rem">
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;
+                          text-transform:none;font-size:0.84rem;letter-spacing:0;font-weight:500;margin:0">
+              <input type="checkbox" name="can_see_children" value="1"
+                     {'checked' if can_see_children else ''}
+                     style="width:1rem;height:1rem;accent-color:var(--primary)">
+              Kinder sehen
+            </label>
+          </div>
+        </div>"""
+
     return f"""
     <div class="card" style="margin-bottom:0.75rem">
       <form method="post" action="{base}{action}">
@@ -58,28 +82,12 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
             </label>
           </div>
         </div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Rolle</label>
-            <select name="role">
-              {"".join(f'<option value="{k}"{" selected" if k == role else ""}>{v}</option>' for k, v in ROLES.items())}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Wochenziel (Aufgaben)</label>
-            <input name="weekly_goal" type="number" min="0" max="99" value="{weekly_goal}"
-                   placeholder="0 = kein Ziel">
-          </div>
-        </div>
         <div class="form-group">
-          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;
-                        text-transform:none;font-size:0.85rem;letter-spacing:0;font-weight:500">
-            <input type="checkbox" name="can_see_children" value="1"
-                   {'checked' if can_see_children else ''}
-                   style="width:1rem;height:1rem;accent-color:var(--primary)">
-            Kann Aufgaben anderer Kinder sehen (nur relevant für Rolle „Kind")
-          </label>
+          <label>Wochenziel (Aufgaben)</label>
+          <input name="weekly_goal" type="number" min="0" max="99" value="{weekly_goal}"
+                 placeholder="0 = kein Ziel">
         </div>
+        {admin_fields}
         <div class="form-group">
           <label>Räume ausblenden</label>
           <div style="display:flex;flex-wrap:wrap;gap:0 1.5rem">{room_boxes}</div>
@@ -275,36 +283,51 @@ async def admin_form(request: Request, saved: str = ""):
 
     # ── Raum-Icons ────────────────────────────────────────────────────────
     stored_icons = get_room_icons()
+    icon_options = '<option value="">🔮 Automatisch</option>'
+    for key in _TASK_ICONS:
+        label = _ICON_LABELS.get(key, key)
+        icon_options += f'<option value="{key}">{label}</option>'
+
     room_icon_rows = ""
     for r in areas:
         current_key = stored_icons.get(r, "")
-        chooser = _icon_chooser(current_key, input_name=f"icon__{r}")
-        # Preview of current icon
         preview = _room_icon(r, 36, stored_icons)
+        # Build options with current selection
+        opts = '<option value="">🔮 Automatisch</option>'
+        for key in _TASK_ICONS:
+            label = _ICON_LABELS.get(key, key)
+            sel = " selected" if key == current_key else ""
+            opts += f'<option value="{key}"{sel}>{label}</option>'
+        safe_name = r.replace(" ", "_")
         room_icon_rows += f"""
-        <div style="border-bottom:1px solid var(--border);padding:0.75rem 0">
-          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
-            {preview}
-            <span style="font-weight:600;font-size:0.9rem">{r}</span>
-          </div>
-          {chooser}
+        <div style="display:flex;align-items:center;gap:0.75rem;
+                    padding:0.65rem 0;border-bottom:1px solid var(--border)">
+          {preview}
+          <span style="flex:1;font-weight:600;font-size:0.9rem">{r}</span>
+          <select name="icon__{safe_name}"
+                  style="width:auto;max-width:160px;padding:0.35rem 0.5rem;
+                         border:1px solid var(--border);border-radius:0.5rem;
+                         font-size:0.82rem;background:var(--surface);color:var(--text)">
+            {opts}
+          </select>
         </div>"""
 
     room_icons_section = f"""
     <div class="card" style="margin-bottom:1rem">
-      <h3 style="margin-bottom:0.75rem">Raum-Icons</h3>
+      <h3 style="margin-bottom:0.5rem">Raum-Icons</h3>
       <p class="muted" style="margin-bottom:1rem;font-size:0.8rem">
-        Icons gelten für alle Personen. 🔮 = automatisch aus Raumname.
+        Gilt für alle Personen. 🔮 = automatisch aus Raumname.
       </p>
       <form method="post" action="{base}admin/room-icons">
         {room_icon_rows}
-        <button class="btn btn-primary btn-sm" style="margin-top:1rem" type="submit">Speichern</button>
+        <button class="btn btn-primary btn-sm" style="margin-top:0.875rem" type="submit">Speichern</button>
       </form>
     </div>"""
 
     # ── Personeneinstellungen (Benachrichtigungen + Räume) ────────────────────
     person_settings_cards = "".join(
-        _person_settings_card(pn, areas, admins, base=base, action="settings")
+        _person_settings_card(pn, areas, admins, base=base, action="settings",
+                               show_admin_fields=True)
         for pn in persons
     )
 
@@ -341,7 +364,7 @@ async def admin_save_room_icons(request: Request):
     icons: dict[str, str] = {}
     for key, value in form.multi_items():
         if key.startswith("icon__") and value:
-            room = key[6:]  # strip "icon__" prefix
+            room = key[6:].replace("_", " ")  # strip prefix, restore spaces
             icons[room] = value
     save_room_icons(icons)
     return RedirectResponse(_base(request) + "admin?saved=1", status_code=303)

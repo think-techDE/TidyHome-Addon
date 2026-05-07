@@ -1,3 +1,9 @@
+## 1.1.7
+
+- Fix: Admin-Panel lädt jetzt wieder zuverlässig (Icon-Chooser durch kompaktes Select ersetzt)
+- Rollen können nur noch durch Admins vergeben werden, nicht durch die Personen selbst
+- Admin: Raum-Icons pro Raum individuell zuweisbar über Dropdown (gilt für alle Personen)
+
 ## 1.1.6
 
 - Admin: Raum-Icons pro Raum individuell zuweisbar (gilt für alle Personen)
