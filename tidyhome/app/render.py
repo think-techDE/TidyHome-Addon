@@ -458,9 +458,10 @@ def render(content: str, request: Request, page: str = "home",
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 <style>
   *{{box-sizing:border-box;margin:0;padding:0}}
-  html,body{{background:#f4f0f2;color:#24181f;opacity:0;
+  html,body{{background:#f4f0f2;color:#24181f;
              font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
              padding-bottom:5rem}}
+  body{{opacity:0}}
   header{{background:rgba(255,255,255,0.90);border-bottom:1px solid #ddd6da;
           padding:0.75rem 1rem;display:flex;align-items:center;
           justify-content:space-between;position:sticky;top:0;z-index:10}}
