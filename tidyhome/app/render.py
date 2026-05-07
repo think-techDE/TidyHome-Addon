@@ -275,9 +275,14 @@ def _proj_icon(room: str = "", size: int = 46, icon: str = "") -> str:
     )
 
 
-def _room_icon(room: str, size: int = 40) -> str:
-    """Round icon bubble using OpenMoji SVG for a room."""
-    filename, bg = ROOM_ICONS.get(room, ("1F3E0", "var(--primary-soft)"))
+def _room_icon(room: str, size: int = 40,
+               stored: dict[str, str] | None = None) -> str:
+    """Round icon bubble using OpenMoji SVG for a room.
+    stored: optional {room_name: icon_key} overrides from DB."""
+    if stored and room in stored and stored[room] in _TASK_ICONS:
+        filename, bg = _TASK_ICONS[stored[room]]
+    else:
+        filename, bg = ROOM_ICONS.get(room, ("1F3E0", "var(--primary-soft)"))
     img_size = int(size * 0.60)
     return (
         f'<div style="width:{size}px;height:{size}px;border-radius:50%;'

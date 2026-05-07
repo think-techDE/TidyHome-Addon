@@ -383,3 +383,19 @@ def save_admins(persons: list[str]) -> None:
         _get_app_table().update(data, Q.key == "admins")
     else:
         _get_app_table().insert(data)
+
+
+def get_room_icons() -> dict[str, str]:
+    """Returns {room_name: icon_key} for rooms with custom icon assignment."""
+    Q = Query()
+    row = _get_app_table().get(Q.key == "room_icons")
+    return dict(row["value"]) if row else {}
+
+
+def save_room_icons(icons: dict[str, str]) -> None:
+    Q = Query()
+    data = {"key": "room_icons", "value": icons}
+    if _get_app_table().get(Q.key == "room_icons"):
+        _get_app_table().update(data, Q.key == "room_icons")
+    else:
+        _get_app_table().insert(data)

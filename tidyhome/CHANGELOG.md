@@ -1,3 +1,9 @@
+## 1.1.6
+
+- Admin: Raum-Icons pro Raum individuell zuweisbar (gilt für alle Personen)
+- Fix: Admin-Panel und Einstellungen ("Wer bin ich?") mit absoluten URLs repariert
+- Fix: Speichern-Weiterleitung im Admin-Panel landet immer mit Erfolgsmeldung
+
 ## 1.1.5
 
 - Raum-Icons: OpenMoji-Illustrationen für Küche, Wohnzimmer, Schlafzimmer, Bad, Flur und mehr

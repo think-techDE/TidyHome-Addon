@@ -1,17 +1,17 @@
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_notify_services, get_persons
-from render import _base, render, resolve_person
+from render import _base, _icon_chooser, _room_icon, render
 from scheduler import notify_person_now, parse_time
-from storage import (get_admins, get_person_settings, list_person_settings,
-                     save_admins, save_person_settings, ROLES)
+from storage import (get_admins, get_person_settings, get_room_icons, list_person_settings,
+                     save_admins, save_person_settings, save_room_icons, ROLES)
 
 router = APIRouter()
 
 
 def _person_settings_card(pn: str, areas: list[str], admins: set[str],
-                           action: str = "settings") -> str:
+                           base: str = "", action: str = "settings") -> str:
     """HTML-Karte für die Einstellungen einer einzelnen Person."""
     cfg = get_person_settings(pn)
     time_val = cfg.get("notify_time", "08:00")
@@ -41,7 +41,7 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
 
     return f"""
     <div class="card" style="margin-bottom:0.75rem">
-      <form method="post" action="{action}">
+      <form method="post" action="{base}{action}">
         <input type="hidden" name="person" value="{pn}">
         <div style="font-weight:700;margin-bottom:0.5rem">{pn}{admin_b}</div>
         {svc_info}
@@ -86,7 +86,7 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
         </div>
         <div style="display:flex;gap:0.5rem">
           <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
-          <a class="btn btn-ghost btn-sm" href="notify-now/{pn}">Testen</a>
+          <a class="btn btn-ghost btn-sm" href="{base}notify-now/{pn}">Testen</a>
         </div>
       </form>
     </div>"""
@@ -94,6 +94,7 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
 
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_form(request: Request, p: str = ""):
+    base = _base(request)
     admins = get_admins()
     areas = await get_areas()
 
@@ -109,7 +110,7 @@ async def settings_form(request: Request, p: str = ""):
             # Admin ohne ?p= → Personenpicker anzeigen
             persons = await get_persons()
             pills = "".join(
-                f'<a href="settings?p={pn}" class="btn btn-ghost btn-sm" '
+                f'<a href="{base}settings?p={pn}" class="btn btn-ghost btn-sm" '
                 f'style="font-size:0.9rem;padding:0.5rem 1.1rem">{pn}</a>'
                 for pn in persons
             )
@@ -134,7 +135,7 @@ async def settings_form(request: Request, p: str = ""):
         # Fallback: kein HA-Header und kein p (lokale Entwicklung)
         persons = await get_persons()
         pills = "".join(
-            f'<a href="settings?p={pn}" class="btn btn-ghost btn-sm" '
+            f'<a href="{base}settings?p={pn}" class="btn btn-ghost btn-sm" '
             f'style="font-size:0.9rem;padding:0.5rem 1.1rem">{pn}</a>'
             for pn in persons
         )
@@ -145,7 +146,7 @@ async def settings_form(request: Request, p: str = ""):
         </div>"""
         return render(content, request, page="settings", person="")
 
-    card = _person_settings_card(p, areas, admins, action="settings")
+    card = _person_settings_card(p, areas, admins, base=base, action="settings")
     content = f"<h2>Einstellungen</h2>{card}"
     return render(content, request, page="settings", person=p)
 
@@ -175,36 +176,38 @@ async def settings_save(request: Request):
 
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_form(request: Request, saved: str = ""):
+    base = _base(request)
     admins = get_admins()
     persons = await get_persons()
+    areas = await get_areas()
 
     # ── Admin-Verwaltung ──────────────────────────────────────────────────
-    checkboxes = ""
+    person_cbs = ""
     for pn in persons:
-        is_admin = pn in admins
-        checkboxes += f"""
+        is_adm = pn in admins
+        person_cbs += f"""
         <label style="display:flex;align-items:center;gap:0.75rem;
                        padding:0.65rem 0;border-bottom:1px solid var(--border);
-                       cursor:pointer;font-size:0.9rem;font-weight:{'600' if is_admin else '400'}">
+                       cursor:pointer;font-size:0.9rem;font-weight:{'600' if is_adm else '400'}">
           <input type="checkbox" name="admins" value="{pn}"
-                 {'checked' if is_admin else ''}
+                 {'checked' if is_adm else ''}
                  style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
           {pn}
-          {'<span class="admin-badge" style="margin-left:0.25rem">Admin</span>' if is_admin else ''}
+          {'<span class="admin-badge" style="margin-left:0.25rem">Admin</span>' if is_adm else ''}
         </label>"""
 
     saved_banner = """
         <div style="background:var(--success-bg);color:var(--success);padding:0.6rem 0.875rem;
                     border-radius:0.6rem;margin-bottom:1rem;font-size:0.84rem;font-weight:600">
-          Admin-Einstellungen gespeichert
+          Gespeichert
         </div>""" if saved == "1" else ""
 
     admin_section = f"""
     <div class="card" style="margin-bottom:1rem">
       <h3 style="margin-bottom:0.75rem">Admin-Rechte vergeben</h3>
       {saved_banner}
-      <form method="post" action="admin/admins">
-        <div style="margin-bottom:1rem">{checkboxes}</div>
+      <form method="post" action="{base}admin/admins">
+        <div style="margin-bottom:1rem">{person_cbs}</div>
         <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
       </form>
     </div>"""
@@ -226,21 +229,19 @@ async def admin_form(request: Request, saved: str = ""):
             admin_b = f' <span class="admin-badge">Admin</span>' if pn in admins else ""
 
             if available_svcs:
-                # Checkboxen für alle bekannten Services
-                checkboxes = ""
+                svc_cbs = ""
                 for svc in available_svcs:
-                    checked = "checked" if svc in selected_svcs else ""
+                    chk = "checked" if svc in selected_svcs else ""
                     short = svc.replace("notify.", "")
-                    checkboxes += f"""
+                    svc_cbs += f"""
                     <label style="display:flex;align-items:center;gap:0.6rem;
                                    padding:0.45rem 0;border-bottom:1px solid var(--border);
                                    cursor:pointer;font-size:0.85rem">
-                      <input type="checkbox" name="services" value="{svc}" {checked}
+                      <input type="checkbox" name="services" value="{svc}" {chk}
                              style="width:1.1rem;height:1.1rem;accent-color:var(--primary)">
                       <span style="flex:1">{short}</span>
                       <span class="muted" style="font-size:0.72rem">{svc}</span>
                     </label>"""
-                # Manuelles Zusatzfeld für nicht erkannte Services
                 extra = ", ".join(s for s in selected_svcs if s not in available_svcs)
                 extra_field = f"""
                 <div class="form-group" style="margin-top:0.75rem">
@@ -248,10 +249,9 @@ async def admin_form(request: Request, saved: str = ""):
                   <input name="extra_services" value="{extra}"
                          placeholder="notify.anderer_service">
                 </div>"""
-                svc_content = checkboxes + extra_field
+                svc_content = svc_cbs + extra_field
                 hint = ""
             else:
-                # Fallback: Freitext wenn HA keine Services liefert
                 svc_val = ", ".join(selected_svcs)
                 svc_content = f"""
                 <div class="form-group">
@@ -263,7 +263,7 @@ async def admin_form(request: Request, saved: str = ""):
 
             cards += f"""
             <div class="card" style="margin-bottom:0.75rem">
-              <form method="post" action="admin">
+              <form method="post" action="{base}admin">
                 <input type="hidden" name="person" value="{pn}">
                 <div style="font-weight:700;margin-bottom:0.75rem">{pn}{admin_b}</div>
                 {hint if not available_svcs else ''}
@@ -273,20 +273,56 @@ async def admin_form(request: Request, saved: str = ""):
             </div>"""
         device_section = cards
 
+    # ── Raum-Icons ────────────────────────────────────────────────────────
+    stored_icons = get_room_icons()
+    room_icon_rows = ""
+    for r in areas:
+        current_key = stored_icons.get(r, "")
+        chooser = _icon_chooser(current_key, input_name=f"icon__{r}")
+        # Preview of current icon
+        preview = _room_icon(r, 36, stored_icons)
+        room_icon_rows += f"""
+        <div style="border-bottom:1px solid var(--border);padding:0.75rem 0">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
+            {preview}
+            <span style="font-weight:600;font-size:0.9rem">{r}</span>
+          </div>
+          {chooser}
+        </div>"""
+
+    room_icons_section = f"""
+    <div class="card" style="margin-bottom:1rem">
+      <h3 style="margin-bottom:0.75rem">Raum-Icons</h3>
+      <p class="muted" style="margin-bottom:1rem;font-size:0.8rem">
+        Icons gelten für alle Personen. 🔮 = automatisch aus Raumname.
+      </p>
+      <form method="post" action="{base}admin/room-icons">
+        {room_icon_rows}
+        <button class="btn btn-primary btn-sm" style="margin-top:1rem" type="submit">Speichern</button>
+      </form>
+    </div>"""
+
     # ── Personeneinstellungen (Benachrichtigungen + Räume) ────────────────────
-    areas = await get_areas()
     person_settings_cards = "".join(
-        _person_settings_card(pn, areas, admins, action="settings")
+        _person_settings_card(pn, areas, admins, base=base, action="settings")
         for pn in persons
     )
 
     content = (
         f"<h2>Admin</h2>{admin_section}"
         f"<h2 style='margin-bottom:0.75rem'>Geräte-Verwaltung</h2>{device_section}"
+        f"<h2 style='margin-bottom:0.75rem;margin-top:1rem'>Raum-Icons</h2>"
+        f"{room_icons_section}"
         f"<h2 style='margin-bottom:0.75rem;margin-top:1rem'>Personeneinstellungen</h2>"
         f"{person_settings_cards}"
     )
-    return render(content, request)
+
+    # Admin-Person aus Header für die Nav-Pill
+    ha_user = (
+        request.headers.get("X-Remote-User-Display-Name") or
+        request.headers.get("X-Remote-User-Name", "")
+    ).strip()
+    return render(content, request, page="settings", person=ha_user)
 
 
 @router.post("/admin/admins")
@@ -297,22 +333,34 @@ async def admin_save_admins(request: Request):
     return RedirectResponse(_base(request) + "admin?saved=1", status_code=303)
 
 
+@router.post("/admin/room-icons")
+async def admin_save_room_icons(request: Request):
+    if not get_admins():
+        raise HTTPException(403)
+    form = await request.form()
+    icons: dict[str, str] = {}
+    for key, value in form.multi_items():
+        if key.startswith("icon__") and value:
+            room = key[6:]  # strip "icon__" prefix
+            icons[room] = value
+    save_room_icons(icons)
+    return RedirectResponse(_base(request) + "admin?saved=1", status_code=303)
+
+
 @router.post("/admin")
 async def admin_save_devices(request: Request):
     if not get_admins():
         raise HTTPException(403)
     form = await request.form()
     person = form.get("person", "")
-    # Checkboxen (mehrere Werte mit gleichem Key)
     checked = list(form.getlist("services"))
-    # Manuelles Zusatzfeld
     extra = [s.strip() for s in form.get("extra_services", "").split(",") if s.strip()]
     svc_list = sorted(set(checked + extra))
     cfg = get_person_settings(person)
     save_person_settings(person=person, services=svc_list,
                          notify_time=cfg.get("notify_time", "08:00"),
                          enabled=cfg.get("enabled", False))
-    return RedirectResponse(_base(request) + "admin", status_code=303)
+    return RedirectResponse(_base(request) + "admin?saved=1", status_code=303)
 
 
 @router.get("/notify-now/{person}")

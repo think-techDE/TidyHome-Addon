@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 
 from ha_client import get_areas
 from render import _icon, _ring_chart, _room_icon, render, resolve_person
-from storage import get_person_settings, list_tasks, list_projects
+from storage import get_person_settings, list_tasks, list_projects, get_room_icons
 
 router = APIRouter()
 
@@ -14,6 +14,7 @@ router = APIRouter()
 async def dashboard(request: Request, p: str = ""):
     p = resolve_person(request, p)
     areas = await get_areas()
+    stored_room_icons = get_room_icons()
     today = date.today().isoformat()
 
     # Hidden rooms for active person
@@ -130,7 +131,7 @@ async def dashboard(request: Request, p: str = ""):
                style="display:flex;align-items:center;gap:0.875rem;
                       padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);
                       text-decoration:none;color:var(--text)">
-              {_room_icon(r, 40)}
+              {_room_icon(r, 40, stored_room_icons)}
               <span style="flex:1;font-weight:600;font-size:0.9rem">{r}</span>
               <span style="font-size:0.74rem;color:var(--muted)">{sub}</span>
               {badge}
