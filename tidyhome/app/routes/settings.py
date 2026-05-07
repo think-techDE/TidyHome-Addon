@@ -5,7 +5,7 @@ from ha_client import get_areas, get_notify_services, get_persons
 from render import _base, render, resolve_person
 from scheduler import notify_person_now, parse_time
 from storage import (get_admins, get_person_settings, list_person_settings,
-                     save_admins, save_person_settings)
+                     save_admins, save_person_settings, ROLES)
 
 router = APIRouter()
 
@@ -19,6 +19,8 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
     services = cfg.get("services") or []
     hidden_rooms = set(cfg.get("hidden_rooms") or [])
     weekly_goal = cfg.get("weekly_goal", 0) or 0
+    role = cfg.get("role", "member")
+    can_see_children = cfg.get("can_see_children", False)
     svc_info = (
         f'<div class="muted" style="margin-bottom:0.75rem">Geräte: {", ".join(services)}</div>'
         if services else
@@ -58,10 +60,25 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
         </div>
         <div class="grid-2">
           <div class="form-group">
+            <label>Rolle</label>
+            <select name="role">
+              {"".join(f'<option value="{k}"{" selected" if k == role else ""}>{v}</option>' for k, v in ROLES.items())}
+            </select>
+          </div>
+          <div class="form-group">
             <label>Wochenziel (Aufgaben)</label>
             <input name="weekly_goal" type="number" min="0" max="99" value="{weekly_goal}"
                    placeholder="0 = kein Ziel">
           </div>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;
+                        text-transform:none;font-size:0.85rem;letter-spacing:0;font-weight:500">
+            <input type="checkbox" name="can_see_children" value="1"
+                   {'checked' if can_see_children else ''}
+                   style="width:1rem;height:1rem;accent-color:var(--primary)">
+            Kann Aufgaben anderer Kinder sehen (nur relevant für Rolle „Kind")
+          </label>
         </div>
         <div class="form-group">
           <label>Räume ausblenden</label>
@@ -144,10 +161,15 @@ async def settings_save(request: Request):
         weekly_goal = int(form.get("weekly_goal", 0) or 0)
     except ValueError:
         weekly_goal = 0
+    role = form.get("role", "member")
+    if role not in ROLES:
+        role = "member"
+    can_see_children = form.get("can_see_children", "") == "1"
     cfg = get_person_settings(person)
     save_person_settings(person=person, services=cfg.get("services") or [],
                          notify_time=notify_time, enabled=enabled,
-                         hidden_rooms=hidden_rooms, weekly_goal=weekly_goal)
+                         hidden_rooms=hidden_rooms, weekly_goal=weekly_goal,
+                         role=role, can_see_children=can_see_children)
     return RedirectResponse(_base(request) + "settings", status_code=303)
 
 

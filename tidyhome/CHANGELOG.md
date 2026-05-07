@@ -1,3 +1,11 @@
+## 1.0.9
+
+- Neue Aufgaben werden automatisch dem angemeldeten Nutzer zugeordnet
+- Rollen-System: Elternteil / Kind / Haushaltshilfe / Mitglied (im Admin-Panel vergeben)
+- Elternteile sehen im Raum-Filter alle Aufgaben nach Person gruppiert
+- Kinder können optional Aufgaben anderer Kinder sehen (Berechtigung per Admin)
+- Mitglieder und Haushaltshilfen sehen nur eigene und nicht zugeordnete Aufgaben
+
 ## 1.0.8
 
 - Fix: Admin-Personenpicker öffnet sich korrekt beim Klick auf den Namen

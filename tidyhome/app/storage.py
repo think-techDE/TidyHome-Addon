@@ -262,25 +262,61 @@ def get_settings_table():
     return _db.table("person_settings")
 
 
+# Verfügbare Rollen
+ROLES = {
+    "parent":      "Elternteil",
+    "child":       "Kind",
+    "housekeeper": "Haushaltshilfe",
+    "member":      "Mitglied",
+}
+
+
 def get_person_settings(person: str) -> dict:
     Q = Query()
     row = get_settings_table().get(Q.person == person)
     return row or {"person": person, "services": [], "notify_time": "08:00",
-                   "enabled": False, "hidden_rooms": [], "weekly_goal": 0}
+                   "enabled": False, "hidden_rooms": [], "weekly_goal": 0,
+                   "role": "member", "can_see_children": False}
 
 
 def save_person_settings(person: str, services: list[str], notify_time: str,
                          enabled: bool, hidden_rooms: list[str] | None = None,
-                         weekly_goal: int = 0) -> dict:
+                         weekly_goal: int = 0, role: str = "member",
+                         can_see_children: bool = False) -> dict:
     Q = Query()
     data = {"person": person, "services": services,
             "notify_time": notify_time, "enabled": enabled,
-            "hidden_rooms": hidden_rooms or [], "weekly_goal": weekly_goal}
+            "hidden_rooms": hidden_rooms or [], "weekly_goal": weekly_goal,
+            "role": role, "can_see_children": can_see_children}
     if get_settings_table().get(Q.person == person):
         get_settings_table().update(data, Q.person == person)
     else:
         get_settings_table().insert(data)
     return data
+
+
+def filter_tasks_by_role(tasks: list, person: str, admins: set[str]) -> list:
+    """Filtert Aufgaben nach Rolle der Person.
+    Parent/Admin: alles. Kind mit Berechtigung: eigene + andere Kinder.
+    Sonst: nur eigene + nicht zugeordnete."""
+    if not person:
+        return tasks
+    if person in admins:
+        return tasks
+    cfg = get_person_settings(person)
+    role = cfg.get("role", "member")
+    if role == "parent":
+        return tasks
+    if role == "child" and cfg.get("can_see_children"):
+        child_persons = {
+            r["person"] for r in get_settings_table().all()
+            if r.get("role") == "child"
+        }
+        return [t for t in tasks
+                if not t.assigned_to or t.assigned_to == person
+                or t.assigned_to in child_persons]
+    # member / housekeeper / child ohne Berechtigung
+    return [t for t in tasks if not t.assigned_to or t.assigned_to == person]
 
 
 def get_person_stats(person: str) -> dict:
