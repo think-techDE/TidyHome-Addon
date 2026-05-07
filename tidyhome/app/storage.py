@@ -231,17 +231,27 @@ def add_step(step: Step) -> Step:
     return step
 
 
+def assign_step(step_id: str, assigned_to: str = None) -> Step | None:
+    step = get_step(step_id)
+    if not step:
+        return None
+    step.assigned_to = assigned_to or None
+    Q = Query()
+    get_steps_table().update(step.model_dump(), Q.id == step_id)
+    return step
+
+
 def complete_step(step_id: str, done_by: str = None) -> Step | None:
     step = get_step(step_id)
     if not step or step.completed:
         return step
     step.completed = True
-    step.completed_by = done_by
+    step.completed_by = done_by or step.assigned_to
     step.completed_at = date.today().isoformat()
     Q = Query()
     get_steps_table().update(step.model_dump(), Q.id == step_id)
-    if done_by:
-        _add_score(done_by, step.points, task_type="project")
+    if step.completed_by:
+        _add_score(step.completed_by, step.points, task_type="project")
     # Projekt auto-abschließen wenn alle Schritte erledigt
     all_steps = list_steps(step.project_id)
     if all_steps and all(s.completed for s in all_steps):
@@ -297,26 +307,24 @@ def save_person_settings(person: str, services: list[str], notify_time: str,
 
 def filter_tasks_by_role(tasks: list, person: str, admins: set[str]) -> list:
     """Filtert Aufgaben nach Rolle der Person.
-    Parent/Admin: alles. Kind mit Berechtigung: eigene + andere Kinder.
-    Sonst: nur eigene + nicht zugeordnete."""
+    Admin: alles. Kind mit Berechtigung: eigene + andere Kinder.
+    Sonst: nur eigene."""
     if not person:
         return tasks
     if person in admins:
         return tasks
     cfg = get_person_settings(person)
     role = cfg.get("role", "member")
-    if role == "parent":
-        return tasks
     if role == "child" and cfg.get("can_see_children"):
         child_persons = {
             r["person"] for r in get_settings_table().all()
             if r.get("role") == "child"
         }
         return [t for t in tasks
-                if not t.assigned_to or person in t.assigned_to
+                if person in t.assigned_to
                 or any(p in child_persons for p in t.assigned_to)]
     # member / housekeeper / child ohne Berechtigung
-    return [t for t in tasks if not t.assigned_to or person in t.assigned_to]
+    return [t for t in tasks if person in t.assigned_to]
 
 
 def get_person_stats(person: str) -> dict:

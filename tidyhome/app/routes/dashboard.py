@@ -5,7 +5,8 @@ from fastapi.responses import HTMLResponse
 
 from ha_client import get_areas
 from render import _base, _icon, _ring_chart, _room_icon, _task_icon, render, resolve_person
-from storage import get_person_settings, list_tasks, list_projects, get_room_icons
+from storage import (filter_tasks_by_role, get_admins, get_person_settings,
+                     get_room_icons, list_projects, list_steps, list_tasks)
 
 router = APIRouter()
 
@@ -26,12 +27,21 @@ async def dashboard(request: Request, p: str = ""):
     all_tasks = list_tasks()
     if hidden_rooms:
         all_tasks = [t for t in all_tasks if t.room not in hidden_rooms]
+    all_tasks = filter_tasks_by_role(all_tasks, p, set(get_admins()))
     overdue_tasks = [t for t in all_tasks if t.days_until_due() < 0]
     due_today     = [t for t in all_tasks if t.days_until_due() == 0]
     done_today    = [t for t in all_tasks if t.last_done == today]
     all_projects  = list_projects()
     if hidden_rooms:
         all_projects = [pr for pr in all_projects if pr.room not in hidden_rooms]
+    admins = get_admins()
+    if p and p not in admins:
+        all_projects = [
+            pr for pr in all_projects
+            if pr.assigned_to == p
+            or any((s.assigned_to or pr.assigned_to or "") == p
+                   for s in list_steps(pr.id))
+        ]
 
     total = len(all_tasks)
     health_pct   = int((total - len(overdue_tasks)) / total * 100) if total else 100
