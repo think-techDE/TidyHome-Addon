@@ -81,10 +81,19 @@ async def settings_form(request: Request, p: str = ""):
     areas = await get_areas()
 
     if not p:
-        content = """
-        <h2>Einstellungen</h2>
+        persons = await get_persons()
+        pills = "".join(
+            f'<a href="settings?p={pn}" class="btn btn-ghost btn-sm" '
+            f'style="font-size:0.9rem;padding:0.5rem 1.1rem">{pn}</a>'
+            for pn in persons
+        )
+        content = f"""
+        <h2>Wer bist du?</h2>
         <div class="card">
-          <div class="muted">Wähle zuerst eine Person über das Menü aus.</div>
+          <p class="muted" style="margin-bottom:1rem">
+            Wähle deinen Namen um deine persönlichen Einstellungen zu öffnen.
+          </p>
+          <div style="display:flex;flex-wrap:wrap;gap:0.5rem">{pills}</div>
         </div>"""
         return render(content, request, page="settings", person=p)
 

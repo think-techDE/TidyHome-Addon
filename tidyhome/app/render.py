@@ -193,11 +193,11 @@ _HTML_BASE = """<!DOCTYPE html>
 {content}
 </main>
 <nav class="bottom-nav">
-  <a href="./" class="nav-item {p_home}"><span class="ni">🏠</span>Zuhause</a>
-  <a href="tasks" class="nav-item {p_tasks}"><span class="ni">✅</span>Aufgaben</a>
-  <a href="projects" class="nav-item {p_projects}"><span class="ni">📦</span>Projekte</a>
-  <a href="scores" class="nav-item {p_scores}"><span class="ni">🏆</span>Punkte</a>
-  <a href="settings" class="nav-item {p_settings}"><span class="ni">👤</span>Einstellungen</a>
+  <a href="./{psuffix}" class="nav-item {p_home}"><span class="ni">🏠</span>Zuhause</a>
+  <a href="tasks{psuffix}" class="nav-item {p_tasks}"><span class="ni">✅</span>Aufgaben</a>
+  <a href="projects{psuffix}" class="nav-item {p_projects}"><span class="ni">📦</span>Projekte</a>
+  <a href="scores{psuffix}" class="nav-item {p_scores}"><span class="ni">🏆</span>Punkte</a>
+  <a href="settings{psuffix}" class="nav-item {p_settings}"><span class="ni">👤</span>Einstellungen</a>
 </nav>
 </body>
 </html>"""
@@ -206,12 +206,14 @@ _HTML_BASE = """<!DOCTYPE html>
 def render(content: str, request: Request, page: str = "home",
            person: str = "") -> HTMLResponse:
     base = _base(request)
-    person_nav = (f'<span class="h-pill">{person}</span>' if person
+    psuffix = f"?p={person}" if person else ""
+    person_nav = (f'<a href="settings{psuffix}" class="h-pill">{person}</a>' if person
                   else '<a href="settings" class="h-pill">Wer bin ich?</a>')
     html = _HTML_BASE.format(
         base=base,
         content=content,
         person_nav=person_nav,
+        psuffix=psuffix,
         p_home="active" if page == "home" else "",
         p_tasks="active" if page == "tasks" else "",
         p_projects="active" if page == "projects" else "",
