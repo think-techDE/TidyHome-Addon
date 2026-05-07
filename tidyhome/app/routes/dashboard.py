@@ -34,8 +34,7 @@ async def dashboard(request: Request, p: str = ""):
     all_projects  = list_projects()
     if hidden_rooms:
         all_projects = [pr for pr in all_projects if pr.room not in hidden_rooms]
-    admins = get_admins()
-    if p and p not in admins:
+    if p:
         all_projects = [
             pr for pr in all_projects
             if pr.assigned_to == p
