@@ -1,3 +1,8 @@
+## 1.2.6
+
+- Admin: Raum-Icons jetzt als visueller Picker – kompaktes Karten-Grid mit allen Icon-Optionen zum Anklicken
+- Admin: Vorschau-Bubble aktualisiert sich live beim Klick ohne Seitenreload
+
 ## 1.2.5
 
 - Fix: Defektes HTML im Admin Panel behoben (Raum-Icons: `</section>` statt `</div>`, kein-Admins-Banner: `</div>` statt `</section>`)

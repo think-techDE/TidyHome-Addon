@@ -252,6 +252,19 @@
                  border:1px solid var(--border); border-radius:0.65rem; background:var(--surface-2);
                  cursor:pointer; color:var(--text); }
   .option-card input { width:1.05rem; height:1.05rem; margin-top:0.05rem; accent-color:var(--primary); }
+  /* Room icon picker */
+  .ri-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:0.65rem; margin-bottom:0.85rem; }
+  .ri-card { background:var(--surface-2); border:1px solid var(--border); border-radius:0.65rem; padding:0.75rem; }
+  .ri-head { display:flex; align-items:center; gap:0.65rem; margin-bottom:0.6rem; }
+  .ri-name { font-weight:700; font-size:0.9rem; }
+  .ri-choices { display:flex; flex-wrap:wrap; gap:0.3rem; }
+  .ri-choice { width:36px; height:36px; border-radius:8px; border:2px solid transparent;
+               background:var(--surface); cursor:pointer; display:flex; align-items:center;
+               justify-content:center; font-size:0.95rem; padding:0; flex-shrink:0;
+               transition:all 0.12s; }
+  .ri-choice:hover { border-color:var(--primary-border); background:var(--primary-soft); }
+  .ri-choice.ri-active { border-color:var(--primary); background:var(--primary-soft);
+                          box-shadow:0 0 0 3px var(--primary-soft); }
   .icon-chooser { display:flex; flex-wrap:wrap; gap:0.35rem; }
   .icon-choice { width:42px; height:42px; border-radius:10px; border:2px solid transparent;
                   background:var(--surface-2); cursor:pointer; display:flex; align-items:center;

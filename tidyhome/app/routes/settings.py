@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_notify_services, get_persons
-from render import (_base, _ha_user, _ICON_LABELS, ROOM_ICON_CHOICES,
-                    ROOM_ICON_LABELS, _room_icon, person_suffix, render)
+from render import (_base, _ha_user, _ICON_LABELS, ROOM_ICON_CHOICES, ROOM_ICON_LABELS,
+                    ROOM_ICONS, _room_icon, person_suffix, render)
 from scheduler import notify_person_now, parse_time
 from storage import (get_admins, get_person_settings, get_room_icons, list_person_settings,
                      save_admins, save_person_settings, save_room_icons, ROLES)
@@ -314,40 +314,80 @@ async def admin_form(request: Request, saved: str = ""):
 
     # ── Raum-Icons ────────────────────────────────────────────────────────
     stored_icons = get_room_icons()
-    room_icon_rows = ""
+    room_cards = ""
     for r in areas:
         current_key = stored_icons.get(r, "")
-        preview = _room_icon(r, 36, stored_icons)
-        # Build options with current selection
-        opts = '<option value="">Automatisch</option>'
-        if current_key and current_key not in ROOM_ICON_CHOICES:
-            legacy_label = _ICON_LABELS.get(current_key, current_key)
-            opts += f'<option value="{current_key}" selected>Bisher: {legacy_label}</option>'
-        for key in ROOM_ICON_CHOICES:
-            label = ROOM_ICON_LABELS.get(key, key)
-            sel = " selected" if key == current_key else ""
-            opts += f'<option value="{key}"{sel}>{label}</option>'
         safe_name = r.replace(" ", "_")
-        room_icon_rows += f"""
-        <div class="admin-row">
-          {preview}
-          <div class="admin-row-main">
-            <span class="admin-row-title">{r}</span>
-            <span class="admin-row-sub">Icon für Raumlisten und Übersichten</span>
+
+        # Preview bubble: use stored key or name-based fallback
+        preview_icon = _room_icon(r, 48, stored_icons)
+        # Data attrs for live preview update
+        if current_key in ROOM_ICON_CHOICES:
+            prev_img, prev_bg = ROOM_ICON_CHOICES[current_key]
+        else:
+            prev_img, prev_bg = ROOM_ICONS.get(r, ("1F3E0", "var(--primary-soft)"))
+
+        # Auto button
+        auto_active = " ri-active" if not current_key else ""
+        choices_html = (
+            f'<button type="button" class="ri-choice{auto_active}" '
+            f'data-key="" data-room="{safe_name}" title="Automatisch" '
+            f'onclick="pickRoomIcon(this)">🔮</button>'
+        )
+        for key, (filename, bg) in ROOM_ICON_CHOICES.items():
+            label = ROOM_ICON_LABELS.get(key, key)
+            active = " ri-active" if key == current_key else ""
+            choices_html += (
+                f'<button type="button" class="ri-choice{active}" '
+                f'data-key="{key}" data-room="{safe_name}" '
+                f'data-img="assets/icons/{filename}.svg" data-bg="{bg}" '
+                f'title="{label}" onclick="pickRoomIcon(this)">'
+                f'<img src="assets/icons/{filename}.svg" width="22" height="22" style="display:block">'
+                f'</button>'
+            )
+
+        room_cards += f"""
+        <div class="ri-card">
+          <div class="ri-head">
+            <div class="ri-preview" id="rip_{safe_name}"
+                 style="width:48px;height:48px;border-radius:50%;background:{prev_bg};
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">
+              <img id="ripimg_{safe_name}" src="assets/icons/{prev_img}.svg"
+                   width="29" height="29" style="display:block" loading="lazy">
+            </div>
+            <span class="ri-name">{r}</span>
           </div>
-          <select class="admin-compact-select" name="icon__{safe_name}">{opts}</select>
+          <div class="ri-choices">{choices_html}</div>
+          <input type="hidden" name="icon__{safe_name}" id="riinput_{safe_name}" value="{current_key}">
         </div>"""
+
+    ri_js = """<script>
+function pickRoomIcon(btn){
+  var room=btn.dataset.room;
+  btn.closest('.ri-choices').querySelectorAll('.ri-choice')
+    .forEach(function(b){b.classList.remove('ri-active')});
+  btn.classList.add('ri-active');
+  document.getElementById('riinput_'+room).value=btn.dataset.key||'';
+  var preview=document.getElementById('rip_'+room);
+  var img=document.getElementById('ripimg_'+room);
+  if(btn.dataset.img){
+    img.src=btn.dataset.img;
+    preview.style.background=btn.dataset.bg||'var(--primary-soft)';
+  }
+}
+</script>"""
 
     room_icons_section = f"""
     <section class="card admin-section">
-      <h3 style="margin-bottom:0.5rem">Raum-Icons</h3>
+      <h3 style="margin-bottom:0.25rem">Raum-Icons</h3>
       <p class="muted" style="margin-bottom:1rem;font-size:0.8rem">
-        Eigene Raum-Symbole statt Aufgaben-Icons. Automatisch nutzt den Raumnamen.
+        Klicke ein Symbol an – 🔮 nutzt automatisch den Raumnamen.
       </p>
       <form method="post" action="{base}admin/room-icons">
-        <div class="admin-list">{room_icon_rows}</div>
-        <button class="btn btn-primary btn-sm admin-save" type="submit">Raum-Icons speichern</button>
+        <div class="ri-grid">{room_cards}</div>
+        <button class="btn btn-primary btn-sm admin-save" type="submit">Speichern</button>
       </form>
+      {ri_js}
     </section>"""
 
     # ── Personeneinstellungen (Benachrichtigungen + Räume) ────────────────────
