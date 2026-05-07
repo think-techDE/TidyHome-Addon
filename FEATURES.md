@@ -12,13 +12,18 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Aufgaben abhaken (erledigt markieren)
 - ✅ Wiederkehrende Intervalle (täglich bis jährlich)
 - ✅ Fälligkeitsanzeige (überfällig / heute / bald / ok) mit Farbkodierung
-- ✅ Filter nach Raum, Person, Überfällig
+- ✅ Badge-Semantik: "Geplant" / "Heute" / "Überfällig" als Status; Timing separat ("Morgen", "In 3 Tagen")
+- ✅ 3-Zeilen-Layout: Name+Badge / Datum / Aktionen – klare Dichte auf Mobile
+- ✅ Kategorie-Icons pro Aufgabe (nach Name/Raum automatisch vergeben)
+- ✅ Filter nach Raum, Person, Überfällig, Meine
 - ✅ Wichtig-Flag (Stern-Badge, orange Markierung, wird oben sortiert)
 - ✅ Einmalige Aufgaben (nach Erledigung automatisch archiviert, 1×-Badge)
 - ✅ Neue Aufgaben automatisch dem angemeldeten Nutzer zugeordnet
 - ✅ Aufgaben mehreren Personen gleichzeitig zuweisbar (Mehrfach-Checkbox)
 - 📋 Aufwand-Feld (gering / mittel / hoch)
 - 📋 Startdatum wählbar
+- 📋 Fälligkeit manuell verschieben (einmalige Ausnahme ohne Intervall zu ändern)
+- 📋 Aufgaben-Pausen: Intervalle temporär einfrieren
 - 📋 Kalenderstreifen (Wochenübersicht mit Aufgaben pro Tag)
 - 💡 Fotos pro Aufgabe (Hinweisfoto wo/was, Vorher/Nachher bei Erledigung)
 - 💡 Aufgaben-Vorlagen (häufige Sets speichern, z.B. "Frühjahrsputz")
@@ -95,8 +100,10 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 
 ## Familie & Kommunikation
 
-- 💡 Kommentare / Notizen zu Aufgaben und Projekten hinterlassen
-- 💡 Einkaufsliste als eigener Bereich (ähnlich wie Projekte, ohne Intervall)
+- 📋 Kommentare / Notizen zu Aufgaben und Projekten hinterlassen
+- 📋 Erinnerung senden: andere Person auf offene Aufgabe hinweisen
+- 📋 Einkaufsliste als eigener Bereich (ähnlich wie Projekte, ohne Intervall)
+- 📋 Urlaubsmodus: Intervalle einfrieren, keine Notifications
 
 ## Design & Navigation
 
@@ -110,14 +117,17 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Person bleibt beim Navigieren zwischen Seiten erhalten
 - ✅ Modern UI Refresh: ruhiger, Home-Assistant-näherer Look mit neutralen Flächen und Mauve als Akzent
 - ✅ Design-Tokens für Light/Dark Mode (Background, Surface, Border, Text, Muted, Statusfarben)
-- ✅ Dashboard als handlungsorientierte Heute-Ansicht mit nächsten Aufgaben, Statuswerten und Raumüberblick
-- ✅ Aufgabenliste mit Statuskante, klaren Badges, Icon-Aktionen und dichter mobiler Darstellung
+- ✅ Externes Stylesheet `assets/app.css`; FOUC-Fix via inline Critical CSS + `color-scheme` Meta
+- ✅ Dashboard: Ring-Charts (Erledigt/Überfällig/Zustand) als einzelne Karten
+- ✅ Dashboard als handlungsorientierte Heute-Ansicht mit nächsten Aufgaben und Raumüberblick
+- ✅ Aufgabenliste: 3-Zeilen-Layout, Badge-Semantik, Kategorie-Icons, SVG-Aktions-Buttons
 - ✅ Projektkarten mit sichtbarem nächsten Schritt, Fortschritt und besserer Trennung aktiver/abgeschlossener Projekte
 - ✅ SVG-Bottom-Navigation statt Emoji-Mix
-- ✅ Filter als horizontale Chip-/Segment-Leiste (Alle, Heute, Überfällig, Meine, Räume)
-- ✅ Formulare mit ruhigeren Labels, Option-Cards und klaren Primäraktionen
+- ✅ Filter als horizontale Chip-Leiste (Alle, Meine, Überfällig, Räume)
+- ✅ Formulare: SVG-Icons, full-width Personenzuweisung, Back-Button, Option-Cards
+- ✅ Empty States mit Icon und Hinweistext bei leerer Aufgaben-/Projektliste
 - ✅ Barrierefreie Kontraste und reduzierte Schatten, besonders im Dark Mode
-- 📋 Action-Icons und Empty States vollständig vereinheitlichen
+- 📋 Abzeichen / Achievements (erste Aufgabe, 10er-Serie, Monatsbester …)
 
 ## Home Assistant Integration
 

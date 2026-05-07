@@ -1,6 +1,6 @@
 # TidyHome – Roadmap
 
-Stand: 2026-05-07 · Aktuelle Version: 1.1.0
+Stand: 2026-05-07 · Aktuelle Version: 1.1.2
 
 ---
 
@@ -35,7 +35,7 @@ Stand: 2026-05-07 · Aktuelle Version: 1.1.0
 ## ✅ Phase 5 – Komfort-Features (v1.0.2–1.0.4)
 
 - **Logo & Assets**: SVG-Logo, PNG-Icon für HA Add-on Store, Favicon in der Web-UI
-- **Admin-Verwaltung per Checkbox**: Personen aus HA als Admin markierbar (kein Freitext mehr)
+- **Admin-Verwaltung per Checkbox**: Personen aus HA als Admin markierbar
 - **Geräte-Verwaltung per Checkbox**: Notify-Services automatisch aus HA geladen
 - **Wichtig-Flag**: Stern-Badge + orange Markierung, wichtige Aufgaben oben sortiert
 - **Projekte auto-archivieren**: automatisch abschließen wenn alle Schritte erledigt; eigener "Abgeschlossen"-Tab
@@ -73,31 +73,20 @@ Stand: 2026-05-07 · Aktuelle Version: 1.1.0
 
 ---
 
-## ✅ Phase 9 – Modern UI Refresh (v1.1.0)
+## ✅ Phase 9 – Modern UI Refresh (v1.1.0–1.1.2)
 
-Ziel: TidyHome optisch ruhiger, moderner und Home-Assistant-näher machen, ohne die bestehende serverseitige FastAPI-Struktur unnötig umzubauen.
-
-- **Design-System auffrischen**: neutrale App-Flächen, Mauve/Rose nur noch als Akzent, klare Statusfarben für überfällig/heute/bald/erledigt
-- **Light/Dark Tokens**: gemeinsame CSS-Variablen für Background, Surface, Border, Text, Muted, Primary, Success, Warning und Danger
-- **Dashboard als Heute-Ansicht**: kompakter Überblick mit erledigt/offen/überfällig, nächsten Aufgaben und dezenter Gesamtzustand-Anzeige
-- **Aufgabenliste modernisieren**: Statuskante, klare Fälligkeits-Badges, Icon-Aktionen, bessere Dichte auf Mobile
-- **Projektkarten stärken**: Fortschritt, nächster offener Schritt und abgeschlossene Projekte visuell klarer unterscheiden
-- **Navigation und Icons vereinheitlichen**: Bottom-Navigation, Aktionen und Statusanzeigen mit konsistenten Icons statt Emoji-Mix
-- **Filter überarbeiten**: horizontale Chip-/Segment-Leiste für Alle, Heute, Überfällig, Meine und Räume
-- **Formulare vereinfachen**: ruhigere Labels, bessere Toggle-Optionen für Wichtig/Einmalig, klare Primär- und Abbruchaktionen
-- **Barrierefreiheit prüfen**: Kontrast, Touch-Ziele, lange deutsche Texte, leere Zustände und Dark-Mode-Lesbarkeit
-
-Umgesetzt:
-
-1. CSS/Markup in `render.py` und den vorhandenen Routen modernisiert.
-2. Keine neuen Frontend-Abhängigkeiten eingeführt.
-3. Styles in `assets/app.css` ausgelagert und lokalen Asset-Fallback ergänzt.
-
-Nächster Feinschliff:
-
-- Action-Icons vollständig als SVG vereinheitlichen.
-- Empty States für Aufgaben, Projekte und Punkte weiter ausarbeiten.
-- Browser-Check in Home Assistant auf Mobile, Tablet und Dashboard-Panel nachziehen.
+- **Design-System aufgefrischt**: neutrale Flächen, Mauve/Rose nur als Akzent, klare Statusfarben
+- **Light/Dark Tokens**: gemeinsame CSS-Variablen; externes Stylesheet `assets/app.css`
+- **FOUC-Fix**: inline Critical CSS + `color-scheme` Meta verhindert Aufblitzen beim Seitenswitch
+- **Dashboard als Heute-Ansicht**: Ring-Charts (Erledigt/Überfällig/Zustand) als einzelne Karten, nächste Aufgaben, Räume als Liste
+- **Aufgaben 3-Zeilen-Layout**: Name+Badge / Datum / Aktionen — klare Dichte auf Mobile
+- **Badge-Semantik**: "Geplant" / "Heute" / "Überfällig" als Status; Timing separat ("Morgen", "In 3 Tagen")
+- **Kategorie-Icons**: Aufgaben bekommen thematische SVG-Icons nach Name/Raum
+- **"Meine"-Filter**: zeigt nur dem aktiven Nutzer zugeordnete Aufgaben
+- **Projekte als Cards**: Fortschrittsbalken, nächster Schritt, Icon-Aktionen
+- **Formulare**: SVG-Stern statt Emoji, Personen full-width, verbesserter Back-Button
+- **SVG-Aktions-Buttons**: Erledigt/Bearbeiten/Löschen als konsistente Icon-Buttons
+- **Empty States**: illustrierte Meldungen bei leerer Aufgaben-/Projektliste
 
 ---
 
@@ -106,26 +95,36 @@ Nächster Feinschliff:
 Ziel: Gemeinsames Arbeiten erleichtern.
 
 - **Kommentare**: Notizen zu Aufgaben und Projekten hinterlassen
-- **Erinnerung senden**: andere Person auf offene Aufgabe hinweisen
-- **Einkaufsliste**: eigener Bereich ohne Intervall
+- **Erinnerung senden**: andere Person auf offene Aufgabe hinweisen ("Küche ist noch offen")
+- **Einkaufsliste**: eigener Bereich ohne Intervall, gemeinsam bearbeitbar
 - **Urlaubsmodus**: globaler Toggle → Intervall-Berechnung eingefroren, keine Notifications
 
 ---
 
-## Phase 11 – Barrierefreiheit & Neurodiversität
+## Phase 11 – Aufgaben-Komfort
+
+Ziel: Flexiblere Aufgabensteuerung ohne Overhead.
+
+- **Startdatum wählbar**: Aufgabe beginnt erst ab einem bestimmten Datum zu laufen
+- **Aufwand-Feld**: gering / mittel / hoch, als zusätzlicher Filter
+- **Fälligkeit manuell verschieben**: einmalige Ausnahme ohne Intervall zu ändern
+- **Aufgaben-Pausen**: Intervalle temporär einfrieren (z.B. Urlaub, Krankheit)
+- **Kalenderstreifen**: Wochenübersicht mit Aufgaben pro Tag
+
+---
+
+## Phase 12 – Barrierefreiheit & Neurodiversität
 
 Ziel: Die App für Menschen mit ADHS, Depressionen, Autismus u.a. zugänglich machen.
 
 - **Fokus-Modus**: reduzierte Ansicht mit nur 1–3 Aufgaben pro Tag
 - **Sanfte Sprache**: "noch offen" statt "überfällig"
 - **Energielevel-Modus**: Aufgaben nach Aufwand filtern je nach Tagesverfassung
-- **Aufgaben-Pausen**: Intervalle temporär einfrieren
 - **Positive Verstärkung**: ermutigende Meldungen bei Erledigung
-- **Strukturhilfe**: Aufgaben in kleine Teilschritte aufteilen
 
 ---
 
-## Phase 12 – Haushaltshilfe-Verwaltung
+## Phase 13 – Haushaltshilfe-Verwaltung
 
 Ziel: Bezahlte Haushaltshilfen verwalten, Zeiten erfassen und Kosten tracken.
 
@@ -136,7 +135,7 @@ Ziel: Bezahlte Haushaltshilfen verwalten, Zeiten erfassen und Kosten tracken.
 
 ---
 
-## Phase 13 – Foto-Dokumentation
+## Phase 14 – Foto-Dokumentation
 
 Ziel: Visuelle Hinweise und Vorher/Nachher-Dokumentation.
 
@@ -147,27 +146,29 @@ Ziel: Visuelle Hinweise und Vorher/Nachher-Dokumentation.
 
 ---
 
-## Phase 14 – Integrationen & Erweiterungen
+## Phase 15 – HA-Integration & Erweiterungen
 
-Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
+Ziel: Tiefer in das HA-Ökosystem einbinden.
 
 - **HA-Sensoren/Entities**: Aufgabenstatus als HA-Entity (für Automationen)
-- **Trash Card**: Müllkalender-Termine als Aufgaben-Trigger
 - **REST-API**: Aufgaben per HA-Automation anlegen
 - **Aufgaben-Vorlagen**: häufige Sets speichern (z.B. "Frühjahrsputz")
 - **Tags / Kategorien**: zusätzlich zu Räumen
+- **Trash Card**: Müllkalender-Termine als Aufgaben-Trigger
 - **Mehrsprachigkeit**: Deutsch / Englisch
 - **Daten-Export**: CSV / JSON-Backup der gesamten Datenbank
 
 ---
 
-## Bereits umgesetzt (v1.1.0)
+## Bereits umgesetzt (v1.1.2)
 
 - Aufgaben-CRUD (anlegen, bearbeiten, löschen, abhaken)
 - Wiederkehrende Intervalle (1/2/7/14/30/90/180/365 Tage)
 - Einmalige Aufgaben (nach Erledigung archiviert)
 - Wichtig-Flag: Stern-Badge, orange Markierung, Sortierung oben
 - Aufgaben können mehreren Personen gleichzeitig zugeordnet werden
+- 3-Zeilen-Layout: Name+Badge / Datum / Aktionen; Badge-Semantik Geplant/Heute/Überfällig
+- "Meine"-Filter: zeigt nur eigene Aufgaben
 - Ordnungsprojekte mit Teilschritten und Fortschrittsbalken
 - Projekte auto-abschließen wenn alle Schritte erledigt; Abgeschlossen-Tab
 - HA-Räume und Personen per Template-API
@@ -179,10 +180,11 @@ Ziel: Tiefer in das HA-Ökosystem einbinden und die App abrunden.
 - Rollenbasierte Sichtbarkeit und Raum-Gruppenansicht für Elternteil/Admin
 - Person automatisch aus HA-Login erkannt; Admins können Ansicht wechseln
 - Räume pro Person individuell ausblendbar
-- Dark Mode (folgt System-/HA-Theme automatisch)
+- Dark Mode (folgt System-/HA-Theme automatisch), FOUC-Fix
 - HA Ingress-Navigation, `p`-Parameter bleibt beim Navigieren erhalten
-- Modernes Rose/Mauve Design-System mit Light/Dark Tokens, SVG-Bottom-Navigation und Heute-Dashboard
-- Statuskanten, klare Badges, Projektkarten mit nächstem Schritt und kompakten Filter-Chips
-- Statisches Stylesheet `assets/app.css` mit lokalem Asset-Fallback
+- Design-System: Mauve/Rose-Tokens, Light/Dark, externes Stylesheet `assets/app.css`
+- Dashboard: Ring-Charts als einzelne Karten, nächste Aufgaben, Räume als Liste
+- Kategorie-Icons für Aufgaben; SVG-Aktions-Buttons; Empty States
+- Formulare: SVG-Icons, full-width Personenzuweisung, konsistenter Back-Button
 - Modulare Codebasis (`routes/`, `render`, `scheduler`, `config`)
 - SVG-Logo + PNG-Icon, Favicon; CHANGELOG.md für HA Update-Dialog
