@@ -19,6 +19,10 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - 📋 Startdatum wählbar
 - 📋 Kalenderstreifen (Wochenübersicht mit Aufgaben pro Tag)
 - 💡 Fotos pro Aufgabe (Hinweisfoto wo/was, Vorher/Nachher bei Erledigung)
+- 💡 Aufgaben-Vorlagen (häufige Sets speichern, z.B. "Frühjahrsputz")
+- 💡 Fälligkeit manuell verschieben (einmalige Ausnahme ohne Intervall zu ändern)
+- 💡 Aufgaben verknüpfen (Vorgänger/Nachfolger, z.B. erst lüften dann putzen)
+- 💡 Tags / Kategorien zusätzlich zu Räumen
 
 ## Ordnungsprojekte
 
@@ -38,6 +42,9 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Bestenliste (Gesamt)
 - ✅ Getrennte Statistik: Haushaltsaufgaben vs. Projektschritte
 - 📋 Bestenliste nach Zeitraum (Monat / Letzter Monat / Gesamt)
+- 💡 Wochenziele pro Person (z.B. 5 Aufgaben / Woche)
+- 💡 Abzeichen / Achievements (erste Aufgabe, 10er-Serie, Monatsbester …)
+- 💡 Persönliche Statistik-Seite (Verlauf, Streak, Lieblingsraum)
 
 ## Benachrichtigungen
 
@@ -47,6 +54,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Admin definiert Geräte, Nutzer stellt Uhrzeit selbst ein
 - ✅ Test-Benachrichtigung direkt aus der UI
 - 📋 Benachrichtigung auch für Projekte mit offenen Schritten
+- 💡 Erinnerung an andere Person schicken ("Küche ist noch offen")
 
 ## Benutzerverwaltung & Einstellungen
 
@@ -55,7 +63,12 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Admins verwalten Geräte-Zuordnung
 - ✅ Jeder Nutzer stellt eigene Benachrichtigungszeit ein
 - 📋 Urlaubsmodus (Intervalle einfrieren, keine Notifications)
-- 💡 Räume pro Person ausblenden (z.B. Kinderzimmer nur für Eltern sichtbar)
+- 💡 Räume pro Person individuell ausblenden (z.B. Kinderzimmer nur für Eltern sichtbar)
+
+## Familie & Kommunikation
+
+- 💡 Kommentare / Notizen zu Aufgaben und Projekten hinterlassen
+- 💡 Einkaufsliste als eigener Bereich (ähnlich wie Projekte, ohne Intervall)
 
 ## Design & Navigation
 
@@ -76,6 +89,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ SUPERVISOR_TOKEN für API-Auth
 - 📋 HA-Sensoren/Entities für Aufgabenstatus (optional, für Automationen)
 - 💡 Verknüpfung mit Trash Card (Müllkalender-Karte als Aufgaben-Trigger)
+- 💡 Aufgaben per HA-Automation anlegen (REST-API Endpunkt)
 
 ## Technisch
 
@@ -85,3 +99,5 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Docker-Build mit HA Base-Image
 - ✅ Dual-Remote Git (Gitea + GitHub)
 - ✅ Automatischer Versionierungsworkflow
+- 💡 Mehrsprachigkeit (Deutsch / Englisch)
+- 💡 Daten-Export (CSV / JSON-Backup der gesamten Datenbank)
