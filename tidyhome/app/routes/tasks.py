@@ -19,16 +19,12 @@ _EFFORT_BADGE  = {"low": "ok", "medium": "today", "high": "overdue"}
 
 @router.get("", response_class=HTMLResponse)
 async def tasks_list(request: Request, room: str = None, person: str = None,
-                     overdue: str = None, mine: str = None, effort: str = None,
+                     overdue: str = None, effort: str = None,
                      p: str = ""):
     p = resolve_person(request, p)
     admins = get_admins()
     tasks = list_tasks(room=room, assigned_to=person,
                        overdue_only=(overdue == "1"), effort=effort or None)
-
-    # "Meine" filter
-    if mine == "1" and p:
-        tasks = [t for t in tasks if p in t.assigned_to]
 
     # Hidden rooms
     if p:
@@ -40,11 +36,9 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     psuffix = f"&p={p}" if p else ""
 
     # Filter bar
-    all_active = not room and not overdue and not mine and not effort
+    all_active = not room and not overdue and not effort
     filters = '<div class="filters">'
     filters += f'<a class="filter-btn {"active" if all_active else ""}" href="tasks{("?p="+p) if p else ""}">Alle</a>'
-    if p:
-        filters += f'<a class="filter-btn {"active" if mine == "1" else ""}" href="tasks?mine=1{psuffix}">Meine</a>'
     filters += f'<a class="filter-btn {"active" if overdue == "1" else ""}" href="tasks?overdue=1{psuffix}">Überfällig</a>'
     for ef, label in _EFFORT_LABELS.items():
         filters += f'<a class="filter-btn {"active" if effort == ef else ""}" href="tasks?effort={ef}{psuffix}">{label}</a>'

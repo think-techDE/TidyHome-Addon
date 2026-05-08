@@ -1,3 +1,8 @@
+## 1.3.7
+
+- Aufgaben: redundanten Filter "Meine" entfernt, weil die Standardansicht bereits persönliche Aufgaben zeigt
+- Aufgaben: Filterleiste ist dadurch kürzer und fachlich eindeutiger
+
 ## 1.3.6
 
 - Aufgaben: Listenansicht mit Dashboard-nahem Kopfbereich und kompakten Statuskacheln für Heute, spät/offen und geplant
