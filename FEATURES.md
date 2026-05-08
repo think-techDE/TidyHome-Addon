@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-08 · Version 1.3.16
+Stand: 2026-05-08 · Version 1.3.17
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -55,6 +55,8 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Eigene Zeile im Leaderboard hervorgehoben
 - [x] Getrennte Auswertung für Haushaltsaufgaben und Projektschritte
 - [x] Persönliche Statistik mit Streak, Wochenpunkten, Gesamtpunkten und Wochenziel
+- [x] Erfolgsmeldung mit Punkten direkt nach dem Erledigen
+- [x] Verlauf der letzten Erfolge mit Aufgabe, Datum und Punktzahl
 
 ### Benachrichtigungen & Erinnerungen
 

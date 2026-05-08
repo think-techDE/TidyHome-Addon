@@ -201,10 +201,21 @@ async def task_create(request: Request, name: str = Form(...), room: str = Form(
 @router.post("/{task_id}/done")
 async def task_done(task_id: str, request: Request):
     form = await request.form()
-    if not mark_done(task_id, done_by=form.get("done_by") or None):
+    task = mark_done(task_id, done_by=form.get("done_by") or None)
+    if not task:
         raise HTTPException(404)
     return_p = str(form.get("return_p") or "")
-    return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
+    done_by = str(form.get("done_by") or "") or (task.assigned_to[0] if task.assigned_to else "")
+    msg = (
+        f"+{task.points} Punkte für {task.name}"
+        if done_by else
+        f"{task.name} erledigt"
+    )
+    sep = "&" if return_p else "?"
+    return RedirectResponse(
+        _base(request) + f"tasks{person_suffix(return_p)}{sep}msg={quote(msg)}",
+        status_code=303
+    )
 
 
 @router.get("/{task_id}/snooze", response_class=HTMLResponse)

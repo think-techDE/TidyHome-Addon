@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
+from html import escape
 
-from render import _icon, render, resolve_person
-from storage import get_person_settings, get_person_stats, get_scores
+from render import _icon, format_date_de, render, resolve_person
+from storage import (get_person_settings, get_person_stats,
+                     get_recent_score_events, get_scores)
 
 router = APIRouter()
 
@@ -71,6 +73,7 @@ async def scores(request: Request, period: str = "all", p: str = ""):
     if p:
         stats = get_person_stats(p)
         cfg = get_person_settings(p)
+        recent = get_recent_score_events(p, limit=5)
         goal = cfg.get("weekly_goal", 0)
         rank_all = next((i + 1 for i, s in enumerate(all_time) if s["person"] == p), None)
         rank_month = next((i + 1 for i, s in enumerate(month_data) if s["person"] == p), None)
@@ -100,6 +103,27 @@ async def scores(request: Request, period: str = "all", p: str = ""):
             <div class="muted" style="margin-top:0.75rem;font-size:0.8rem">
               Kein Wochenziel gesetzt. Mit einem Ziel werden Fortschritt und Restaufgaben hier sichtbar.
             </div>"""
+
+        activity_rows = ""
+        for event in recent:
+            event_type = "Projektschritt" if event.get("type") == "project" else "Aufgabe"
+            label = event.get("label") or event_type
+            activity_rows += f"""
+            <div class="score-activity-row">
+              <div class="score-activity-icon">{_icon("check", 15, "var(--success)")}</div>
+              <div class="score-activity-main">
+                <div class="score-activity-title">{escape(label)}</div>
+                <div class="score-activity-meta">{event_type} · {format_date_de(event.get("date", ""))}</div>
+              </div>
+              <div class="score-activity-points">+{event.get("points", 0)}</div>
+            </div>"""
+        if not activity_rows:
+            activity_rows = (
+                '<div class="empty" style="padding:1.25rem 1rem">'
+                '<div style="font-weight:700">Noch keine Erfolge sichtbar</div>'
+                '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
+                'Erledigte Aufgaben erscheinen hier als Verlauf.</div></div>'
+            )
 
         personal_section = f"""
         <div class="hero-card">
@@ -142,6 +166,15 @@ async def scores(request: Request, period: str = "all", p: str = ""):
             <div class="today-value">{stats['total_points']}</div>
             <div class="today-label">Gesamtpunkte</div>
           </div>
+        </div>
+        <div class="card card-flush score-activity-card">
+          <div class="score-activity-head">
+            <div>
+              <h3>Letzte Erfolge</h3>
+              <div class="muted">Was zuletzt Punkte gebracht hat</div>
+            </div>
+          </div>
+          {activity_rows}
         </div>"""
 
     total_points_period = sum(s.get("points", 0) for s in data)

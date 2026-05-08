@@ -117,7 +117,8 @@ def mark_done(task_id: str, done_by: str = None, done_at: str = None) -> Task | 
     person = done_by or (task.assigned_to[0] if task.assigned_to else None)
 
     if person:
-        _add_score(person, task.points, task_type="task")
+        _add_score(person, task.points, task_type="task",
+                   label=task.name, source_id=task.id)
 
     # Einmalige Aufgaben nach Erledigung archivieren
     if task.onetime:
@@ -126,7 +127,8 @@ def mark_done(task_id: str, done_by: str = None, done_at: str = None) -> Task | 
     return update_task(task)
 
 
-def _add_score(person: str, points: int, task_type: str = "task"):
+def _add_score(person: str, points: int, task_type: str = "task",
+               label: str = "", source_id: str = ""):
     # Gesamtpunkte aktualisieren
     table = get_scores_table()
     Q = Query()
@@ -152,6 +154,9 @@ def _add_score(person: str, points: int, task_type: str = "task"):
         "points": points,
         "type": task_type,
         "date": date.today().isoformat(),
+        "created_at": datetime.now().isoformat(),
+        "label": label,
+        "source_id": source_id,
     })
 
 
@@ -195,6 +200,14 @@ def get_scores(period: str = "all") -> list[dict]:
             agg[p]["tasks_done"] += 1
 
     return sorted(agg.values(), key=lambda s: s["points"], reverse=True)
+
+
+def get_recent_score_events(person: str = "", limit: int = 8) -> list[dict]:
+    rows = _db.table("score_log").all()
+    if person:
+        rows = [r for r in rows if r.get("person") == person]
+    rows.sort(key=lambda r: r.get("created_at") or r.get("date", ""), reverse=True)
+    return rows[:limit]
 
 
 def get_projects_table():
@@ -277,7 +290,10 @@ def complete_step(step_id: str, done_by: str = None) -> Step | None:
     Q = Query()
     get_steps_table().update(step.model_dump(), Q.id == step_id)
     if step.completed_by:
-        _add_score(step.completed_by, step.points, task_type="project")
+        proj = get_project(step.project_id)
+        label = f"{proj.name}: {step.name}" if proj else step.name
+        _add_score(step.completed_by, step.points, task_type="project",
+                   label=label, source_id=step.id)
     # Projekt auto-abschließen wenn alle Schritte erledigt
     all_steps = list_steps(step.project_id)
     if all_steps and all(s.completed for s in all_steps):

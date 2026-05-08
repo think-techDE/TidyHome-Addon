@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-08 · Aktuelle Version: 1.3.16
+Stand: 2026-05-08 · Aktuelle Version: 1.3.17
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -17,7 +17,7 @@ TidyHome ist aktuell ein nutzbares Home-Assistant-Add-on für:
 - Erinnerungen an andere Personen und Projektschritte
 - tägliche Benachrichtigungen über Home Assistant Notify-Services
 - persönlichen Urlaubsmodus
-- Punkte, Bestenliste, Streak und Wochenziel
+- Punkte, Bestenliste, Erfolgshistorie, Streak und Wochenziel
 - mobile Web-UI über Home Assistant Ingress
 
 Die Codebasis ist inzwischen modularisiert:
@@ -31,6 +31,12 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.17
+
+- Punktebereich um Verlauf der letzten Erfolge ergänzt
+- Erfolgsmeldung mit Punktzahl nach erledigten Aufgaben und Projektschritten
+- Score-Log speichert neue Erfolge mit Aufgaben-/Schrittnamen
 
 ### v1.3.16
 

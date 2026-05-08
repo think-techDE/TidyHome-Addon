@@ -480,11 +480,20 @@ async def step_assign(project_id: str, step_id: str, request: Request,
 @router.post("/{project_id}/steps/{step_id}/done")
 async def step_done(project_id: str, step_id: str, request: Request):
     form = await request.form()
+    before = get_step(step_id)
     step = complete_step(step_id, done_by=form.get("done_by") or None)
     if not step:
         raise HTTPException(404)
     return_p = str(form.get("return_p") or "")
-    return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
+    msg = ""
+    if before and not before.completed and step.completed_by:
+        msg = f"+{step.points} Punkte für {step.name}"
+    sep = "&" if return_p else "?"
+    msg_suffix = f"{sep}msg={quote(msg)}" if msg else ""
+    return RedirectResponse(
+        _base(request) + f"projects/{project_id}{_p_suffix(return_p)}{msg_suffix}",
+        status_code=303
+    )
 
 
 @router.get("/{project_id}/steps/{step_id}/delete")

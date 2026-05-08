@@ -1,3 +1,10 @@
+## 1.3.17
+
+- Punkte: Verlauf der letzten Erfolge mit Aufgabe, Datum und Punktzahl ergänzt
+- Motivation: Erfolgsmeldung mit vergebenen Punkten nach erledigten Aufgaben und Projektschritten
+- Score-Log: neue Einträge speichern Aufgaben-/Schrittnamen für transparentere Auswertung
+- Tests: Score-Log-Erfassung für Aufgaben und Projektschritte ergänzt
+
 ## 1.3.16
 
 - UI: Bottom-Navigation nutzt lokale OpenMoji-Icons
