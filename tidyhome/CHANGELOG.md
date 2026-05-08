@@ -1,3 +1,11 @@
+## 1.3.13
+
+- Erinnerung: Erfolgsmeldung nach Versand oder Notiz-Fallback anzeigen
+- Erinnerung: Notiztexte verständlicher formulieren, z. B. "Danny hat Petra erinnert"
+- Projekte: Erinnerung an zuständige Person eines offenen Projektschritts senden
+- Refactoring: gemeinsame Aufgabenzeilen-Komponente für Zuhause und Aufgabenliste
+- Doku: README, Feature-Liste und Roadmap aktualisiert
+
 ## 1.3.12
 
 - Aufgaben: Erinnerungs-Glocke erscheint nur, wenn andere zugewiesene Personen erinnert werden können

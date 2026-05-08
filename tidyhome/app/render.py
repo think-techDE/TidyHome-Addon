@@ -655,6 +655,108 @@ def comments_card(entity_type: str, entity_id: str, action: str,
     </div>"""
 
 
+def task_row(task, base: str = "", person: str = "", show_assigned: bool = False,
+             paused: bool = False, vacation_until: str = "") -> str:
+    from reminders import task_reminder_recipients
+
+    effort_labels = {"low": "Wenig", "medium": "Mittel", "high": "Viel"}
+    effort_badges = {"low": "ok", "medium": "today", "high": "overdue"}
+    due = task.days_until_due()
+
+    if due < 0:
+        badge_text, badge_cls = "Überfällig", "overdue"
+        date_text = f"{abs(due)}d überfällig"
+    elif due == 0:
+        badge_text, badge_cls = "Heute", "today"
+        date_text = "Heute"
+    else:
+        badge_text, badge_cls = "Geplant", "ok"
+        date_text = "Morgen" if due == 1 else f"In {due} Tagen"
+
+    if task.snooze_until:
+        try:
+            snooze_d = date.fromisoformat(task.snooze_until)
+            if snooze_d > date.today():
+                date_text = f"Verschoben bis {snooze_d.strftime('%-d. %b')}"
+                badge_text, badge_cls = "Verschoben", "ok"
+        except ValueError:
+            pass
+
+    if paused:
+        badge_text, badge_cls = "Pausiert", "ok"
+        date_text = (
+            f"Pausiert bis {format_date_de(vacation_until)}"
+            if vacation_until else "Pausiert"
+        )
+
+    important_cls = " important" if task.important else ""
+    star = _icon("star", 13, "var(--warning)", 2.5) if task.important else ""
+    onetime_badge = (
+        '<span class="badge" style="background:var(--muted);color:#fff;'
+        'font-size:0.62rem;flex-shrink:0">1×</span>'
+    ) if task.onetime else ""
+    effort_badge = (
+        f'<span class="badge {effort_badges[task.effort]}" '
+        f'style="font-size:0.62rem;flex-shrink:0">{effort_labels[task.effort]}</span>'
+    ) if task.effort in effort_labels else ""
+    sub_badges = (
+        f'<div class="task-badge-subrow">{effort_badge}{onetime_badge}</div>'
+        if effort_badge or onetime_badge else ""
+    )
+
+    assigned_txt = ""
+    if task.assigned_to and show_assigned:
+        assigned_txt = (
+            f'<span class="task-meta" style="font-size:0.72rem">'
+            f'→ {", ".join(task.assigned_to)}</span>'
+        )
+    task_meta_inline = f'<span class="task-name-meta"> · {date_text}</span>'
+    psuffix = person_suffix(person)
+
+    done_btn = (
+        f'<form class="inline" method="post" action="{base}tasks/{task.id}/done">'
+        + (f'<input type="hidden" name="done_by" value="{person}">' if person else "")
+        + (f'<input type="hidden" name="return_p" value="{person}">' if person else "")
+        + f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
+        f'</form>'
+    )
+    snooze_btn = (
+        f'<a class="icon-btn" href="{base}tasks/{task.id}/snooze{psuffix}" '
+        f'title="Verschieben">{_icon("clock", 16)}</a>'
+    )
+    remind_btn = (
+        f'<a class="icon-btn" href="{base}tasks/{task.id}/remind{psuffix}" '
+        f'title="Andere erinnern">{_icon("bell", 16)}</a>'
+    ) if task_reminder_recipients(task, person) else ""
+    edit_btn = (
+        f'<a class="icon-btn" href="{base}tasks/{task.id}/edit{psuffix}" title="Bearbeiten">'
+        f'{_icon("edit", 16)}</a>'
+    )
+    del_btn = (
+        f'<a class="icon-btn danger" href="{base}tasks/{task.id}/delete{psuffix}" '
+        f'onclick="return confirm(\'Aufgabe löschen?\')" title="Löschen">'
+        f'{_icon("trash", 16)}</a>'
+    )
+
+    return f"""
+    <div class="task-row{important_cls}">
+      {_task_icon(task.name, task.room, icon=task.icon, size=40)}
+      <div class="task-body">
+        <div class="task-header">
+          <span class="task-name">{star}{task.name}{task_meta_inline}</span>
+          <div class="task-badges">
+            <span class="badge {badge_cls}">{badge_text}</span>
+            {sub_badges}
+          </div>
+        </div>
+        {f'<div class="task-date">{assigned_txt}</div>' if assigned_txt else ''}
+      </div>
+      <div class="task-actions">
+        {done_btn}{snooze_btn}{remind_btn}{edit_btn}{del_btn}
+      </div>
+    </div>"""
+
+
 def render(content: str, request: Request, page: str = "home",
            person: str = "") -> HTMLResponse:
     base = _base(request)
@@ -664,6 +766,15 @@ def render(content: str, request: Request, page: str = "home",
     is_admin = ha_user in admins
     display_person = person or ha_user
     vacation_banner = ""
+    flash = ""
+    msg = request.query_params.get("msg", "").strip()
+    if msg:
+        flash = (
+            '<div class="card" style="border-color:var(--success);'
+            'background:var(--success-bg);margin-bottom:1rem">'
+            f'<div style="font-weight:750;color:var(--success)">{escape(msg)}</div>'
+            '</div>'
+        )
     if display_person and is_vacation_mode_active(display_person):
         vacation = get_vacation_mode(display_person)
         until = vacation.get("until") or ""
@@ -761,9 +872,10 @@ def render(content: str, request: Request, page: str = "home",
   </div>
 </header>
 <main>
-{vacation_banner}
-{content}
-</main>
+        {flash}
+        {vacation_banner}
+        {content}
+      </main>
 <nav class="bottom-nav">{nav_items}</nav>
 </body>
 </html>"""

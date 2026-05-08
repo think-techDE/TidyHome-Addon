@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from html import escape
+from urllib.parse import quote
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -7,9 +8,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from ha_client import get_areas, get_persons
 from models import Task
 from reminders import send_task_reminders, task_reminder_recipients
-from render import (INTERVALS, _base, _icon, _icon_chooser, _selected, _task_icon,
-                    comments_card, format_date_de, interval_label, person_suffix,
-                    render, resolve_person, urgency_class)
+from render import (INTERVALS, _base, _icon, _icon_chooser, _selected,
+                    comments_card, person_suffix, render, resolve_person, task_row)
 from storage import (add_comment, create_task, delete_task, edit_task, filter_tasks_by_role,
                      get_admins, get_person_settings, get_task, get_vacation_mode,
                      is_vacation_mode_active, list_people_by_role, list_tasks,
@@ -70,104 +70,6 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     def _is_paused_for_view(t: Task) -> bool:
         return bool(vacation_active and p and p in t.assigned_to)
 
-    base = _base(request)
-
-    def _task_row(t: Task) -> str:
-        due = t.days_until_due()
-        paused = _is_paused_for_view(t)
-
-        if due < 0:
-            badge_text, badge_cls = "Überfällig", "overdue"
-            date_text = f"{abs(due)}d überfällig"
-        elif due == 0:
-            badge_text, badge_cls = "Heute", "today"
-            date_text = "Heute"
-        else:
-            badge_text, badge_cls = "Geplant", "ok"
-            date_text = "Morgen" if due == 1 else f"In {due} Tagen"
-
-        # Snooze-Hinweis überschreibt den Datumstext
-        if t.snooze_until:
-            try:
-                snooze_d = date.fromisoformat(t.snooze_until)
-                if snooze_d > date.today():
-                    date_text = f"Verschoben bis {snooze_d.strftime('%-d. %b')}"
-                    badge_text, badge_cls = "Verschoben", "ok"
-            except ValueError:
-                pass
-
-        if paused:
-            badge_text, badge_cls = "Pausiert", "ok"
-            date_text = (
-                f"Pausiert bis {format_date_de(vacation_until)}"
-                if vacation_until else
-                "Pausiert"
-            )
-
-        important_cls = " important" if t.important else ""
-        star = f'{_icon("star", 13, "var(--warning)", 2.5)}' if t.important else ""
-        onetime_badge = (
-            '<span class="badge" style="background:var(--muted);color:#fff;'
-            'font-size:0.62rem;flex-shrink:0">1×</span>'
-        ) if t.onetime else ""
-        effort_badge = (
-            f'<span class="badge {_EFFORT_BADGE[t.effort]}" '
-            f'style="font-size:0.62rem;flex-shrink:0">{_EFFORT_LABELS[t.effort]}</span>'
-        ) if t.effort in _EFFORT_LABELS else ""
-        sub_badges = f'<div class="task-badge-subrow">{effort_badge}{onetime_badge}</div>' if effort_badge or onetime_badge else ""
-
-        assigned_txt = ""
-        if t.assigned_to and show_grouped:
-            assigned_txt = (
-                f'<span class="task-meta" style="font-size:0.72rem">'
-                f'→ {", ".join(t.assigned_to)}</span>'
-            )
-        task_meta_inline = f'<span class="task-name-meta"> · {date_text}</span>'
-
-        done_btn = (
-            f'<form class="inline" method="post" action="tasks/{t.id}/done">'
-            + (f'<input type="hidden" name="done_by" value="{p}">' if p else "")
-            + (f'<input type="hidden" name="return_p" value="{p}">' if p else "")
-            + f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
-            f'</form>'
-        )
-        snooze_btn = (
-            f'<a class="icon-btn" href="tasks/{t.id}/snooze{person_suffix(p)}" '
-            f'title="Verschieben">{_icon("clock", 16)}</a>'
-        )
-        remind_recipients = task_reminder_recipients(t, p)
-        remind_btn = (
-            f'<a class="icon-btn" href="tasks/{t.id}/remind{person_suffix(p)}" '
-            f'title="Andere erinnern">{_icon("bell", 16)}</a>'
-        ) if remind_recipients else ""
-        edit_btn = (
-            f'<a class="icon-btn" href="tasks/{t.id}/edit{person_suffix(p)}" title="Bearbeiten">'
-            f'{_icon("edit", 16)}</a>'
-        )
-        del_btn = (
-            f'<a class="icon-btn danger" href="tasks/{t.id}/delete{person_suffix(p)}" '
-            f'onclick="return confirm(\'Aufgabe löschen?\')" title="Löschen">'
-            f'{_icon("trash", 16)}</a>'
-        )
-
-        return f"""
-        <div class="task-row{important_cls}">
-          {_task_icon(t.name, t.room, icon=t.icon, size=40)}
-          <div class="task-body">
-            <div class="task-header">
-              <span class="task-name">{star}{t.name}{task_meta_inline}</span>
-              <div class="task-badges">
-                <span class="badge {badge_cls}">{badge_text}</span>
-                {sub_badges}
-              </div>
-            </div>
-            {f'<div class="task-date">{assigned_txt}</div>' if assigned_txt else ''}
-          </div>
-          <div class="task-actions">
-            {done_btn}{snooze_btn}{remind_btn}{edit_btn}{del_btn}
-          </div>
-        </div>"""
-
     rows = ""
     if not tasks:
         rows = (
@@ -195,10 +97,16 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
                 f'{_icon("person", 13, "var(--primary-dark)")} {person_name}</div>'
             )
             for t in ptasks:
-                rows += _task_row(t)
+                rows += task_row(
+                    t, person=p, show_assigned=show_grouped,
+                    paused=_is_paused_for_view(t), vacation_until=vacation_until
+                )
     else:
         for t in tasks:
-            rows += _task_row(t)
+            rows += task_row(
+                t, person=p, show_assigned=show_grouped,
+                paused=_is_paused_for_view(t), vacation_until=vacation_until
+            )
 
     psuffix_q = f"?p={p}" if p else ""
     active_tasks = [t for t in tasks if not _is_paused_for_view(t)]
@@ -383,7 +291,9 @@ async def task_remind_form(task_id: str, request: Request, p: str = ""):
 
     recipients = task_reminder_recipients(task, p)
     if not recipients:
-        return RedirectResponse(_base(request) + f"tasks{person_suffix(p)}", status_code=303)
+        msg = quote("Keine anderen Empfänger für diese Aufgabe")
+        sep = "&" if p else "?"
+        return RedirectResponse(_base(request) + f"tasks{person_suffix(p)}{sep}msg={msg}", status_code=303)
 
     recipient_label = ", ".join(recipients)
     default_message = f"Kannst du bitte an {task.name} denken?"
@@ -428,9 +338,20 @@ async def task_remind_send(task_id: str, request: Request,
 
     sender = resolve_person(request, return_p)
     recipients = task_reminder_recipients(task, sender)
+    sent = False
     if recipients:
-        await send_task_reminders(task, recipients, message, sender=sender)
-    return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
+        sent = await send_task_reminders(task, recipients, message, sender=sender)
+    target_label = ", ".join(recipients)
+    msg = (
+        f"Erinnerung an {target_label} gesendet"
+        if sent else
+        f"Erinnerung für {target_label or 'niemanden'} als Notiz gespeichert"
+    )
+    sep = "&" if return_p else "?"
+    return RedirectResponse(
+        _base(request) + f"tasks{person_suffix(return_p)}{sep}msg={quote(msg)}",
+        status_code=303
+    )
 
 
 @router.post("/{task_id}/comments")

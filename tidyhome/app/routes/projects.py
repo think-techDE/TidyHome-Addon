@@ -1,14 +1,16 @@
 from urllib.parse import quote
+from html import escape
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Project, Step
+from reminders import send_project_step_reminder
 from render import (_base, _icon, _icon_chooser, _proj_icon, _selected,
                     comments_card, render, resolve_person)
 from storage import (add_comment, add_step, assign_step, complete_step, create_project,
-                     delete_project, delete_step, get_admins, get_person_settings,
+                     delete_project, delete_step, get_admins, get_person_settings, get_step,
                      get_project, list_projects, list_steps, update_project)
 
 router = APIRouter(prefix="/projects")
@@ -310,6 +312,10 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
               </div>
             </div>"""
         else:
+            remind_btn = (
+                f'<a class="icon-btn" href="{base}projects/{project_id}/steps/{s.id}/remind{_p_suffix(p)}" '
+                f'title="Andere erinnern">{_icon("bell", 16)}</a>'
+            ) if assignee and assignee != p else ""
             step_rows += f"""
             <div class="project-step-row">
               <div class="project-step-main">
@@ -329,6 +335,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
                   <input type="hidden" name="return_p" value="{p}">
                   <button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>
                 </form>
+                {remind_btn}
                 <a class="icon-btn danger"
                    href="{base}projects/{project_id}/steps/{s.id}/delete{_p_suffix(p)}"
                    onclick="return confirm('Schritt löschen?')"
@@ -476,6 +483,80 @@ async def project_comment_add(project_id: str, request: Request,
     author = resolve_person(request, return_p)
     add_comment("project", project_id, text, author=author)
     return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
+
+
+@router.get("/{project_id}/steps/{step_id}/remind", response_class=HTMLResponse)
+async def step_remind_form(project_id: str, step_id: str, request: Request, p: str = ""):
+    p = resolve_person(request, p)
+    proj = get_project(project_id)
+    step = get_step(step_id)
+    if not proj or not step or step.project_id != project_id:
+        raise HTTPException(404)
+
+    assignee = _step_assignee(step, proj)
+    if not assignee or assignee == p:
+        msg = quote("Keine andere Person für diesen Schritt")
+        sep = "&" if p else "?"
+        return RedirectResponse(
+            _base(request) + f"projects/{project_id}{_p_suffix(p)}{sep}msg={msg}",
+            status_code=303
+        )
+
+    default_message = f"Kannst du bitte an {step.name} denken?"
+    content = f"""
+    <div class="page-header">
+      <h2>Erinnerung senden</h2>
+      <a class="icon-btn" href="{_base(request)}projects/{project_id}{_p_suffix(p)}" title="Abbrechen">{_icon("chevron_l", 20)}</a>
+    </div>
+    <div class="card" style="margin-bottom:0.75rem">
+      <div style="font-weight:600;margin-bottom:0.2rem">{proj.name}</div>
+      <div class="task-meta">{step.name} · {assignee}</div>
+    </div>
+    <div class="card">
+      <form method="post" action="{_base(request)}projects/{project_id}/steps/{step_id}/remind">
+        <input type="hidden" name="return_p" value="{p}">
+        <div class="form-group">
+          <label>Erinnerung an</label>
+          <div style="padding:0.7rem 0.8rem;border:1px solid var(--border);
+                      border-radius:8px;background:var(--bg-soft);font-weight:600">
+            {assignee}
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nachricht</label>
+          <textarea name="message" rows="3" required>{escape(default_message)}</textarea>
+        </div>
+        <button class="btn btn-primary btn-full" type="submit">Erinnerung senden</button>
+        <a class="btn btn-ghost btn-full" href="{_base(request)}projects/{project_id}{_p_suffix(p)}"
+           style="margin-top:0.5rem">Abbrechen</a>
+      </form>
+    </div>"""
+    return render(content, request, page="projects", person=p)
+
+
+@router.post("/{project_id}/steps/{step_id}/remind")
+async def step_remind_send(project_id: str, step_id: str, request: Request,
+                           message: str = Form(...), return_p: str = Form("")):
+    proj = get_project(project_id)
+    step = get_step(step_id)
+    if not proj or not step or step.project_id != project_id:
+        raise HTTPException(404)
+
+    sender = resolve_person(request, return_p)
+    assignee = _step_assignee(step, proj)
+    sent = False
+    if assignee and assignee != sender:
+        sent = await send_project_step_reminder(proj, step, assignee, message, sender=sender)
+    msg = (
+        f"Erinnerung an {assignee} gesendet"
+        if sent else
+        f"Erinnerung für {assignee or 'niemanden'} als Notiz gespeichert"
+    )
+    sep = "&" if return_p else "?"
+    return RedirectResponse(
+        _base(request) + f"projects/{project_id}{_p_suffix(return_p)}{sep}msg={quote(msg)}",
+        status_code=303
+    )
 
 
 @router.get("/{project_id}/delete")

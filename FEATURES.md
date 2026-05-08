@@ -44,6 +44,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Projekt-Icons können aus Aufgaben-Icons und Raum-/Orts-Icons gewählt werden
 - ✅ Projekt-Icons nutzen ohne manuelle Auswahl die konservative Raum-Erkennung
 - ✅ Kommentare / Notizen zu Projekten hinterlegen
+- ✅ Erinnerung an zuständige Person eines offenen Projektschritts senden
 - 💡 Fotos pro Projekt und Schritt (Vorher/Nachher, Hinweisfotos)
 
 ## Gamification & Punkte
@@ -66,6 +67,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Admin definiert Geräte (Notify-Services per Checkbox aus HA)
 - ✅ Test-Benachrichtigung direkt aus der UI
 - ✅ Erinnerung an andere Person schicken ("Küche ist noch offen")
+- ✅ Erinnerung an andere Person nur anzeigen, wenn es andere Empfänger gibt
 - ✅ Persönlicher Urlaubsmodus (keine Notifications, fällige Aufgaben pausiert)
 
 ## Benutzerverwaltung & Rollen
@@ -96,6 +98,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 
 - ✅ Kommentare / Notizen zu Aufgaben und Projekten hinterlassen
 - ✅ Erinnerung senden: andere Person auf offene Aufgabe hinweisen
+- ✅ Erinnerung senden: zuständige Person eines Projektschritts hinweisen
 - 📋 Einkaufsliste als späterer Bereich (ähnlich wie Projekte, ohne Intervall)
 - ✅ Persönlicher Urlaubsmodus: fällige Aufgaben pausieren, keine Notifications
 
@@ -124,6 +127,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Externes Stylesheet assets/app.css; FOUC-Fix via inline Critical CSS
 - ✅ Dashboard: Ring-Charts (Erledigt/Überfällig/Zustand) als einzelne Karten
 - ✅ Aufgabenliste: kompaktes Layout, Badge-Semantik, OpenMoji-Icons, SVG-Aktions-Buttons
+- ✅ Gemeinsame Aufgabenzeilen-Komponente für Zuhause und Aufgabenliste
 - ✅ Icon-Chooser im Formular: manuelle Auswahl oder automatische Erkennung
 - ✅ Erweiterte Raum-/Orts-Icon-Auswahl im Admin-Bereich mit konservativer Namens-Erkennung
 - ✅ Projekt-Icon-Chooser kombiniert Aufgaben-Icons und Raum-/Orts-Icons

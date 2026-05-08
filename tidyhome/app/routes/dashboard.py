@@ -4,18 +4,13 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 from ha_client import get_areas
-from reminders import task_reminder_recipients
-from render import (_base, _icon, _ring_chart, _room_icon, _task_icon,
-                    person_suffix, render, resolve_person)
+from render import (_base, _icon, _ring_chart, _room_icon,
+                    person_suffix, render, resolve_person, task_row)
 from storage import (filter_tasks_by_role, get_admins, get_person_settings,
                      get_room_icons, is_vacation_mode_active, list_projects,
                      list_steps, list_tasks)
 
 router = APIRouter()
-
-_EFFORT_LABELS = {"low": "Wenig", "medium": "Mittel", "high": "Viel"}
-_EFFORT_BADGE = {"low": "ok", "medium": "today", "high": "overdue"}
-
 
 @router.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, p: str = ""):
@@ -75,7 +70,7 @@ async def dashboard(request: Request, p: str = ""):
 
     greeting = f"Hallo{' ' + p if p else ''}!"
 
-    # ── Ring-Charts ─────────────────────────────────────────────────────────
+    # Ring-Charts
     done_color    = "var(--success)" if len(done_today) >= done_of_due else "var(--primary)"
     overdue_color = "var(--danger)"  if overdue_tasks else "var(--success)"
     health_color  = ("var(--success)" if health_pct > 80
@@ -93,7 +88,7 @@ async def dashboard(request: Request, p: str = ""):
       <div class="card" style="padding:1rem 0.5rem;margin-bottom:0">{ring_health}</div>
     </div>"""
 
-    # ── Schnellaktionen ──────────────────────────────────────────────────────
+    # Schnellaktionen
     base = _base(request)
     psuffix_q = f"?p={p}" if p else ""
     plus = _icon("plus", 15)
@@ -111,80 +106,14 @@ async def dashboard(request: Request, p: str = ""):
       </a>
     </div>"""
 
-    # ── Nächste Aufgaben ─────────────────────────────────────────────────────
+    # Nächste Aufgaben
     upcoming = sorted(all_tasks, key=lambda t: t.days_until_due())[:5]
     chev     = _icon("chevron_r", 16, "var(--muted)")
 
     if upcoming:
         task_rows = ""
         for t in upcoming:
-            d = t.days_until_due()
-            if d < 0:
-                badge_text, badge_cls = "Überfällig", "overdue"
-                date_text = f"{abs(d)}d überfällig"
-            elif d == 0:
-                badge_text, badge_cls = "Heute", "today"
-                date_text = "Heute"
-            else:
-                badge_text, badge_cls = "Geplant", "ok"
-                date_text = "Morgen" if d == 1 else f"In {d} Tagen"
-
-            important_cls = " important" if t.important else ""
-            star = _icon("star", 13, "var(--warning)", 2.5) if t.important else ""
-            onetime_badge = (
-                '<span class="badge" style="background:var(--muted);color:#fff;'
-                'font-size:0.62rem;flex-shrink:0">1×</span>'
-            ) if t.onetime else ""
-            effort_badge = (
-                f'<span class="badge {_EFFORT_BADGE[t.effort]}" '
-                f'style="font-size:0.62rem;flex-shrink:0">{_EFFORT_LABELS[t.effort]}</span>'
-            ) if t.effort in _EFFORT_LABELS else ""
-            sub_badges = f'<div class="task-badge-subrow">{effort_badge}{onetime_badge}</div>' if effort_badge or onetime_badge else ""
-            task_meta_inline = f'<span class="task-name-meta"> · {date_text}</span>'
-
-            done_btn = (
-                f'<form class="inline" method="post" action="{base}tasks/{t.id}/done">'
-                + (f'<input type="hidden" name="done_by" value="{p}">' if p else "")
-                + (f'<input type="hidden" name="return_p" value="{p}">' if p else "")
-                + f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
-                f'</form>'
-            )
-            snooze_btn = (
-                f'<a class="icon-btn" href="{base}tasks/{t.id}/snooze{person_suffix(p)}" '
-                f'title="Verschieben">{_icon("clock", 16)}</a>'
-            )
-            remind_recipients = task_reminder_recipients(t, p)
-            remind_btn = (
-                f'<a class="icon-btn" href="{base}tasks/{t.id}/remind{person_suffix(p)}" '
-                f'title="Andere erinnern">{_icon("bell", 16)}</a>'
-            ) if remind_recipients else ""
-            edit_btn = (
-                f'<a class="icon-btn" href="{base}tasks/{t.id}/edit{person_suffix(p)}" '
-                f'title="Bearbeiten">{_icon("edit", 16)}</a>'
-            )
-            del_btn = (
-                f'<a class="icon-btn danger" href="{base}tasks/{t.id}/delete{person_suffix(p)}" '
-                f'onclick="return confirm(\'Aufgabe löschen?\')" title="Löschen">'
-                f'{_icon("trash", 16)}</a>'
-            )
-
-            task_rows += f"""
-            <div class="task-row{important_cls}">
-              {_task_icon(t.name, t.room, icon=t.icon, size=40)}
-              <div class="task-body">
-                <div class="task-header">
-                  <span class="task-name">{star}{t.name}{task_meta_inline}</span>
-                  <div class="task-badges">
-                    <span class="badge {badge_cls}">{badge_text}</span>
-                    {sub_badges}
-                  </div>
-                </div>
-              </div>
-              <div class="task-actions">
-                {done_btn}{snooze_btn}{remind_btn}{edit_btn}{del_btn}
-              </div>
-            </div>"""
-
+            task_rows += task_row(t, base=base, person=p)
         next_tasks_section = f"""
         <div style="display:flex;justify-content:space-between;align-items:center;
                     margin-bottom:0.6rem">
@@ -204,7 +133,7 @@ async def dashboard(request: Request, p: str = ""):
           <div class="muted" style="margin-top:0.25rem">Keine offenen Aufgaben.</div>
         </div>"""
 
-    # ── Räume ermitteln ──────────────────────────────────────────────────────
+    # Räume ermitteln
     # Räume mit eigenen Aufgaben/Projekten
     own_rooms_set = (
         {t.room for t in own_tasks} | {pr.room for pr in own_projects}
@@ -249,7 +178,7 @@ async def dashboard(request: Request, p: str = ""):
             f'</a>'
         )
 
-    # ── Räume-Block aufbauen ─────────────────────────────────────────────────
+    # Räume-Block aufbauen
     if own_room_list or foreign_room_list:
         room_block_parts = []
 
