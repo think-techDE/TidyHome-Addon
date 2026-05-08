@@ -66,7 +66,6 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     elif not show_grouped:
         tasks = filter_tasks_by_role(tasks, p, admins)
 
-    cal = _icon("calendar", 13, "var(--muted)")
     base = _base(request)
 
     def _task_row(t: Task) -> str:
@@ -105,11 +104,12 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
         sub_badges = f'<div class="task-badge-subrow">{effort_badge}{onetime_badge}</div>' if effort_badge or onetime_badge else ""
 
         assigned_txt = ""
-        if t.assigned_to and not show_grouped:
+        if t.assigned_to and show_grouped:
             assigned_txt = (
                 f'<span class="task-meta" style="font-size:0.72rem">'
                 f'→ {", ".join(t.assigned_to)}</span>'
             )
+        task_meta_inline = f'<span class="task-name-meta"> · {date_text}</span>'
 
         done_btn = (
             f'<form class="inline" method="post" action="tasks/{t.id}/done">'
@@ -137,16 +137,13 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
           {_task_icon(t.name, t.room, icon=t.icon, size=40)}
           <div class="task-body">
             <div class="task-header">
-              <span class="task-name">{star}{t.name}</span>
+              <span class="task-name">{star}{t.name}{task_meta_inline}</span>
               <div class="task-badges">
                 <span class="badge {badge_cls}">{badge_text}</span>
                 {sub_badges}
               </div>
             </div>
-            <div class="task-date">{cal}
-              <span class="task-meta">{date_text}</span>
-              {assigned_txt}
-            </div>
+            {f'<div class="task-date">{assigned_txt}</div>' if assigned_txt else ''}
           </div>
           <div class="task-actions">
             {done_btn}{snooze_btn}{edit_btn}{del_btn}

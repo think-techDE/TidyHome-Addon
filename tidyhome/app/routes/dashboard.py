@@ -106,7 +106,6 @@ async def dashboard(request: Request, p: str = ""):
 
     # ── Nächste Aufgaben ─────────────────────────────────────────────────────
     upcoming = sorted(all_tasks, key=lambda t: t.days_until_due())[:5]
-    cal_icon = _icon("calendar", 13, "var(--muted)")
     chev     = _icon("chevron_r", 16, "var(--muted)")
 
     if upcoming:
@@ -134,9 +133,7 @@ async def dashboard(request: Request, p: str = ""):
                 f'style="font-size:0.62rem;flex-shrink:0">{_EFFORT_LABELS[t.effort]}</span>'
             ) if t.effort in _EFFORT_LABELS else ""
             sub_badges = f'<div class="task-badge-subrow">{effort_badge}{onetime_badge}</div>' if effort_badge or onetime_badge else ""
-            assigned_txt = (
-                f'<span class="task-meta" style="font-size:0.72rem">→ {", ".join(t.assigned_to)}</span>'
-            ) if t.assigned_to else ""
+            task_meta_inline = f'<span class="task-name-meta"> · {date_text}</span>'
 
             done_btn = (
                 f'<form class="inline" method="post" action="{base}tasks/{t.id}/done">'
@@ -164,15 +161,11 @@ async def dashboard(request: Request, p: str = ""):
               {_task_icon(t.name, t.room, icon=t.icon, size=40)}
               <div class="task-body">
                 <div class="task-header">
-                  <span class="task-name">{star}{t.name}</span>
+                  <span class="task-name">{star}{t.name}{task_meta_inline}</span>
                   <div class="task-badges">
                     <span class="badge {badge_cls}">{badge_text}</span>
                     {sub_badges}
                   </div>
-                </div>
-                <div class="task-date">{cal_icon}
-                  <span class="task-meta">{date_text}</span>
-                  {assigned_txt}
                 </div>
               </div>
               <div class="task-actions">

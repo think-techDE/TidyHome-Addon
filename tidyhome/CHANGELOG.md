@@ -1,3 +1,9 @@
+## 1.3.5
+
+- Aufgabenliste: Fälligkeit steht jetzt direkt hinter dem Aufgabennamen statt in einer eigenen Kalenderzeile
+- Dashboard: "Nächste Aufgaben" nutzt dieselbe kompakte Namenszeile wie die Aufgabenliste
+- UI: redundante Personenanzeige in persönlichen Aufgabenlisten entfernt
+
 ## 1.3.4
 
 - UI: Icon-Picker in Aufgaben-/Projektformularen und im Admin-Bereich sind jetzt durchsuchbar

@@ -92,6 +92,7 @@
   .task-badge-subrow { display:flex; align-items:center; justify-content:flex-end; gap:0.25rem; }
   .task-actions { display: flex; align-items: center; gap: 0rem; flex-shrink: 0; }
   .task-name { font-weight: 600; font-size: 0.9rem; line-height: 1.3; }
+  .task-name-meta { color:var(--muted); font-size:0.75rem; font-weight:500; white-space:nowrap; }
   .task-meta { font-size: 0.75rem; color: var(--muted); }
   .badge { display: inline-flex; align-items:center; gap:0.25rem; padding: 0.22rem 0.55rem;
             border-radius: 999px; font-size: 0.7rem; font-weight: 750; white-space: nowrap; }
