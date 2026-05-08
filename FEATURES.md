@@ -64,7 +64,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Admin definiert Geräte (Notify-Services per Checkbox aus HA)
 - ✅ Test-Benachrichtigung direkt aus der UI
 - 💡 Erinnerung an andere Person schicken ("Küche ist noch offen")
-- 💡 Urlaubsmodus (keine Notifications, Intervalle eingefroren)
+- ✅ Urlaubsmodus (keine Notifications, fällige Aufgaben pausiert)
 
 ## Benutzerverwaltung & Rollen
 
@@ -79,7 +79,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
   - Mitglied/Haushaltshilfe: nur eigene + nicht zugeordnete
 - ✅ Räume pro Person individuell ausblendbar
 - ✅ Persönliche Einstellungen auf /settings, alle Personen im Admin-Panel
-- 📋 Urlaubsmodus (Intervalle einfrieren, keine Notifications)
+- ✅ Urlaubsmodus (fällige Aufgaben pausieren, keine Notifications)
 
 ## Haushaltshilfe
 
@@ -95,7 +95,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - 📋 Kommentare / Notizen zu Aufgaben und Projekten hinterlassen
 - 📋 Erinnerung senden: andere Person auf offene Aufgabe hinweisen
 - 📋 Einkaufsliste als eigener Bereich (ähnlich wie Projekte, ohne Intervall)
-- 📋 Urlaubsmodus: Intervalle einfrieren, keine Notifications
+- ✅ Urlaubsmodus: fällige Aufgaben pausieren, keine Notifications
 
 ## Barrierefreiheit & Neurodiversität
 

@@ -2,7 +2,8 @@ import asyncio
 import logging
 from datetime import datetime
 
-from storage import list_tasks, list_person_settings, get_person_settings, list_projects, list_steps
+from storage import (is_vacation_mode_active, list_person_settings, list_projects,
+                     list_steps, list_tasks, get_person_settings)
 from ha_client import send_notification
 
 logger = logging.getLogger("tidyhome")
@@ -17,6 +18,10 @@ def parse_time(raw: str) -> str:
 
 
 async def _do_notify(person: str, services: list[str]) -> None:
+    if is_vacation_mode_active():
+        logger.info("Urlaubsmodus aktiv, keine Benachrichtigung fuer %s", person)
+        return
+
     tasks = [t for t in list_tasks(assigned_to=person) if t.days_until_due() <= 0]
     # Fallback: auch Aufgaben ohne Zuweisung einschließen
 

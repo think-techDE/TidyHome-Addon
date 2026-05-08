@@ -5,8 +5,10 @@ from ha_client import get_areas, get_notify_services, get_persons
 from render import (_base, _ha_user, _ICON_LABELS, ROOM_ICON_CHOICES, ROOM_ICON_LABELS,
                     _auto_room_icon_config, _room_icon, person_suffix, render)
 from scheduler import notify_person_now, parse_time
-from storage import (get_admins, get_person_settings, get_room_icons, list_person_settings,
-                     save_admins, save_person_settings, save_room_icons, ROLES)
+from storage import (ROLES, get_admins, get_person_settings, get_room_icons,
+                     get_vacation_mode, is_vacation_mode_active, list_person_settings,
+                     save_admins, save_person_settings, save_room_icons,
+                     save_vacation_mode)
 
 router = APIRouter()
 
@@ -239,6 +241,43 @@ async def admin_form(request: Request, saved: str = ""):
       </form>
     </section>"""
 
+    vacation = get_vacation_mode()
+    vacation_active = is_vacation_mode_active()
+    vacation_checked = "checked" if vacation.get("enabled") else ""
+    vacation_until = vacation.get("until", "")
+    vacation_state = (
+        '<span class="admin-badge">Aktiv</span>'
+        if vacation_active else
+        '<span class="badge ok" style="font-size:0.68rem">Inaktiv</span>'
+    )
+    vacation_section = f"""
+    <section class="card admin-section">
+      <div class="admin-section-head">
+        <div>
+          <h3>Urlaubsmodus</h3>
+          <p class="muted">Pausiert fällige Aufgaben und tägliche Benachrichtigungen global.</p>
+        </div>
+        {vacation_state}
+      </div>
+      <form method="post" action="{base}admin/vacation">
+        <div class="grid-2">
+          <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:0.75rem">
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;
+                          text-transform:none;font-size:0.84rem;letter-spacing:0;font-weight:500;margin:0">
+              <input type="checkbox" name="enabled" value="1" {vacation_checked}
+                     style="width:1rem;height:1rem;accent-color:var(--primary)">
+              Aktiv
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Bis einschließlich</label>
+            <input type="date" name="until" value="{vacation_until}">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm admin-save" type="submit">Urlaubsmodus speichern</button>
+      </form>
+    </section>"""
+
     # ── Geräte-Verwaltung ─────────────────────────────────────────────────
     if not admins:
         device_section = """
@@ -418,6 +457,7 @@ function filterRoomIcons(input){
     </div>
     <div class="admin-stack">
       {admin_section}
+      {vacation_section}
       {room_icons_section}
       {device_section}
       <section class="admin-section">
@@ -441,6 +481,18 @@ async def admin_save_admins(request: Request):
     form = await request.form()
     selected = form.getlist("admins")
     save_admins(selected)
+    return RedirectResponse(_base(request) + "admin?saved=1", status_code=303)
+
+
+@router.post("/admin/vacation")
+async def admin_save_vacation(request: Request):
+    if not get_admins():
+        raise HTTPException(403)
+    form = await request.form()
+    save_vacation_mode(
+        enabled=(form.get("enabled", "") == "1"),
+        until=str(form.get("until") or ""),
+    )
     return RedirectResponse(_base(request) + "admin?saved=1", status_code=303)
 
 

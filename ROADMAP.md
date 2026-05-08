@@ -96,6 +96,7 @@ Stand: 2026-05-08 · Aktuelle Version: 1.3.8
 - **Fälligkeit einmalig verschieben (Snooze)**: Schnell-Seite mit +1/+3/+7/+14/+30 Tage und eigenem Datum; Snooze-Button direkt in der Aufgabenzeile; Verschiebung wird nach Erledigung automatisch aufgehoben
 - **Erweiterte OpenMoji-Icons**: größere Raum-/Orts-Auswahl im Admin-Bereich, konservative automatische Raumerkennung per Teilstring
 - **Projekt-Icons**: Projektformulare bieten Aufgaben-Icons und Raum-/Orts-Icons gemeinsam an
+- **Urlaubsmodus**: globaler Admin-Schalter bis Datum; fällige Aufgaben und tägliche Benachrichtigungen werden pausiert
 
 ---
 
@@ -106,7 +107,6 @@ Ziel: Gemeinsames Arbeiten erleichtern.
 - **Kommentare**: Notizen zu Aufgaben und Projekten hinterlassen
 - **Erinnerung senden**: andere Person auf offene Aufgabe hinweisen
 - **Einkaufsliste**: eigener Bereich ohne Intervall, gemeinsam bearbeitbar
-- **Urlaubsmodus**: globaler Toggle → Intervall-Berechnung eingefroren, keine Notifications
 
 ---
 

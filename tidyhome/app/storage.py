@@ -26,6 +26,9 @@ def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = F
     rows = table.search(Q.room == room) if room else table.all()
     tasks = [Task(**r) for r in rows if r.get("active", True)]
 
+    if is_vacation_mode_active():
+        return []
+
     # Aufgaben mit Startdatum in der Zukunft ausblenden
     today = date.today().isoformat()
     tasks = [t for t in tasks if not t.start_date or t.start_date <= today]
@@ -404,32 +407,61 @@ def _get_app_table():
     return _db.table("app_settings")
 
 
-def get_admins() -> set[str]:
+def _get_app_value(key: str, default=None):
     Q = Query()
-    row = _get_app_table().get(Q.key == "admins")
-    return set(row["value"]) if row else set()
+    row = _get_app_table().get(Q.key == key)
+    return row.get("value") if row else default
+
+
+def _save_app_value(key: str, value) -> None:
+    Q = Query()
+    data = {"key": key, "value": value}
+    if _get_app_table().get(Q.key == key):
+        _get_app_table().update(data, Q.key == key)
+    else:
+        _get_app_table().insert(data)
+
+
+def get_admins() -> set[str]:
+    return set(_get_app_value("admins", []))
 
 
 def save_admins(persons: list[str]) -> None:
-    Q = Query()
-    data = {"key": "admins", "value": sorted(persons)}
-    if _get_app_table().get(Q.key == "admins"):
-        _get_app_table().update(data, Q.key == "admins")
-    else:
-        _get_app_table().insert(data)
+    _save_app_value("admins", sorted(persons))
 
 
 def get_room_icons() -> dict[str, str]:
     """Returns {room_name: icon_key} for rooms with custom icon assignment."""
-    Q = Query()
-    row = _get_app_table().get(Q.key == "room_icons")
-    return dict(row["value"]) if row else {}
+    return dict(_get_app_value("room_icons", {}))
 
 
 def save_room_icons(icons: dict[str, str]) -> None:
-    Q = Query()
-    data = {"key": "room_icons", "value": icons}
-    if _get_app_table().get(Q.key == "room_icons"):
-        _get_app_table().update(data, Q.key == "room_icons")
-    else:
-        _get_app_table().insert(data)
+    _save_app_value("room_icons", icons)
+
+
+def get_vacation_mode() -> dict:
+    cfg = _get_app_value("vacation_mode", {}) or {}
+    return {
+        "enabled": bool(cfg.get("enabled")),
+        "until": cfg.get("until") or "",
+    }
+
+
+def save_vacation_mode(enabled: bool, until: str = "") -> None:
+    _save_app_value("vacation_mode", {
+        "enabled": bool(enabled),
+        "until": until or "",
+    })
+
+
+def is_vacation_mode_active() -> bool:
+    cfg = get_vacation_mode()
+    if not cfg.get("enabled"):
+        return False
+    until = cfg.get("until") or ""
+    if not until:
+        return True
+    try:
+        return date.fromisoformat(until) >= date.today()
+    except ValueError:
+        return False

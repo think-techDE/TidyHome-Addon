@@ -2,7 +2,7 @@ from urllib.parse import quote
 
 from fastapi import Request
 from fastapi.responses import HTMLResponse
-from storage import get_admins
+from storage import get_admins, get_vacation_mode, is_vacation_mode_active
 
 INTERVALS = {
     1: "Täglich", 2: "Alle 2 Tage", 7: "Wöchentlich", 14: "Alle 2 Wochen",
@@ -599,6 +599,19 @@ def render(content: str, request: Request, page: str = "home",
     ha_user = _ha_user(request)
     is_admin = ha_user in admins
     display_person = person or ha_user
+    vacation_banner = ""
+    if is_vacation_mode_active():
+        vacation = get_vacation_mode()
+        until = vacation.get("until") or ""
+        until_txt = f" bis {until}" if until else ""
+        vacation_banner = (
+            '<div class="card" style="border-color:var(--warning);'
+            'background:var(--warning-bg);margin-bottom:1rem">'
+            f'<div style="font-weight:750;color:var(--warning)">Urlaubsmodus aktiv{until_txt}</div>'
+            '<div class="muted" style="margin-top:0.25rem;font-size:0.82rem">'
+            'Fällige Aufgaben und tägliche Benachrichtigungen sind pausiert.</div>'
+            '</div>'
+        )
 
     # Person nav pill / dropdown
     if not display_person:
@@ -684,6 +697,7 @@ def render(content: str, request: Request, page: str = "home",
   </div>
 </header>
 <main>
+{vacation_banner}
 {content}
 </main>
 <nav class="bottom-nav">{nav_items}</nav>

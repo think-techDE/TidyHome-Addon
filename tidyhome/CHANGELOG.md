@@ -1,3 +1,11 @@
+## 1.3.9
+
+- Neu: globaler Urlaubsmodus im Admin-Bereich mit optionalem Enddatum
+- Urlaubsmodus: fällige Aufgaben werden pausiert und tauchen nicht in Heute/Überfällig auf
+- Urlaubsmodus: tägliche Push-Benachrichtigungen und Test-Benachrichtigungen werden unterdrückt
+- UI: globaler Hinweisbanner zeigt aktiven Urlaubsmodus in allen Ansichten
+- Doku: README, Feature-Liste und Roadmap aktualisiert
+
 ## 1.3.8
 
 - Punkte: persönlicher Fortschrittsbereich mit Rang, Wochenziel und motivierendem Zielhinweis
