@@ -718,7 +718,7 @@ def photos_card(entity_type: str, entity_id: str, action: str,
             <span>Nachher</span>
           </label>
         </div>
-        <input type="file" name="photo" accept="image/*" required>
+        <input type="file" name="photo" accept="image/*" capture="environment" required>
         <button class="btn btn-ghost btn-sm" type="submit">{_icon("plus", 14)} Foto hinzufügen</button>
       </form>
     </div>"""

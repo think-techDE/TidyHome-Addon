@@ -1,3 +1,8 @@
+## 1.3.19
+
+- Fotos: Upload-Feld für Smartphone-Kameraaufnahme optimiert (`capture="environment"`)
+- Fotos: Vorher/Nachher-Upload bleibt als Datei-Upload nutzbar, wenn keine Kamera angeboten wird
+
 ## 1.3.18
 
 - Fotos: Vorher/Nachher-Uploads für Aufgaben ergänzt

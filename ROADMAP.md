@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-08 · Aktuelle Version: 1.3.18
+Stand: 2026-05-08 · Aktuelle Version: 1.3.19
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -32,6 +32,11 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.19
+
+- Foto-Uploads öffnen auf Smartphones bevorzugt die Kamera
+- Vorher/Nachher-Fotos bleiben weiterhin als normaler Datei-Upload nutzbar
 
 ### v1.3.18
 
