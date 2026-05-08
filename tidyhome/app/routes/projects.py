@@ -1,5 +1,4 @@
 from urllib.parse import quote
-from html import escape
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -7,8 +6,9 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from ha_client import get_areas, get_persons
 from models import Project, Step
 from reminders import send_project_step_reminder
-from render import (_base, _icon, _icon_chooser, _proj_icon, _selected,
-                    comments_card, render, resolve_person)
+from render import (_base, _icon, _icon_chooser, _selected,
+                    comments_card, project_row, project_step_reminder_form,
+                    project_step_row, render, resolve_person)
 from storage import (add_comment, add_step, assign_step, complete_step, create_project,
                      delete_project, delete_step, get_admins, get_person_settings, get_step,
                      get_project, list_projects, list_steps, update_project)
@@ -95,61 +95,6 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
             f'</div>'
         )
     else:
-        def project_row(proj: Project, visible: list[Step], person_name: str = "") -> str:
-            steps = list_steps(proj.id)
-            done, total = proj.progress(visible)
-            pct = int(done / total * 100) if total else 0
-            assigned = f"<span>→ {proj.assigned_to}</span>" if proj.assigned_to and not grouped_by_person else ""
-            fill_class = "green" if proj.completed else ""
-            opacity = "opacity:0.65;" if proj.completed else ""
-
-            if proj.completed:
-                action_btns = (
-                    f'<a class="icon-btn" href="projects/{proj.id}/archive{_p_suffix(p)}" '
-                    f'title="Archivieren">{_icon("archive", 16)}</a>'
-                )
-            else:
-                action_btns = (
-                    f'<a class="icon-btn" href="projects/{proj.id}/edit{_p_suffix(p)}" '
-                    f'title="Bearbeiten">{_icon("edit", 16)}</a>'
-                )
-            del_btn = (
-                f'<a class="icon-btn danger" href="projects/{proj.id}/delete{_p_suffix(p)}" '
-                f'onclick="return confirm(\'Projekt löschen?\')" title="Löschen">'
-                f'{_icon("trash", 16)}</a>'
-            )
-
-            person_suffix = f" · {person_name}" if person_name else ""
-            detail_suffix = f"?scope=people{_p_suffix(p, '&')}" if grouped_by_person else _p_suffix(p)
-            status_badge = (
-                '<span class="badge ok">Abgeschlossen</span>'
-                if proj.completed else f'<span class="badge today">{done}/{total}</span>'
-            )
-            return f"""
-            <div class="proj-row" style="{opacity}">
-              <a href="projects/{proj.id}{detail_suffix}" style="display:contents;text-decoration:none">
-                {_proj_icon(proj.room, icon=proj.icon)}
-              </a>
-              <div class="proj-main">
-                <div class="proj-head">
-                  <a class="proj-title" href="projects/{proj.id}{detail_suffix}">{proj.name}</a>
-                  {status_badge}
-                </div>
-                <div class="proj-meta">
-                  <span>{proj.room}{person_suffix}</span>
-                  <span>{total} Schritte</span>
-                  {assigned}
-                </div>
-                <div class="proj-progress">
-                  <div class="progress-track">
-                    <div class="progress-fill {fill_class}" style="width:{pct}%"></div>
-                  </div>
-                  <span class="proj-percent">{pct}%</span>
-                </div>
-              </div>
-              <div class="task-actions">{action_btns}{del_btn}</div>
-            </div>"""
-
         if grouped_by_person:
             from collections import defaultdict
             grouped: dict[str, list[str]] = defaultdict(list)
@@ -159,7 +104,13 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
                     visible = _steps_for_person(proj, steps, person_name)
                     if not visible and proj.assigned_to == person_name:
                         visible = steps
-                    grouped[person_name].append(project_row(proj, visible, person_name))
+                    grouped[person_name].append(
+                        project_row(
+                            proj, visible, steps, person=p,
+                            grouped_by_person=grouped_by_person,
+                            person_name=person_name,
+                        )
+                    )
             for person_name, person_rows in sorted(grouped.items()):
                 rows += (
                     f'<div style="padding:0.5rem 1.25rem;font-size:0.72rem;font-weight:700;'
@@ -171,7 +122,10 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
         else:
             for proj in projects:
                 steps = list_steps(proj.id)
-                rows += project_row(proj, _visible_steps(proj, steps, p, admins))
+                rows += project_row(
+                    proj, _visible_steps(proj, steps, p, admins), steps,
+                    person=p, grouped_by_person=grouped_by_person
+                )
 
     psuffix_q = f"?p={p}" if p else ""
     visible_step_count = 0
@@ -299,52 +253,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
         step_person_opts = f'<option value=""{_selected("", assignee)}>— Niemand —</option>' + "".join(
             f'<option value="{pn}"{_selected(pn, assignee)}>{pn}</option>'
             for pn in step_person_names)
-        if s.completed:
-            who = f" · {s.completed_by}" if s.completed_by else ""
-            step_rows += f"""
-            <div class="project-step-row is-done">
-              <span style="color:var(--success);font-size:1.1rem;flex-shrink:0">
-                {_icon("check", 18, "var(--success)")}
-              </span>
-              <div class="project-step-main">
-                <span class="project-step-title">{s.name}</span>
-                <span class="project-step-meta">{s.points} Pkt · → {assignee or "Niemand"}{who}</span>
-              </div>
-            </div>"""
-        else:
-            remind_btn = (
-                f'<a class="icon-btn" href="{base}projects/{project_id}/steps/{s.id}/remind{_p_suffix(p)}" '
-                f'title="Andere erinnern">{_icon("bell", 16)}</a>'
-            ) if assignee and assignee != p else ""
-            step_rows += f"""
-            <div class="project-step-row">
-              <div class="project-step-main">
-                <span class="project-step-title">{s.name}</span>
-                <span class="project-step-meta">{s.points} Pkt</span>
-              </div>
-              <div class="project-step-actions">
-                <form class="project-step-form" method="post" action="{base}projects/{project_id}/steps/{s.id}/assign">
-                  <input type="hidden" name="return_p" value="{p}">
-                  <select class="project-step-person" name="assigned_to" aria-label="Zugewiesen an"
-                          onchange="this.form.submit()">
-                  {step_person_opts}
-                  </select>
-                </form>
-                <form class="inline" method="post" action="{base}projects/{project_id}/steps/{s.id}/done">
-                  <input type="hidden" name="done_by" value="{assignee}">
-                  <input type="hidden" name="return_p" value="{p}">
-                  <button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>
-                </form>
-                {remind_btn}
-                <a class="icon-btn danger"
-                   href="{base}projects/{project_id}/steps/{s.id}/delete{_p_suffix(p)}"
-                   onclick="return confirm('Schritt löschen?')"
-                   title="Schritt löschen">
-                   {_icon("trash", 15)}
-                </a>
-              </div>
-            </div>"""
-
+        step_rows += project_step_row(proj, s, assignee, step_person_opts, base, p)
     if not steps:
         step_rows = (
             '<div class="empty">'
@@ -502,35 +411,7 @@ async def step_remind_form(project_id: str, step_id: str, request: Request, p: s
             status_code=303
         )
 
-    default_message = f"Kannst du bitte an {step.name} denken?"
-    content = f"""
-    <div class="page-header">
-      <h2>Erinnerung senden</h2>
-      <a class="icon-btn" href="{_base(request)}projects/{project_id}{_p_suffix(p)}" title="Abbrechen">{_icon("chevron_l", 20)}</a>
-    </div>
-    <div class="card" style="margin-bottom:0.75rem">
-      <div style="font-weight:600;margin-bottom:0.2rem">{proj.name}</div>
-      <div class="task-meta">{step.name} · {assignee}</div>
-    </div>
-    <div class="card">
-      <form method="post" action="{_base(request)}projects/{project_id}/steps/{step_id}/remind">
-        <input type="hidden" name="return_p" value="{p}">
-        <div class="form-group">
-          <label>Erinnerung an</label>
-          <div style="padding:0.7rem 0.8rem;border:1px solid var(--border);
-                      border-radius:8px;background:var(--bg-soft);font-weight:600">
-            {assignee}
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Nachricht</label>
-          <textarea name="message" rows="3" required>{escape(default_message)}</textarea>
-        </div>
-        <button class="btn btn-primary btn-full" type="submit">Erinnerung senden</button>
-        <a class="btn btn-ghost btn-full" href="{_base(request)}projects/{project_id}{_p_suffix(p)}"
-           style="margin-top:0.5rem">Abbrechen</a>
-      </form>
-    </div>"""
+    content = project_step_reminder_form(proj, step, assignee, _base(request), p)
     return render(content, request, page="projects", person=p)
 
 

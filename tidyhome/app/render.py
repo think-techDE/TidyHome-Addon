@@ -757,6 +757,153 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
     </div>"""
 
 
+def project_row(project, visible_steps: list, all_steps: list, person: str = "",
+                grouped_by_person: bool = False, person_name: str = "") -> str:
+    done, total = project.progress(visible_steps)
+    pct = int(done / total * 100) if total else 0
+    assigned = (
+        f"<span>→ {project.assigned_to}</span>"
+        if project.assigned_to and not grouped_by_person else ""
+    )
+    fill_class = "green" if project.completed else ""
+    opacity = "opacity:0.65;" if project.completed else ""
+    detail_suffix = (
+        f"?scope=people{person_suffix(person, '&')}"
+        if grouped_by_person else person_suffix(person)
+    )
+    person_hint = f" · {person_name}" if person_name else ""
+    status_badge = (
+        '<span class="badge ok">Abgeschlossen</span>'
+        if project.completed else f'<span class="badge today">{done}/{total}</span>'
+    )
+
+    if project.completed:
+        action_btns = (
+            f'<a class="icon-btn" href="projects/{project.id}/archive{person_suffix(person)}" '
+            f'title="Archivieren">{_icon("archive", 16)}</a>'
+        )
+    else:
+        action_btns = (
+            f'<a class="icon-btn" href="projects/{project.id}/edit{person_suffix(person)}" '
+            f'title="Bearbeiten">{_icon("edit", 16)}</a>'
+        )
+    del_btn = (
+        f'<a class="icon-btn danger" href="projects/{project.id}/delete{person_suffix(person)}" '
+        f'onclick="return confirm(\'Projekt löschen?\')" title="Löschen">'
+        f'{_icon("trash", 16)}</a>'
+    )
+
+    return f"""
+    <div class="proj-row" style="{opacity}">
+      <a href="projects/{project.id}{detail_suffix}" style="display:contents;text-decoration:none">
+        {_proj_icon(project.room, icon=project.icon)}
+      </a>
+      <div class="proj-main">
+        <div class="proj-head">
+          <a class="proj-title" href="projects/{project.id}{detail_suffix}">{project.name}</a>
+          {status_badge}
+        </div>
+        <div class="proj-meta">
+          <span>{project.room}{person_hint}</span>
+          <span>{len(all_steps)} Schritte</span>
+          {assigned}
+        </div>
+        <div class="proj-progress">
+          <div class="progress-track">
+            <div class="progress-fill {fill_class}" style="width:{pct}%"></div>
+          </div>
+          <span class="proj-percent">{pct}%</span>
+        </div>
+      </div>
+      <div class="task-actions">{action_btns}{del_btn}</div>
+    </div>"""
+
+
+def project_step_row(project, step, assignee: str, person_options: str,
+                     base: str, person: str = "") -> str:
+    psuffix = person_suffix(person)
+    if step.completed:
+        who = f" · {step.completed_by}" if step.completed_by else ""
+        return f"""
+        <div class="project-step-row is-done">
+          <span style="color:var(--success);font-size:1.1rem;flex-shrink:0">
+            {_icon("check", 18, "var(--success)")}
+          </span>
+          <div class="project-step-main">
+            <span class="project-step-title">{step.name}</span>
+            <span class="project-step-meta">{step.points} Pkt · → {assignee or "Niemand"}{who}</span>
+          </div>
+        </div>"""
+
+    remind_btn = (
+        f'<a class="icon-btn" href="{base}projects/{project.id}/steps/{step.id}/remind{psuffix}" '
+        f'title="Andere erinnern">{_icon("bell", 16)}</a>'
+    ) if assignee and assignee != person else ""
+
+    return f"""
+    <div class="project-step-row">
+      <div class="project-step-main">
+        <span class="project-step-title">{step.name}</span>
+        <span class="project-step-meta">{step.points} Pkt</span>
+      </div>
+      <div class="project-step-actions">
+        <form class="project-step-form" method="post" action="{base}projects/{project.id}/steps/{step.id}/assign">
+          <input type="hidden" name="return_p" value="{person}">
+          <select class="project-step-person" name="assigned_to" aria-label="Zugewiesen an"
+                  onchange="this.form.submit()">
+          {person_options}
+          </select>
+        </form>
+        <form class="inline" method="post" action="{base}projects/{project.id}/steps/{step.id}/done">
+          <input type="hidden" name="done_by" value="{assignee}">
+          <input type="hidden" name="return_p" value="{person}">
+          <button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>
+        </form>
+        {remind_btn}
+        <a class="icon-btn danger"
+           href="{base}projects/{project.id}/steps/{step.id}/delete{psuffix}"
+           onclick="return confirm('Schritt löschen?')"
+           title="Schritt löschen">
+           {_icon("trash", 15)}
+        </a>
+      </div>
+    </div>"""
+
+
+def project_step_reminder_form(project, step, assignee: str, base: str,
+                               person: str = "") -> str:
+    default_message = f"Kannst du bitte an {step.name} denken?"
+    psuffix = person_suffix(person)
+    return f"""
+    <div class="page-header">
+      <h2>Erinnerung senden</h2>
+      <a class="icon-btn" href="{base}projects/{project.id}{psuffix}" title="Abbrechen">{_icon("chevron_l", 20)}</a>
+    </div>
+    <div class="card" style="margin-bottom:0.75rem">
+      <div style="font-weight:600;margin-bottom:0.2rem">{project.name}</div>
+      <div class="task-meta">{step.name} · {assignee}</div>
+    </div>
+    <div class="card">
+      <form method="post" action="{base}projects/{project.id}/steps/{step.id}/remind">
+        <input type="hidden" name="return_p" value="{person}">
+        <div class="form-group">
+          <label>Erinnerung an</label>
+          <div style="padding:0.7rem 0.8rem;border:1px solid var(--border);
+                      border-radius:8px;background:var(--bg-soft);font-weight:600">
+            {assignee}
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nachricht</label>
+          <textarea name="message" rows="3" required>{escape(default_message)}</textarea>
+        </div>
+        <button class="btn btn-primary btn-full" type="submit">Erinnerung senden</button>
+        <a class="btn btn-ghost btn-full" href="{base}projects/{project.id}{psuffix}"
+           style="margin-top:0.5rem">Abbrechen</a>
+      </form>
+    </div>"""
+
+
 def render(content: str, request: Request, page: str = "home",
            person: str = "") -> HTMLResponse:
     base = _base(request)

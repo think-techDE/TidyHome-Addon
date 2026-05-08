@@ -156,5 +156,6 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Dual-Remote Git (Gitea + GitHub)
 - ✅ CHANGELOG.md für HA Update-Dialog
 - ✅ Statisches Stylesheet assets/app.css mit lokalem Asset-Fallback
+- ✅ Reminder-Unit-Tests für Empfängerlogik, Urlaubsmodus-Fallback und Projektschritte
 - 💡 Mehrsprachigkeit (Deutsch / Englisch)
 - 💡 Daten-Export (CSV / JSON-Backup der gesamten Datenbank)

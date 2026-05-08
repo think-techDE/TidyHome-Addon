@@ -1,3 +1,9 @@
+## 1.3.14
+
+- Tests: Reminder-Unit-Tests für Empfängerlogik, Versandnotiz, Urlaubsmodus-Fallback und Projektschritte ergänzt
+- Refactoring: Projektzeile, Projektschritt-Zeile und Projektschritt-Erinnerungsformular in gemeinsame Render-Helfer ausgelagert
+- Doku: README, Feature-Liste und Roadmap aktualisiert
+
 ## 1.3.13
 
 - Erinnerung: Erfolgsmeldung nach Versand oder Notiz-Fallback anzeigen
