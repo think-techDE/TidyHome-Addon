@@ -266,13 +266,13 @@ _ICON_PATHS: dict[str, str] = {
     "settings":  '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>',
 }
 
-# Navigation items: (icon_key, label, page_key, href)
+# Navigation items: (openmoji filename, label, page_key, href)
 _NAV_ITEMS = [
-    ("home",     "Zuhause",    "home",     "./"),
-    ("tasks",    "Aufgaben",   "tasks",    "tasks"),
-    ("projects", "Projekte",   "projects", "projects"),
-    ("scores",   "Punkte",     "scores",   "scores"),
-    ("person",   "Ich",        "settings", "settings"),
+    ("1F3E0", "Zuhause",  "home",     "./"),
+    ("1F9F9", "Aufgaben", "tasks",    "tasks"),
+    ("1F4E6", "Projekte", "projects", "projects"),
+    ("1F4A1", "Punkte",   "scores",   "scores"),
+    ("1F527", "Ich",      "settings", "settings"),
 ]
 
 
@@ -284,6 +284,15 @@ def _icon(name: str, size: int = 20, color: str = "currentColor", sw: float = 2.
         f'stroke="{color}" stroke-width="{sw}" '
         f'stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0">'
         f'{path}</svg>'
+    )
+
+
+def _openmoji_nav_icon(filename: str, label: str) -> str:
+    """Small local OpenMoji image for the bottom navigation."""
+    return (
+        f'<img class="nav-openmoji" src="assets/icons/{filename}.svg" '
+        f'width="24" height="24" alt="" aria-hidden="true" '
+        f'title="{escape(label)}" loading="lazy">'
     )
 
 
@@ -703,7 +712,6 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
         f'<div class="task-badge-subrow">{effort_badge}{onetime_badge}</div>'
         if effort_badge or onetime_badge else ""
     )
-
     assigned_txt = ""
     if task.assigned_to and show_assigned:
         assigned_txt = (
@@ -1012,13 +1020,13 @@ def render(content: str, request: Request, page: str = "home",
             f'{_icon("person", 15)}<span>{display_person}</span></a>'
         )
 
-    # Bottom navigation with SVG icons
+    # Bottom navigation with local OpenMoji icons
     nav_items = ""
-    for icon_key, label, page_key, href in _NAV_ITEMS:
+    for icon_file, label, page_key, href in _NAV_ITEMS:
         active = "active" if page == page_key else ""
         nav_items += (
             f'<a href="{href}{psuffix}" class="nav-item {active}">'
-            f'{_icon(icon_key, 22)}'
+            f'{_openmoji_nav_icon(icon_file, label)}'
             f'<span>{label}</span>'
             f'</a>'
         )

@@ -82,6 +82,10 @@
   .nav-item.active { color: var(--primary); }
   .nav-item .ni { width: 1.25rem; height: 1.25rem; display: grid; place-items: center; }
   .nav-item svg { width: 1.2rem; height: 1.2rem; stroke-width: 2.2; }
+  .nav-openmoji { width:1.45rem; height:1.45rem; display:block; object-fit:contain;
+                  filter:saturate(0.72) opacity(0.72); transform:translateY(1px);
+                  transition:filter 0.15s, transform 0.15s; }
+  .nav-item.active .nav-openmoji { filter:saturate(1) opacity(1); transform:translateY(0); }
   main { padding: 1rem; max-width: 720px; margin: 0 auto; }
   .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
            padding: 1rem; box-shadow: var(--shadow); margin-bottom: 1rem; transition: box-shadow 0.15s; }

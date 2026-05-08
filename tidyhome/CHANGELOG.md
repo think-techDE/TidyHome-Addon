@@ -1,9 +1,14 @@
+## 1.3.16
+
+- UI: Bottom-Navigation nutzt lokale OpenMoji-Icons
+- Doku: README, Feature-Liste und Roadmap neu geordnet
+
 ## 1.3.15
 
 - Projekte: Projektliste zeigt offene Schritte bei anderen Personen direkt als Hinweis an
 - UI: Personenmenue strukturierter und uebersichtlicher gestaltet
 - Tests: Render-Tests fuer Glocken-Buttons, Projektzeilen und Projektschritt-Zeilen ergaenzt
-- Doku: Feature-Liste und Roadmap aktualisiert
+- Doku: README, Feature-Liste und Roadmap aktualisiert
 
 ## 1.3.14
 

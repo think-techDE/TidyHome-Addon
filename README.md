@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.15-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.16-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -13,12 +13,12 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 
 ## Highlights
 
-- Aufgaben mit Raum, Intervall, Personenzuordnung, Punkten und Wichtig-Flag
+- Aufgaben mit Raum, Intervall, Personenzuordnung, Punkten, Aufwand und Wichtig-Flag
 - Mehrfachzuweisung an mehrere Personen
 - Einmalige und wiederkehrende Aufgaben
-- Ordnungsprojekte mit Teilschritten, Fortschritt und Punkten
+- Ordnungsprojekte mit Teilschritten, Fortschritt, Punkten und Hinweisen auf offene Schritte bei anderen Personen
 - Notizen zu Aufgaben und Projekten
-- Erinnerungen an zugewiesene Personen und Projekt-Schritte senden
+- Erinnerungen an zugewiesene Personen und Projekt-Schritte, inklusive Notiz-Fallback
 - Aufgaben-, Raum- und Projekt-Icons mit OpenMoji-Auswahl und automatischer Erkennung
 - Bestenliste und persönliche Statistik mit Streak, Wochenpunkten und Wochenziel
 - Tägliche Push-Benachrichtigungen pro Person und Gerät
@@ -26,6 +26,20 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 - Rollen für Elternteil, Kind, Haushaltshilfe und Mitglied
 - Automatische Personen- und Raumintegration aus Home Assistant
 - Responsive Web-UI über Home Assistant Ingress
+
+---
+
+## Aktueller Fokus
+
+Die Basisfunktionen sind nutzbar. Die nächsten sinnvollen Ausbauschritte sind:
+
+1. Einkaufsliste als einfacher gemeinsamer Bereich ohne Intervall
+2. Aufgaben-Pausen für einzelne Aufgaben, getrennt vom Urlaubsmodus
+3. Wochenübersicht für anstehende Aufgaben
+4. Home-Assistant-Entities für Automationen
+5. Export und Backup der gespeicherten Daten
+
+Details stehen in [ROADMAP.md](ROADMAP.md).
 
 ---
 
@@ -37,12 +51,11 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Gemeinsame Design-Tokens für Light und Dark Mode
 - Dashboard als Heute-Ansicht mit Status, nächsten Aufgaben und Raumüberblick
 - Aufgabenlisten mit klaren Fälligkeits-Badges und schnellen Icon-Aktionen
-- Projektkarten mit sichtbarem Fortschritt und nächstem Schritt
+- Projektkarten mit sichtbarem Fortschritt und Hinweisen auf offene Schritte
 - Erweiterte OpenMoji-Iconauswahl für Aufgaben, Räume und Projekte
+- Bottom-Navigation mit lokalen OpenMoji-Icons
 - Filter als kompakte Chip-Leiste
 - Gute Lesbarkeit, ausreichende Touch-Ziele und reduzierte Schatten
-
-Der Modern UI Refresh ist umgesetzt; die nächsten Feinschliffe sind in [FEATURES.md](FEATURES.md) und [ROADMAP.md](ROADMAP.md) beschrieben.
 
 ---
 
@@ -55,16 +68,18 @@ Der Modern UI Refresh ist umgesetzt; die nächsten Feinschliffe sind in [FEATURE
 - Erinnerungen an zugewiesene Personen senden, mit Notiz-Fallback
 - Intervalle von täglich bis jährlich
 - Einmalige Aufgaben, die nach Erledigung automatisch archiviert werden
+- Startdatum und einmaliges Verschieben der Fälligkeit
 - Fälligkeit nach Status: überfällig, heute, bald oder ok
-- Filter nach Raum, Person und Überfälligkeit
+- Filter nach Raum, Person, Überfälligkeit und Aufwand
 - Wichtig-Flag für priorisierte Aufgaben
 
 ### Ordnungsprojekte
 
-- Projekte mit Raum, Person und Beschreibung
-- Teilschritte mit eigenen Punkten
+- Projekte mit Raum, Person, Beschreibung und Icon
+- Teilschritte mit eigenen Punkten und eigener Zuständigkeit
 - Notizen direkt am Projekt sammeln
 - Erinnerungen an zuständige Projektschritte senden, mit Notiz-Fallback
+- Projektliste zeigt, wenn offene Schritte bei anderen Personen liegen
 - Projekt-Icons aus Aufgaben- und Raum-/Orts-Icons auswählbar
 - Fortschrittsbalken pro Projekt
 - Automatischer Abschluss, wenn alle Schritte erledigt sind
@@ -95,6 +110,7 @@ Der Modern UI Refresh ist umgesetzt; die nächsten Feinschliffe sind in [FEATURE
 - Raum-Icons im Admin-Bereich per visueller Auswahl konfigurierbar
 - Rollenbasierte Sichtbarkeit für Elternteil, Kind, Haushaltshilfe und Mitglied
 - Räume können pro Person individuell ausgeblendet werden
+- Personenmenü mit klar getrennten Bereichen für Ansicht, Einstellungen und Verwaltung
 
 ---
 
@@ -130,6 +146,13 @@ Admin- und Geräteeinstellungen können anschließend direkt in der TidyHome-Obe
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
+Weitere lokale Prüfung:
+
+```powershell
+.\.venv\Scripts\python.exe -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
+git diff --check
+```
+
 ---
 
 ## Projektstruktur
@@ -139,8 +162,9 @@ tidyhome/
   app/
     main.py          # App-Setup, Router, Startup
     config.py        # Konfiguration und Logger
-    render.py        # HTML-Template und Render-Helfer
-    scheduler.py     # Benachrichtigungslogik
+    render.py        # HTML-Layout, Navigation und Render-Helfer
+    reminders.py     # Manuelle Erinnerungen
+    scheduler.py     # Tägliche Benachrichtigungen
     routes/
       dashboard.py   # Startseite
       tasks.py       # Aufgaben
