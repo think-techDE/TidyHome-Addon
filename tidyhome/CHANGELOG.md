@@ -1,3 +1,8 @@
+## 1.3.21
+
+- UI: Mobile Aufgabenzeilen nutzen ein kompakteres Grid, damit Titel, Status und Aktionen nicht überlappen
+- UI: Aktionsicons stehen auf Smartphones in einer eigenen Zeile unter dem Aufgabeninhalt
+
 ## 1.3.20
 
 - Fotos: Live-Kameraaufnahme mit Vorschau und Aufnahme-Button ergänzt

@@ -106,7 +106,7 @@
   .task-header { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.15rem; }
   .task-badges { display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:0.25rem; flex-shrink:0; }
   .task-badge-subrow { display:flex; align-items:center; justify-content:flex-end; gap:0.25rem; }
-  .task-actions { display: flex; align-items: center; gap: 0rem; flex-shrink: 0; }
+  .task-actions { display: flex; align-items: center; justify-content:flex-end; gap: 0rem; flex-shrink: 0; }
   .task-name { font-weight: 600; font-size: 0.9rem; line-height: 1.3; }
   .task-name-meta { color:var(--muted); font-size:0.75rem; font-weight:500; white-space:nowrap; }
   .task-meta { font-size: 0.75rem; color: var(--muted); }
@@ -411,6 +411,17 @@
   @media (max-width: 430px) {
     main { padding: 0.85rem; }
     .grid-2 { grid-template-columns: 1fr; gap: 0; }
+    .task-row { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start;
+                gap:0.7rem; padding:0.9rem 0.85rem; }
+    .task-row > .task-actions { grid-column:2; width:100%; justify-content:flex-start;
+                                gap:0.15rem; margin-top:0.15rem; }
+    .task-header { align-items:flex-start; gap:0.45rem; }
+    .task-name { display:block; min-width:0; overflow-wrap:anywhere; }
+    .task-name-meta { white-space:normal; display:inline; }
+    .task-badges { align-items:flex-end; max-width:6.2rem; }
+    .task-badges .badge { max-width:6.2rem; justify-content:center; }
+    .task-badge-subrow { flex-wrap:wrap; }
+    .icon-btn { width:32px; height:32px; border-radius:9px; }
 
     .project-step-row { grid-template-columns:1fr; align-items:start; gap:0.7rem; }
     .project-step-row.is-done { grid-template-columns:auto minmax(0,1fr); align-items:center; }

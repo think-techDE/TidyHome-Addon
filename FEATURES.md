@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-08 · Version 1.3.20
+Stand: 2026-05-08 · Version 1.3.21
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -23,6 +23,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Kommentare und Notizen direkt an Aufgaben
 - [x] Vorher/Nachher-Fotos direkt an Aufgaben
 - [x] Live-Kameraaufnahme und Datei-Upload für Aufgabenfotos
+- [x] Mobile Aufgabenzeilen mit separater Aktionszeile gegen Überlagerungen
 - [x] Erinnerung an andere zugewiesene Personen senden
 
 ### Projekte
