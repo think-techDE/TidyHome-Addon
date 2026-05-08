@@ -1,5 +1,3 @@
-from datetime import datetime
-from html import escape
 from urllib.parse import quote
 
 from fastapi import APIRouter, Form, HTTPException, Request
@@ -7,10 +5,11 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Project, Step
-from render import _base, _icon, _icon_chooser, _proj_icon, _selected, render, resolve_person
+from render import (_base, _icon, _icon_chooser, _proj_icon, _selected,
+                    comments_card, render, resolve_person)
 from storage import (add_comment, add_step, assign_step, complete_step, create_project,
                      delete_project, delete_step, get_admins, get_person_settings,
-                     get_project, list_comments, list_projects, list_steps, update_project)
+                     get_project, list_projects, list_steps, update_project)
 
 router = APIRouter(prefix="/projects")
 
@@ -43,57 +42,6 @@ def _project_people(project: Project, steps: list[Step]) -> list[str]:
     people = {project.assigned_to} if project.assigned_to else set()
     people.update(_step_assignee(s, project) for s in steps if _step_assignee(s, project))
     return sorted(people) or ["— Nicht zugeordnet —"]
-
-
-def _comment_time(raw: str) -> str:
-    try:
-        return datetime.fromisoformat(raw).strftime("%d.%m.%Y %H:%M")
-    except ValueError:
-        return raw[:16].replace("T", " ")
-
-
-def _comments_card(project_id: str, person: str = "") -> str:
-    comments = list_comments("project", project_id)
-    if comments:
-        rows = ""
-        for c in comments:
-            author = escape(c.author or "Unbekannt")
-            text = escape(c.text).replace("\n", "<br>")
-            created = escape(_comment_time(c.created_at))
-            rows += f"""
-            <div class="task-row" style="align-items:flex-start">
-              <div class="task-body">
-                <div class="task-header">
-                  <span class="task-name">{author}</span>
-                  <span class="task-meta">{created}</span>
-                </div>
-                <div class="muted" style="margin-top:0.25rem;line-height:1.45">{text}</div>
-              </div>
-            </div>"""
-    else:
-        rows = (
-            '<div class="empty">'
-            '<div style="font-weight:600">Noch keine Notizen</div>'
-            '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
-            'Halte Hinweise oder Absprachen direkt hier fest.</div>'
-            '</div>'
-        )
-
-    return f"""
-    <div class="card card-flush" style="margin-bottom:1rem">
-      <div style="padding:1rem 1.25rem 0.5rem">
-        <h3 style="margin-bottom:0.35rem">Notizen</h3>
-      </div>
-      {rows}
-      <form method="post" action="projects/{project_id}/comments" style="padding:1rem 1.25rem">
-        <input type="hidden" name="return_p" value="{person}">
-        <div class="form-group">
-          <label>Neue Notiz</label>
-          <textarea name="text" rows="3" required placeholder="Hinweis oder Kommentar"></textarea>
-        </div>
-        <button class="btn btn-primary btn-sm" type="submit">Notiz speichern</button>
-      </form>
-    </div>"""
 
 
 @router.get("", response_class=HTMLResponse)
@@ -423,7 +371,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
       </div>
     </div>
     <div class="card card-flush" style="margin-bottom:1rem">{step_rows}</div>
-    {_comments_card(project_id, p)}
+    {comments_card("project", project_id, f"projects/{project_id}/comments", p)}
     <div class="card">
       <h3 style="margin-bottom:0.75rem">Schritt hinzufügen</h3>
       <form method="post" action="{base}projects/{project_id}/steps">

@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from html import escape
 
 from fastapi import APIRouter, Form, HTTPException, Request
@@ -6,70 +6,19 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Task
+from reminders import send_task_reminder
 from render import (INTERVALS, _base, _icon, _icon_chooser, _selected, _task_icon,
-                    format_date_de, interval_label, person_suffix, render,
-                    resolve_person, urgency_class)
+                    comments_card, format_date_de, interval_label, person_suffix,
+                    render, resolve_person, urgency_class)
 from storage import (add_comment, create_task, delete_task, edit_task, filter_tasks_by_role,
                      get_admins, get_person_settings, get_task, get_vacation_mode,
-                     is_vacation_mode_active, list_comments, list_people_by_role,
-                     list_tasks, mark_done, snooze_task)
+                     is_vacation_mode_active, list_people_by_role, list_tasks,
+                     mark_done, snooze_task)
 
 router = APIRouter(prefix="/tasks")
 
 _EFFORT_LABELS = {"low": "Wenig", "medium": "Mittel", "high": "Viel"}
 _EFFORT_BADGE  = {"low": "ok", "medium": "today", "high": "overdue"}
-
-
-def _comment_time(raw: str) -> str:
-    try:
-        return datetime.fromisoformat(raw).strftime("%d.%m.%Y %H:%M")
-    except ValueError:
-        return raw[:16].replace("T", " ")
-
-
-def _comments_card(entity_type: str, entity_id: str, action: str,
-                   person: str = "") -> str:
-    comments = list_comments(entity_type, entity_id)
-    if comments:
-        rows = ""
-        for c in comments:
-            author = escape(c.author or "Unbekannt")
-            text = escape(c.text).replace("\n", "<br>")
-            created = escape(_comment_time(c.created_at))
-            rows += f"""
-            <div class="task-row" style="align-items:flex-start">
-              <div class="task-body">
-                <div class="task-header">
-                  <span class="task-name">{author}</span>
-                  <span class="task-meta">{created}</span>
-                </div>
-                <div class="muted" style="margin-top:0.25rem;line-height:1.45">{text}</div>
-              </div>
-            </div>"""
-    else:
-        rows = (
-            '<div class="empty">'
-            '<div style="font-weight:600">Noch keine Notizen</div>'
-            '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
-            'Halte Hinweise oder Absprachen direkt hier fest.</div>'
-            '</div>'
-        )
-
-    return f"""
-    <div class="card card-flush" style="margin-top:1rem">
-      <div style="padding:1rem 1.25rem 0.5rem">
-        <h3 style="margin-bottom:0.35rem">Notizen</h3>
-      </div>
-      {rows}
-      <form method="post" action="{action}" style="padding:1rem 1.25rem">
-        <input type="hidden" name="return_p" value="{person}">
-        <div class="form-group">
-          <label>Neue Notiz</label>
-          <textarea name="text" rows="3" required placeholder="Hinweis oder Kommentar"></textarea>
-        </div>
-        <button class="btn btn-primary btn-sm" type="submit">Notiz speichern</button>
-      </form>
-    </div>"""
 
 
 @router.get("", response_class=HTMLResponse)
@@ -186,6 +135,10 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             f'<a class="icon-btn" href="tasks/{t.id}/snooze{person_suffix(p)}" '
             f'title="Verschieben">{_icon("clock", 16)}</a>'
         )
+        remind_btn = (
+            f'<a class="icon-btn" href="tasks/{t.id}/remind{person_suffix(p)}" '
+            f'title="Erinnern">{_icon("bell", 16)}</a>'
+        )
         edit_btn = (
             f'<a class="icon-btn" href="tasks/{t.id}/edit{person_suffix(p)}" title="Bearbeiten">'
             f'{_icon("edit", 16)}</a>'
@@ -210,7 +163,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             {f'<div class="task-date">{assigned_txt}</div>' if assigned_txt else ''}
           </div>
           <div class="task-actions">
-            {done_btn}{snooze_btn}{edit_btn}{del_btn}
+            {done_btn}{snooze_btn}{remind_btn}{edit_btn}{del_btn}
           </div>
         </div>"""
 
@@ -420,6 +373,61 @@ async def task_snooze(task_id: str, request: Request):
     return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
 
 
+@router.get("/{task_id}/remind", response_class=HTMLResponse)
+async def task_remind_form(task_id: str, request: Request, p: str = ""):
+    p = resolve_person(request, p)
+    task = get_task(task_id)
+    if not task:
+        raise HTTPException(404)
+
+    people = task.assigned_to or await get_persons()
+    person_opts = "".join(
+        f'<option value="{pn}"{_selected(pn, p)}>{pn}</option>'
+        for pn in people
+    )
+    default_message = f"Kannst du bitte an {task.name} denken?"
+    psuffix_q = f"?p={p}" if p else ""
+    content = f"""
+    <div class="page-header">
+      <h2>Erinnerung senden</h2>
+      <a class="icon-btn" href="tasks{psuffix_q}" title="Abbrechen">{_icon("chevron_l", 20)}</a>
+    </div>
+    <div class="card" style="margin-bottom:0.75rem">
+      <div style="font-weight:600;margin-bottom:0.2rem">{task.name}</div>
+      <div class="task-meta">{task.room} · {", ".join(task.assigned_to) if task.assigned_to else "Nicht zugeordnet"}</div>
+    </div>
+    <div class="card">
+      <form method="post" action="tasks/{task_id}/remind">
+        <input type="hidden" name="return_p" value="{p}">
+        <div class="form-group">
+          <label>Erinnerung an</label>
+          <select name="target_person">{person_opts}</select>
+        </div>
+        <div class="form-group">
+          <label>Nachricht</label>
+          <textarea name="message" rows="3" required>{escape(default_message)}</textarea>
+        </div>
+        <button class="btn btn-primary btn-full" type="submit">Erinnerung senden</button>
+        <a class="btn btn-ghost btn-full" href="tasks{psuffix_q}" style="margin-top:0.5rem">Abbrechen</a>
+      </form>
+    </div>"""
+    return render(content, request, page="tasks", person=p)
+
+
+@router.post("/{task_id}/remind")
+async def task_remind_send(task_id: str, request: Request,
+                           target_person: str = Form(...),
+                           message: str = Form(...),
+                           return_p: str = Form("")):
+    task = get_task(task_id)
+    if not task:
+        raise HTTPException(404)
+
+    sender = resolve_person(request, return_p)
+    await send_task_reminder(task, target_person, message, sender=sender)
+    return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
+
+
 @router.post("/{task_id}/comments")
 async def task_comment_add(task_id: str, request: Request,
                            text: str = Form(...), return_p: str = Form("")):
@@ -503,7 +511,8 @@ async def _task_form(request: Request, title: str, action: str,
 
     psuffix_q = f"?p={person}" if person else ""
     comments = (
-        _comments_card("task", task.id, f"tasks/{task.id}/comments", person)
+        comments_card("task", task.id, f"tasks/{task.id}/comments", person,
+                      margin_top=True)
         if task else ""
     )
 

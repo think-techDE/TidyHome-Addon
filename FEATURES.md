@@ -65,7 +65,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Per-Person konfigurierbar (eigene Uhrzeit, eigene Geräte)
 - ✅ Admin definiert Geräte (Notify-Services per Checkbox aus HA)
 - ✅ Test-Benachrichtigung direkt aus der UI
-- 💡 Erinnerung an andere Person schicken ("Küche ist noch offen")
+- ✅ Erinnerung an andere Person schicken ("Küche ist noch offen")
 - ✅ Persönlicher Urlaubsmodus (keine Notifications, fällige Aufgaben pausiert)
 
 ## Benutzerverwaltung & Rollen
@@ -95,8 +95,8 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 ## Familie & Kommunikation
 
 - ✅ Kommentare / Notizen zu Aufgaben und Projekten hinterlassen
-- 📋 Erinnerung senden: andere Person auf offene Aufgabe hinweisen
-- 📋 Einkaufsliste als eigener Bereich (ähnlich wie Projekte, ohne Intervall)
+- ✅ Erinnerung senden: andere Person auf offene Aufgabe hinweisen
+- 📋 Einkaufsliste als späterer Bereich (ähnlich wie Projekte, ohne Intervall)
 - ✅ Persönlicher Urlaubsmodus: fällige Aufgaben pausieren, keine Notifications
 
 ## Barrierefreiheit & Neurodiversität

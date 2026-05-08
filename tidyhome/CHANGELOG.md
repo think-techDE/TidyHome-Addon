@@ -1,3 +1,9 @@
+## 1.3.11
+
+- Aufgaben: Erinnerung an zugewiesene Personen senden; bei fehlendem Gerät oder Versandfehler wird eine Notiz hinterlegt
+- Refactoring: Notiz-/Kommentar-Karte für Aufgaben und Projekte vereinheitlicht
+- Doku: README, Feature-Liste und Roadmap aktualisiert
+
 ## 1.3.10
 
 - Neu: persönlicher Urlaubsmodus in den Einstellungen mit optionalem Enddatum

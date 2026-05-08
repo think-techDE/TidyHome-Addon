@@ -1,9 +1,10 @@
 from urllib.parse import quote
-from datetime import date
+from datetime import date, datetime
+from html import escape
 
 from fastapi import Request
 from fastapi.responses import HTMLResponse
-from storage import get_admins, get_vacation_mode, is_vacation_mode_active
+from storage import get_admins, get_vacation_mode, is_vacation_mode_active, list_comments
 
 INTERVALS = {
     1: "Täglich", 2: "Alle 2 Tage", 7: "Wöchentlich", 14: "Alle 2 Wochen",
@@ -599,6 +600,59 @@ def format_date_de(raw: str) -> str:
         return date.fromisoformat(raw).strftime("%d.%m.%Y")
     except ValueError:
         return raw
+
+
+def _comment_time(raw: str) -> str:
+    try:
+        return datetime.fromisoformat(raw).strftime("%d.%m.%Y %H:%M")
+    except ValueError:
+        return raw[:16].replace("T", " ")
+
+
+def comments_card(entity_type: str, entity_id: str, action: str,
+                  person: str = "", margin_top: bool = False) -> str:
+    comments = list_comments(entity_type, entity_id)
+    if comments:
+        rows = ""
+        for c in comments:
+            author = escape(c.author or "Unbekannt")
+            text = escape(c.text).replace("\n", "<br>")
+            created = escape(_comment_time(c.created_at))
+            rows += f"""
+            <div class="task-row" style="align-items:flex-start">
+              <div class="task-body">
+                <div class="task-header">
+                  <span class="task-name">{author}</span>
+                  <span class="task-meta">{created}</span>
+                </div>
+                <div class="muted" style="margin-top:0.25rem;line-height:1.45">{text}</div>
+              </div>
+            </div>"""
+    else:
+        rows = (
+            '<div class="empty">'
+            '<div style="font-weight:600">Noch keine Notizen</div>'
+            '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
+            'Halte Hinweise oder Absprachen direkt hier fest.</div>'
+            '</div>'
+        )
+
+    margin = "margin-top:1rem;" if margin_top else "margin-bottom:1rem;"
+    return f"""
+    <div class="card card-flush" style="{margin}">
+      <div style="padding:1rem 1.25rem 0.5rem">
+        <h3 style="margin-bottom:0.35rem">Notizen</h3>
+      </div>
+      {rows}
+      <form method="post" action="{action}" style="padding:1rem 1.25rem">
+        <input type="hidden" name="return_p" value="{person}">
+        <div class="form-group">
+          <label>Neue Notiz</label>
+          <textarea name="text" rows="3" required placeholder="Hinweis oder Kommentar"></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" type="submit">Notiz speichern</button>
+      </form>
+    </div>"""
 
 
 def render(content: str, request: Request, page: str = "home",
