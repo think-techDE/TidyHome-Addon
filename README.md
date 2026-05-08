@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.17-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.18-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -18,6 +18,7 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 - Einmalige und wiederkehrende Aufgaben
 - Ordnungsprojekte mit Teilschritten, Fortschritt, Punkten und Hinweisen auf offene Schritte bei anderen Personen
 - Notizen zu Aufgaben und Projekten
+- Vorher/Nachher-Fotos für Aufgaben, Projekte und einzelne Projektschritte
 - Erinnerungen an zugewiesene Personen und Projekt-Schritte, inklusive Notiz-Fallback
 - Aufgaben-, Raum- und Projekt-Icons mit OpenMoji-Auswahl und automatischer Erkennung
 - Bestenliste, Erfolgshistorie und persönliche Statistik mit Streak, Wochenpunkten und Wochenziel
@@ -72,12 +73,14 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Fälligkeit nach Status: überfällig, heute, bald oder ok
 - Filter nach Raum, Person, Überfälligkeit und Aufwand
 - Wichtig-Flag für priorisierte Aufgaben
+- Vorher/Nachher-Fotos direkt an der Aufgabe
 
 ### Ordnungsprojekte
 
 - Projekte mit Raum, Person, Beschreibung und Icon
 - Teilschritte mit eigenen Punkten und eigener Zuständigkeit
 - Notizen direkt am Projekt sammeln
+- Vorher/Nachher-Fotos am Projekt und an einzelnen Schritten
 - Erinnerungen an zuständige Projektschritte senden, mit Notiz-Fallback
 - Projektliste zeigt, wenn offene Schritte bei anderen Personen liegen
 - Projekt-Icons aus Aufgaben- und Raum-/Orts-Icons auswählbar

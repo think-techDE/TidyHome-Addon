@@ -2,12 +2,16 @@ from tinydb import TinyDB, Query
 from models import Comment, Project, Step, Task
 from datetime import date, datetime
 import os
+import uuid
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 DB_PATH = os.path.join(DATA_DIR, "tidyhome.json")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 _db = TinyDB(DB_PATH)
+PHOTO_DIR = os.path.join(DATA_DIR, "photos")
+os.makedirs(PHOTO_DIR, exist_ok=True)
+MAX_PHOTO_BYTES = 8 * 1024 * 1024
 
 
 def get_tasks_table():
@@ -20,6 +24,10 @@ def get_scores_table():
 
 def get_comments_table():
     return _db.table("comments")
+
+
+def get_photos_table():
+    return _db.table("photos")
 
 
 def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = False,
@@ -334,6 +342,81 @@ def add_comment(entity_type: str, entity_id: str, text: str,
     )
     get_comments_table().insert(comment.model_dump())
     return comment
+
+
+def _photo_extension(filename: str, content_type: str = "") -> str:
+    ext = os.path.splitext(filename or "")[1].lower()
+    allowed = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+    if ext in allowed:
+        return ext
+    if content_type == "image/png":
+        return ".png"
+    if content_type == "image/webp":
+        return ".webp"
+    if content_type == "image/gif":
+        return ".gif"
+    return ".jpg"
+
+
+def add_photo(entity_type: str, entity_id: str, photo_type: str,
+              filename: str, content_type: str, data: bytes,
+              author: str = "") -> dict | None:
+    if entity_type not in {"task", "project", "step"}:
+        return None
+    if photo_type not in {"before", "after"}:
+        photo_type = "before"
+    if not data:
+        return None
+    if len(data) > MAX_PHOTO_BYTES:
+        return None
+    if content_type and not content_type.startswith("image/"):
+        return None
+    ext = _photo_extension(filename, content_type)
+    stored_name = f"{uuid.uuid4().hex}{ext}"
+    path = os.path.join(PHOTO_DIR, stored_name)
+    with open(path, "wb") as handle:
+        handle.write(data)
+    row = {
+        "id": str(uuid.uuid4()),
+        "entity_type": entity_type,
+        "entity_id": entity_id,
+        "photo_type": photo_type,
+        "filename": stored_name,
+        "original_name": filename or stored_name,
+        "content_type": content_type or "image/jpeg",
+        "author": author or None,
+        "created_at": datetime.now().isoformat(),
+    }
+    get_photos_table().insert(row)
+    return row
+
+
+def list_photos(entity_type: str, entity_id: str) -> list[dict]:
+    Q = Query()
+    rows = get_photos_table().search(
+        (Q.entity_type == entity_type) & (Q.entity_id == entity_id)
+    )
+    rows.sort(key=lambda r: r.get("created_at", ""))
+    return rows
+
+
+def delete_photo(photo_id: str, entity_type: str = "", entity_id: str = "") -> bool:
+    Q = Query()
+    table = get_photos_table()
+    row = table.get(Q.id == photo_id)
+    if not row:
+        return False
+    if entity_type and row.get("entity_type") != entity_type:
+        return False
+    if entity_id and row.get("entity_id") != entity_id:
+        return False
+    filename = os.path.basename(row.get("filename", ""))
+    if filename:
+        path = os.path.join(PHOTO_DIR, filename)
+        if os.path.isfile(path):
+            os.remove(path)
+    removed = table.remove(Q.id == photo_id)
+    return len(removed) > 0
 
 
 def get_settings_table():

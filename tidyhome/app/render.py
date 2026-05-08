@@ -4,7 +4,8 @@ from html import escape
 
 from fastapi import Request
 from fastapi.responses import HTMLResponse
-from storage import get_admins, get_vacation_mode, is_vacation_mode_active, list_comments
+from storage import (get_admins, get_vacation_mode, is_vacation_mode_active,
+                     list_comments, list_photos)
 
 INTERVALS = {
     1: "Täglich", 2: "Alle 2 Tage", 7: "Wöchentlich", 14: "Alle 2 Wochen",
@@ -660,6 +661,65 @@ def comments_card(entity_type: str, entity_id: str, action: str,
           <textarea name="text" rows="3" required placeholder="Hinweis oder Kommentar"></textarea>
         </div>
         <button class="btn btn-primary btn-sm" type="submit">Notiz speichern</button>
+      </form>
+    </div>"""
+
+
+def photos_card(entity_type: str, entity_id: str, action: str,
+                person: str = "", title: str = "Fotos",
+                margin_top: bool = False) -> str:
+    photos = list_photos(entity_type, entity_id)
+    sections = {"before": "", "after": ""}
+    for photo in photos:
+        ptype = photo.get("photo_type") if photo.get("photo_type") in sections else "before"
+        label = "Vorher" if ptype == "before" else "Nachher"
+        filename = escape(photo.get("filename", ""))
+        photo_id = escape(photo.get("id", ""))
+        sections[ptype] += f"""
+        <figure class="photo-tile">
+          <img src="photos/{filename}" alt="{label}">
+          <figcaption>
+            <span>{label}</span>
+            <a class="photo-delete" href="{action}/{photo_id}/delete{person_suffix(person)}"
+               onclick="return confirm('Foto löschen?')" title="Foto löschen">
+              {_icon("trash", 13)}
+            </a>
+          </figcaption>
+        </figure>"""
+
+    def _section(label: str, key: str) -> str:
+        body = sections[key] or '<div class="photo-empty">Noch kein Foto</div>'
+        return f"""
+        <div class="photo-section">
+          <div class="photo-section-title">{label}</div>
+          <div class="photo-grid">{body}</div>
+        </div>"""
+
+    margin = "margin-top:1rem;" if margin_top else "margin-bottom:1rem;"
+    return f"""
+    <div class="card photos-card" style="{margin}">
+      <div class="photos-head">
+        <div>
+          <h3>{title}</h3>
+          <div class="muted">Vorher/Nachher dokumentieren</div>
+        </div>
+      </div>
+      {_section("Vorher", "before")}
+      {_section("Nachher", "after")}
+      <form class="photo-upload" method="post" action="{action}" enctype="multipart/form-data">
+        <input type="hidden" name="return_p" value="{person}">
+        <div class="photo-type-picker">
+          <label class="option-card">
+            <input type="radio" name="photo_type" value="before" checked>
+            <span>Vorher</span>
+          </label>
+          <label class="option-card">
+            <input type="radio" name="photo_type" value="after">
+            <span>Nachher</span>
+          </label>
+        </div>
+        <input type="file" name="photo" accept="image/*" required>
+        <button class="btn btn-ghost btn-sm" type="submit">{_icon("plus", 14)} Foto hinzufügen</button>
       </form>
     </div>"""
 

@@ -2,15 +2,17 @@ from datetime import date, timedelta
 from html import escape
 from urllib.parse import quote
 
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Task
 from reminders import send_task_reminders, task_reminder_recipients
 from render import (INTERVALS, _base, _icon, _icon_chooser, _selected,
-                    comments_card, person_suffix, render, resolve_person, task_row)
-from storage import (add_comment, create_task, delete_task, edit_task, filter_tasks_by_role,
+                    comments_card, person_suffix, photos_card, render,
+                    resolve_person, task_row)
+from storage import (add_comment, add_photo, create_task, delete_photo, delete_task,
+                     edit_task, filter_tasks_by_role,
                      get_admins, get_person_settings, get_task, get_vacation_mode,
                      is_vacation_mode_active, list_people_by_role, list_tasks,
                      mark_done, snooze_task)
@@ -375,6 +377,27 @@ async def task_comment_add(task_id: str, request: Request,
     return RedirectResponse(_base(request) + f"tasks/{task_id}/edit{person_suffix(return_p)}", status_code=303)
 
 
+@router.post("/{task_id}/photos")
+async def task_photo_add(task_id: str, request: Request,
+                         photo_type: str = Form("before"),
+                         return_p: str = Form(""),
+                         photo: UploadFile = File(...)):
+    if not get_task(task_id):
+        raise HTTPException(404)
+    data = await photo.read()
+    author = resolve_person(request, return_p)
+    add_photo("task", task_id, photo_type, photo.filename or "",
+              photo.content_type or "", data, author=author)
+    return RedirectResponse(_base(request) + f"tasks/{task_id}/edit{person_suffix(return_p)}", status_code=303)
+
+
+@router.get("/{task_id}/photos/{photo_id}/delete")
+async def task_photo_delete(task_id: str, photo_id: str, request: Request, p: str = ""):
+    delete_photo(photo_id, "task", task_id)
+    p = resolve_person(request, p) if p else ""
+    return RedirectResponse(_base(request) + f"tasks/{task_id}/edit{person_suffix(p)}", status_code=303)
+
+
 @router.get("/{task_id}/delete")
 async def task_delete(task_id: str, request: Request, p: str = ""):
     delete_task(task_id)
@@ -452,6 +475,11 @@ async def _task_form(request: Request, title: str, action: str,
                       margin_top=True)
         if task else ""
     )
+    photos = (
+        photos_card("task", task.id, f"tasks/{task.id}/photos", person,
+                    title="Aufgaben-Fotos", margin_top=True)
+        if task else ""
+    )
 
     content = f"""
     <div class="page-header">
@@ -515,5 +543,6 @@ async def _task_form(request: Request, title: str, action: str,
            style="margin-top:0.5rem">Abbrechen</a>
       </form>
     </div>
+    {photos}
     {comments}"""
     return render(content, request, page="tasks", person=person)

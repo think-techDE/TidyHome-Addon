@@ -1,3 +1,10 @@
+## 1.3.18
+
+- Fotos: Vorher/Nachher-Uploads für Aufgaben ergänzt
+- Fotos: Vorher/Nachher-Uploads für Projekte und einzelne Projektschritte ergänzt
+- Fotos: Dateien werden persistent unter `/data/photos` gespeichert und über `/photos` ausgeliefert
+- UI: Foto-Karten mit getrennten Vorher-/Nachher-Bereichen und Löschfunktion ergänzt
+
 ## 1.3.17
 
 - Punkte: Verlauf der letzten Erfolge mit Aufgabe, Datum und Punktzahl ergänzt

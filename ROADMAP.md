@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-08 · Aktuelle Version: 1.3.17
+Stand: 2026-05-08 · Aktuelle Version: 1.3.18
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -14,6 +14,7 @@ TidyHome ist aktuell ein nutzbares Home-Assistant-Add-on für:
 - persönliche Aufgabenansichten mit Rollen und Sichtbarkeit
 - Ordnungsprojekte mit Schritten, Fortschritt und Punkten
 - Kommentare und Notizen an Aufgaben und Projekten
+- Vorher/Nachher-Fotos an Aufgaben, Projekten und Projektschritten
 - Erinnerungen an andere Personen und Projektschritte
 - tägliche Benachrichtigungen über Home Assistant Notify-Services
 - persönlichen Urlaubsmodus
@@ -31,6 +32,12 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.18
+
+- Vorher/Nachher-Fotos für Aufgaben ergänzt
+- Vorher/Nachher-Fotos für Projekte und einzelne Projektschritte ergänzt
+- Fotoablage unter `/data/photos` mit statischer Auslieferung über `/photos`
 
 ### v1.3.17
 

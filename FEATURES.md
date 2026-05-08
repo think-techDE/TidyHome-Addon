@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-08 · Version 1.3.17
+Stand: 2026-05-08 · Version 1.3.18
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -21,6 +21,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Neue Aufgaben werden standardmäßig der angemeldeten Person zugeordnet
 - [x] Filter nach Raum, Person, Überfälligkeit und Aufwand
 - [x] Kommentare und Notizen direkt an Aufgaben
+- [x] Vorher/Nachher-Fotos direkt an Aufgaben
 - [x] Erinnerung an andere zugewiesene Personen senden
 
 ### Projekte
@@ -32,6 +33,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Automatischer Projektabschluss, wenn alle Schritte erledigt sind
 - [x] Abgeschlossene Projekte in eigener Ansicht mit Archivierung
 - [x] Kommentare und Notizen direkt an Projekten
+- [x] Vorher/Nachher-Fotos an Projekten und einzelnen Projektschritten
 - [x] Erinnerung an zuständige Person eines offenen Projektschritts senden
 - [x] Projektliste zeigt offene Schritte bei anderen Personen direkt an
 - [x] Projekt-Icons aus Aufgaben-, Raum- und Orts-Icons auswählbar

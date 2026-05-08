@@ -1,16 +1,16 @@
 from urllib.parse import quote
 
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Project, Step
 from reminders import send_project_step_reminder
 from render import (_base, _icon, _icon_chooser, _selected,
-                    comments_card, project_row, project_step_reminder_form,
+                    comments_card, photos_card, project_row, project_step_reminder_form,
                     project_step_row, render, resolve_person)
-from storage import (add_comment, add_step, assign_step, complete_step, create_project,
-                     delete_project, delete_step, get_admins, get_person_settings, get_step,
+from storage import (add_comment, add_photo, add_step, assign_step, complete_step, create_project,
+                     delete_photo, delete_project, delete_step, get_admins, get_person_settings, get_step,
                      get_project, list_projects, list_steps, update_project)
 
 router = APIRouter(prefix="/projects")
@@ -253,7 +253,13 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
         step_person_opts = f'<option value=""{_selected("", assignee)}>— Niemand —</option>' + "".join(
             f'<option value="{pn}"{_selected(pn, assignee)}>{pn}</option>'
             for pn in step_person_names)
-        step_rows += project_step_row(proj, s, assignee, step_person_opts, base, p)
+        step_rows += (
+            '<div class="card card-flush" style="margin-bottom:0.75rem">'
+            + project_step_row(proj, s, assignee, step_person_opts, base, p)
+            + '</div>'
+        )
+        step_rows += photos_card("step", s.id, f"{base}projects/{project_id}/steps/{s.id}/photos",
+                                  p, title=f"Fotos: {s.name}")
     if not steps:
         step_rows = (
             '<div class="empty">'
@@ -286,7 +292,8 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
         <div class="progress-fill {fill_cls}" style="width:{pct}%"></div>
       </div>
     </div>
-    <div class="card card-flush" style="margin-bottom:1rem">{step_rows}</div>
+    {photos_card("project", project_id, f"{base}projects/{project_id}/photos", p, title="Projekt-Fotos")}
+    <div style="margin-bottom:1rem">{step_rows}</div>
     {comments_card("project", project_id, f"projects/{project_id}/comments", p)}
     <div class="card">
       <h3 style="margin-bottom:0.75rem">Schritt hinzufügen</h3>
@@ -394,6 +401,27 @@ async def project_comment_add(project_id: str, request: Request,
     return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
 
 
+@router.post("/{project_id}/photos")
+async def project_photo_add(project_id: str, request: Request,
+                            photo_type: str = Form("before"),
+                            return_p: str = Form(""),
+                            photo: UploadFile = File(...)):
+    if not get_project(project_id):
+        raise HTTPException(404)
+    data = await photo.read()
+    author = resolve_person(request, return_p)
+    add_photo("project", project_id, photo_type, photo.filename or "",
+              photo.content_type or "", data, author=author)
+    return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
+
+
+@router.get("/{project_id}/photos/{photo_id}/delete")
+async def project_photo_delete(project_id: str, photo_id: str, request: Request, p: str = ""):
+    delete_photo(photo_id, "project", project_id)
+    p = resolve_person(request, p) if p else ""
+    return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(p)}", status_code=303)
+
+
 @router.get("/{project_id}/steps/{step_id}/remind", response_class=HTMLResponse)
 async def step_remind_form(project_id: str, step_id: str, request: Request, p: str = ""):
     p = resolve_person(request, p)
@@ -467,6 +495,29 @@ async def step_add(project_id: str, request: Request,
     add_step(Step(project_id=project_id, name=name, points=points,
                   assigned_to=assignee or None))
     return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
+
+
+@router.post("/{project_id}/steps/{step_id}/photos")
+async def step_photo_add(project_id: str, step_id: str, request: Request,
+                         photo_type: str = Form("before"),
+                         return_p: str = Form(""),
+                         photo: UploadFile = File(...)):
+    step = get_step(step_id)
+    if not step or step.project_id != project_id:
+        raise HTTPException(404)
+    data = await photo.read()
+    author = resolve_person(request, return_p)
+    add_photo("step", step_id, photo_type, photo.filename or "",
+              photo.content_type or "", data, author=author)
+    return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
+
+
+@router.get("/{project_id}/steps/{step_id}/photos/{photo_id}/delete")
+async def step_photo_delete(project_id: str, step_id: str, photo_id: str,
+                            request: Request, p: str = ""):
+    delete_photo(photo_id, "step", step_id)
+    p = resolve_person(request, p) if p else ""
+    return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(p)}", status_code=303)
 
 
 @router.post("/{project_id}/steps/{step_id}/assign")
