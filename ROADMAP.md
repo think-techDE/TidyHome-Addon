@@ -1,6 +1,6 @@
 # TidyHome – Roadmap
 
-Stand: 2026-05-08 · Aktuelle Version: 1.3.14
+Stand: 2026-05-08 · Aktuelle Version: 1.3.15
 
 ---
 
@@ -99,10 +99,10 @@ Stand: 2026-05-08 · Aktuelle Version: 1.3.14
 - **Urlaubsmodus**: persönlicher Schalter in den Einstellungen bis Datum; fällige Aufgaben und tägliche Benachrichtigungen werden pausiert
 - **Kommentare/Notizen**: Hinweise und Absprachen direkt an Aufgaben und Projekten hinterlegen
 - **Erinnerung senden**: andere Person per Notify-Service auf eine offene Aufgabe hinweisen; Fallback als Aufgaben-Notiz
-- **Erinnerung abrunden**: Erfolgsmeldung nach Versand, schönere Notiztexte und Erinnerung für Projekt-Schritte
+- **Erinnerung abrunden**: Erfolgsmeldung nach Versand, schönere Notiztexte, Erinnerung für Projekt-Schritte und Projektlisten-Hinweis für offene Schritte bei anderen Personen
 - **UI-Refactoring**: gemeinsame Aufgabenzeilen-Komponente für Zuhause und Aufgabenliste
 - **Projekt-UI-Refactoring**: Projektzeile, Projektschritt-Zeile und Projektschritt-Erinnerungsformular in gemeinsame Render-Helfer ausgelagert
-- **Reminder-Tests**: Empfängerlogik, Versandnotiz, Urlaubsmodus-Fallback und Projektschritt-Erinnerung abgesichert
+- **Reminder-Tests**: Empfängerlogik, Versandnotiz, Urlaubsmodus-Fallback, Glocken-Buttons und Projektschritt-Erinnerung abgesichert
 
 ---
 

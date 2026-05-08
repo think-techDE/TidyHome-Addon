@@ -43,6 +43,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Abgeschlossene Projekte in eigenem Tab mit Archivieren-Button
 - ✅ Projekt-Icons können aus Aufgaben-Icons und Raum-/Orts-Icons gewählt werden
 - ✅ Projekt-Icons nutzen ohne manuelle Auswahl die konservative Raum-Erkennung
+- ✅ Projektliste zeigt offene Schritte bei anderen Personen direkt an
 - ✅ Kommentare / Notizen zu Projekten hinterlegen
 - ✅ Erinnerung an zuständige Person eines offenen Projektschritts senden
 - 💡 Fotos pro Projekt und Schritt (Vorher/Nachher, Hinweisfotos)
@@ -156,6 +157,6 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Dual-Remote Git (Gitea + GitHub)
 - ✅ CHANGELOG.md für HA Update-Dialog
 - ✅ Statisches Stylesheet assets/app.css mit lokalem Asset-Fallback
-- ✅ Reminder-Unit-Tests für Empfängerlogik, Urlaubsmodus-Fallback und Projektschritte
+- ✅ Reminder- und Render-Unit-Tests für Empfängerlogik, Glocken-Buttons, Urlaubsmodus-Fallback und Projektschritte
 - 💡 Mehrsprachigkeit (Deutsch / Englisch)
 - 💡 Daten-Export (CSV / JSON-Backup der gesamten Datenbank)

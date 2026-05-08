@@ -42,21 +42,33 @@
              color: var(--primary-dark); padding: 0.38rem 0.7rem;
              border-radius: 999px; border: 1px solid var(--primary-border);
              text-decoration: none; font-weight: 650; line-height: 1;
-             display: inline-block; cursor: pointer; user-select: none; }
+             display: inline-flex; align-items: center; gap: 0.35rem;
+             cursor: pointer; user-select: none; }
+  .h-pill-person { max-width: min(48vw, 220px); }
+  .h-pill-person span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .h-pill-caret { color: var(--muted); font-size: 0.68rem; margin-left: 0.1rem; }
   .hpill-menu { position: relative; }
   .hpill-menu > summary { list-style: none; }
   .hpill-menu > summary::-webkit-details-marker { display: none; }
   .hpill-menu > summary::marker { display: none; }
   .hpill-dropdown { position: absolute; top: calc(100% + 0.45rem); right: 0;
                      background: var(--surface); border: 1px solid var(--border);
-                     border-radius: 0.6rem; box-shadow: var(--shadow);
-                     padding: 0.35rem; min-width: 180px; z-index: 100;
-                     display: flex; flex-direction: column; gap: 0.1rem; }
-  .hpill-dropdown a { display: block; padding: 0.55rem 0.75rem;
-                       text-decoration: none; color: var(--text);
-                       border-radius: 0.45rem; font-size: 0.85rem;
-                       font-weight: 600; }
-  .hpill-dropdown a:hover { background: var(--primary-soft); color: var(--primary-dark); }
+                     border-radius: 0.75rem; box-shadow: var(--shadow);
+                     padding: 0.45rem; width: min(84vw, 280px); z-index: 100;
+                     display: flex; flex-direction: column; gap: 0.15rem; }
+  .hpill-head { padding: 0.65rem 0.7rem 0.6rem; border-bottom: 1px solid var(--sep);
+                margin-bottom: 0.2rem; }
+  .hpill-head-label { color: var(--muted); font-size: 0.72rem; font-weight: 650; }
+  .hpill-head-name { color: var(--text); font-size: 0.98rem; font-weight: 800;
+                     margin-top: 0.15rem; overflow: hidden; text-overflow: ellipsis; }
+  .hpill-section-label { color: var(--muted); font-size: 0.66rem; font-weight: 800;
+                         text-transform: uppercase; letter-spacing: 0.06em;
+                         padding: 0.55rem 0.7rem 0.2rem; }
+  .hpill-action { display: flex; align-items: center; gap: 0.55rem;
+                  padding: 0.62rem 0.7rem; text-decoration: none; color: var(--text);
+                  border-radius: 0.55rem; font-size: 0.85rem; font-weight: 650; }
+  .hpill-action span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .hpill-action:hover { background: var(--primary-soft); color: var(--primary-dark); }
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h);
                  background: rgba(255,255,255,0.94); border-top: 1px solid var(--border);
                  display: flex; z-index: 10;
@@ -262,6 +274,10 @@
   .proj-head { display:flex; align-items:center; justify-content:space-between; gap:0.75rem; }
   .proj-title { text-decoration:none; color:inherit; font-weight:700; font-size:0.92rem; line-height:1.3; min-width:0; }
   .proj-meta { display:flex; align-items:center; flex-wrap:wrap; gap:0.35rem 0.55rem; color:var(--muted); font-size:0.74rem; }
+  .proj-reminder-hint { display:inline-flex; align-items:center; gap:0.25rem; padding:0.15rem 0.45rem;
+                        border-radius:999px; border:1px solid var(--primary-border);
+                        background:var(--primary-soft); color:var(--primary-dark);
+                        font-size:0.68rem; font-weight:750; line-height:1.2; white-space:nowrap; }
   .proj-progress { display:flex; align-items:center; gap:0.55rem; }
   .proj-progress .progress-track { flex:1; }
   .proj-percent { color:var(--muted); font-size:0.72rem; font-weight:700; min-width:2.4rem; text-align:right; }

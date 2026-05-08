@@ -776,6 +776,30 @@ def project_row(project, visible_steps: list, all_steps: list, person: str = "",
         '<span class="badge ok">Abgeschlossen</span>'
         if project.completed else f'<span class="badge today">{done}/{total}</span>'
     )
+    reference_person = person_name or person
+    foreign_open_assignees: list[str] = []
+    for step in all_steps:
+        assignee = step.assigned_to or project.assigned_to or ""
+        if step.completed or not assignee or assignee == reference_person:
+            continue
+        if assignee not in foreign_open_assignees:
+            foreign_open_assignees.append(assignee)
+    foreign_open_count = sum(
+        1
+        for step in all_steps
+        if not step.completed
+        and (step.assigned_to or project.assigned_to or "")
+        and (step.assigned_to or project.assigned_to or "") != reference_person
+    )
+    if foreign_open_count:
+        shown_names = ", ".join(escape(name) for name in foreign_open_assignees[:2])
+        more = f" +{len(foreign_open_assignees) - 2}" if len(foreign_open_assignees) > 2 else ""
+        foreign_hint = (
+            f'<span class="proj-reminder-hint">{_icon("bell", 13)} '
+            f'{foreign_open_count} offen bei {shown_names}{more}</span>'
+        )
+    else:
+        foreign_hint = ""
 
     if project.completed:
         action_btns = (
@@ -807,6 +831,7 @@ def project_row(project, visible_steps: list, all_steps: list, person: str = "",
           <span>{project.room}{person_hint}</span>
           <span>{len(all_steps)} Schritte</span>
           {assigned}
+          {foreign_hint}
         </div>
         <div class="proj-progress">
           <div class="progress-track">
@@ -940,32 +965,52 @@ def render(content: str, request: Request, page: str = "home",
         person_nav = f'<a href="{base}settings" class="h-pill">Wer bin ich?</a>'
     elif is_admin:
         profile_person = person or ha_user
+        viewing_other = bool(ha_user and profile_person != ha_user)
+        menu_hint = (
+            f'Ansicht von {profile_person}'
+            if viewing_other else
+            'Meine Ansicht'
+        )
         own_link = (
-            f'<a href="{base}">Zurück zu mir</a>'
-            if profile_person != ha_user else
-            f'<a href="{base}">Meine Ansicht</a>'
+            f'<a href="{base}" class="hpill-action">{_icon("home", 16)}<span>Zurück zu meiner Ansicht</span></a>'
+            if viewing_other else ""
         )
         current_profile = (
-            f'<a href="{base}settings{person_suffix(profile_person)}">'
-            f'Profil: {profile_person}</a>'
+            f'<a href="{base}settings{person_suffix(profile_person)}" class="hpill-action">'
+            f'{_icon("settings", 16)}<span>Einstellungen für {profile_person}</span></a>'
         )
         own_profile = (
-            f'<a href="{base}settings{person_suffix(ha_user)}">Mein Profil</a>'
-            if ha_user and profile_person != ha_user else ""
+            f'<a href="{base}settings{person_suffix(ha_user)}" class="hpill-action">'
+            f'{_icon("person", 16)}<span>Meine Einstellungen</span></a>'
+            if viewing_other else ""
         )
         person_nav = f'''
         <details class="hpill-menu">
-          <summary class="h-pill">{display_person} ▾</summary>
+          <summary class="h-pill h-pill-person">
+            {_icon("person", 15)}
+            <span>{display_person}</span>
+            <span class="h-pill-caret">▾</span>
+          </summary>
           <div class="hpill-dropdown">
+            <div class="hpill-head">
+              <div class="hpill-head-label">{menu_hint}</div>
+              <div class="hpill-head-name">{display_person}</div>
+            </div>
+            <div class="hpill-section-label">Ansicht</div>
             {own_link}
-            {current_profile}
+            <a href="{base}settings" class="hpill-action">{_icon("person", 16)}<span>Person wechseln</span></a>
+            <div class="hpill-section-label">Einstellungen</div>
             {own_profile}
-            <a href="{base}settings">Person wechseln</a>
-            <a href="{base}admin">Admin-Bereich</a>
+            {current_profile}
+            <div class="hpill-section-label">Verwaltung</div>
+            <a href="{base}admin" class="hpill-action">{_icon("settings", 16)}<span>Admin-Bereich</span></a>
           </div>
         </details>'''
     else:
-        person_nav = f'<span class="h-pill">{display_person}</span>'
+        person_nav = (
+            f'<a href="{base}settings{person_suffix(display_person)}" class="h-pill h-pill-person">'
+            f'{_icon("person", 15)}<span>{display_person}</span></a>'
+        )
 
     # Bottom navigation with SVG icons
     nav_items = ""
