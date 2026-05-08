@@ -374,20 +374,18 @@ async def _task_form(request: Request, title: str, action: str,
 
     effort_btns = ""
     for ef, label in _EFFORT_LABELS.items():
-        active = "ri-active" if cur_effort == ef else ""
         effort_btns += (
-            f'<label class="option-card {active}" style="padding:0.45rem 0.7rem;cursor:pointer">'
-            f'<input type="radio" name="effort" value="{ef}" style="display:none"'
+            f'<label class="effort-choice effort-{ef}">'
+            f'<input type="radio" name="effort" value="{ef}"'
             f'{" checked" if cur_effort == ef else ""}>'
-            f'<span class="badge {_EFFORT_BADGE[ef]}" style="pointer-events:none">{label}</span>'
+            f'<span>{label}</span>'
             f'</label>'
         )
     effort_btns += (
-        f'<label class="option-card {"ri-active" if not cur_effort else ""}" '
-        f'style="padding:0.45rem 0.7rem;cursor:pointer">'
-        f'<input type="radio" name="effort" value="" style="display:none"'
+        f'<label class="effort-choice effort-none">'
+        f'<input type="radio" name="effort" value=""'
         f'{" checked" if not cur_effort else ""}>'
-        f'<span style="font-size:0.8rem;color:var(--muted)">—</span>'
+        f'<span>Ohne</span>'
         f'</label>'
     )
 
@@ -442,7 +440,7 @@ async def _task_form(request: Request, title: str, action: str,
         </div>
         <div class="form-group">
           <label>Aufwand</label>
-          <div style="display:flex;flex-wrap:wrap;gap:0.4rem">{effort_btns}</div>
+          <div class="effort-picker">{effort_btns}</div>
         </div>
         <div class="form-group">
           <label>Zugewiesen an</label>

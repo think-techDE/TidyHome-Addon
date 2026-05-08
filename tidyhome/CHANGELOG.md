@@ -1,8 +1,13 @@
+## 1.3.2
+
+- Fix: Aufwand-Auswahl im Aufgabenformular ist jetzt klickbar und zeigt die aktive Auswahl direkt an
+- Aufwand: vierte Option heißt jetzt "Ohne" und bleibt der Standard für neue Aufgaben
+- Doku: überflüssigen Hinweis für alte Installationen entfernt
+
 ## 1.3.1
 
 - Fix: Home-Assistant-Sidebar-Eintrag ist jetzt auch für Nicht-Admin-Benutzer sichtbar (`panel_admin: false`)
 - Fix: interne App-Version wieder mit Add-on-Version synchronisiert
-- Doku: README beschreibt die Sichtbarkeit für Nicht-Admin-Benutzer
 
 ## 1.3.0
 

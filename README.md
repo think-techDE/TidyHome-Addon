@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.1-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.2-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -98,11 +98,6 @@ Der Modern UI Refresh ist umgesetzt; die nächsten Feinschliffe sind in [FEATURE
 
 4. **TidyHome** installieren und starten.
 5. Die Web-UI über den Add-on-Ingress öffnen.
-
-Hinweis für bestehende Installationen: Änderungen an der Home-Assistant-Sidebar
-werden über die Add-on-Metadaten ausgeliefert. Nach einem Update auf eine neue
-TidyHome-Version den Add-on-Store aktualisieren, TidyHome aktualisieren und die
-Home-Assistant-Oberfläche im Browser neu laden.
 
 ---
 

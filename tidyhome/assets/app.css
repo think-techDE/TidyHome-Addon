@@ -264,6 +264,20 @@
                  border:1px solid var(--border); border-radius:0.65rem; background:var(--surface-2);
                  cursor:pointer; color:var(--text); }
   .option-card input { width:1.05rem; height:1.05rem; margin-top:0.05rem; accent-color:var(--primary); }
+  .effort-picker { display:flex; flex-wrap:wrap; gap:0.45rem; }
+  .effort-choice { position:relative; display:inline-flex; align-items:center; justify-content:center;
+                   min-width:5.4rem; min-height:2.65rem; padding:0.45rem 0.85rem;
+                   border:1px solid var(--border); border-radius:0.75rem;
+                   background:var(--surface-2); color:var(--muted); cursor:pointer;
+                   font-weight:750; font-size:0.84rem; transition:all 0.12s; }
+  .effort-choice input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+  .effort-choice:hover { border-color:var(--primary-border); background:var(--primary-soft); }
+  .effort-choice:has(input:focus-visible) { box-shadow:0 0 0 3px var(--primary-soft); }
+  .effort-choice:has(input:checked) { border-color:var(--primary); background:var(--primary-soft); }
+  .effort-low:has(input:checked) { color:var(--success); }
+  .effort-medium:has(input:checked) { color:var(--warning); }
+  .effort-high:has(input:checked) { color:var(--danger); }
+  .effort-none:has(input:checked) { color:var(--text); }
   /* Room icon picker */
   .ri-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:0.65rem; margin-bottom:0.85rem; }
   .ri-card { background:var(--surface-2); border:1px solid var(--border); border-radius:0.65rem; padding:0.75rem; }
