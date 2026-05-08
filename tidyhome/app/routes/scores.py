@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
-from render import render, resolve_person
+from render import _icon, render, resolve_person
 from storage import get_person_settings, get_person_stats, get_scores
 
 router = APIRouter()
@@ -17,6 +17,8 @@ _PERIODS = [
 async def scores(request: Request, period: str = "all", p: str = ""):
     p = resolve_person(request, p)
     data = get_scores(period=period)
+    all_time = get_scores(period="all")
+    month_data = get_scores(period="month")
 
     tabs = '<div class="filters">'
     for key, label in _PERIODS:
@@ -27,19 +29,37 @@ async def scores(request: Request, period: str = "all", p: str = ""):
     rows = ""
     if not data:
         hint = "Noch keine Punkte in diesem Zeitraum." if period != "all" else "Noch keine Punkte vergeben."
-        rows = f'<div class="empty">{hint}</div>'
+        rows = (
+            f'<div class="empty">'
+            f'<div class="empty-icon">★</div>'
+            f'<div style="font-weight:700">{hint}</div>'
+            f'<div class="muted" style="font-size:0.8rem">Erledigte Aufgaben und Projektschritte erscheinen hier automatisch.</div>'
+            f'</div>'
+        )
     else:
         for i, s in enumerate(data):
             rank = f"{i + 1}"
             t_done = s.get("tasks_done", 0)
             pr_done = s.get("project_steps_done", 0)
-            highlight = "background:var(--primary-soft);" if s["person"] == p else ""
+            me_cls = " is-me" if s["person"] == p else ""
+            top_cls = " is-top" if i == 0 else ""
+            source_meta = []
+            if t_done:
+                source_meta.append(f"{t_done} Aufgaben")
+            if pr_done:
+                source_meta.append(f"{pr_done} Projektschritte")
+            source_txt = " · ".join(source_meta) if source_meta else "Noch keine Details"
             rows += f"""
-            <div class="score-row" style="{highlight}">
-              <span class="badge {'today' if i == 0 else 'ok' if i < 3 else ''}" style="min-width:2rem;justify-content:center">{rank}</span>
-              <span class="score-name">{s["person"]}</span>
-              <span class="task-meta">{t_done} Aufg. · {pr_done} Schritte</span>
-              <span class="score-pts">{s["points"]} Pkt</span>
+            <div class="score-row-modern{me_cls}{top_cls}">
+              <div class="score-rank">{rank}</div>
+              <div class="score-main">
+                <div class="score-name">{s["person"]}</div>
+                <div class="score-meta"><span>{source_txt}</span></div>
+              </div>
+              <div class="score-points">
+                <strong>{s["points"]}</strong>
+                <span>Punkte</span>
+              </div>
             </div>"""
 
     note = ""
@@ -52,49 +72,91 @@ async def scores(request: Request, period: str = "all", p: str = ""):
         stats = get_person_stats(p)
         cfg = get_person_settings(p)
         goal = cfg.get("weekly_goal", 0)
+        rank_all = next((i + 1 for i, s in enumerate(all_time) if s["person"] == p), None)
+        rank_month = next((i + 1 for i, s in enumerate(month_data) if s["person"] == p), None)
 
         streak_txt = f"{stats['streak']} Tag{'e' if stats['streak'] != 1 else ''}" if stats["streak"] else "–"
-        streak_marker = " Serie" if stats["streak"] >= 3 else ""
+        streak_hint = "Serie aktiv" if stats["streak"] >= 3 else "Dranbleiben"
 
         goal_bar = ""
+        goal_hint = "Kein Wochenziel gesetzt"
         if goal:
             pct = min(int(stats["week_tasks"] / goal * 100), 100)
             fill_cls = "green" if pct >= 100 else ""
+            remaining = max(goal - stats["week_tasks"], 0)
+            goal_hint = "Wochenziel erreicht" if remaining == 0 else f"Noch {remaining} Aufgabe{'n' if remaining != 1 else ''} bis zum Ziel"
             goal_bar = f"""
             <div style="margin-top:0.75rem">
               <div style="display:flex;justify-content:space-between;
                           font-size:0.75rem;color:var(--muted);margin-bottom:0.3rem">
-                <span>Wochenziel</span><span>{stats['week_tasks']}/{goal} Aufgaben</span>
+                <span>{goal_hint}</span><span>{stats['week_tasks']}/{goal} Aufgaben</span>
               </div>
               <div class="progress-track">
                 <div class="progress-fill {fill_cls}" style="width:{pct}%"></div>
               </div>
             </div>"""
+        else:
+            goal_bar = """
+            <div class="muted" style="margin-top:0.75rem;font-size:0.8rem">
+              Kein Wochenziel gesetzt. Mit einem Ziel werden Fortschritt und Restaufgaben hier sichtbar.
+            </div>"""
 
         personal_section = f"""
-        <div class="card" style="margin-bottom:1rem">
-          <h3 style="margin-bottom:0.75rem">Meine Statistik · {p}</h3>
-          <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0">
-            <div class="stat-card">
-              <div class="stat-value" style="font-size:1.5rem">{stats['week_tasks']}</div>
-              <div class="stat-label">Diese Woche</div>
+        <div class="hero-card">
+          <div class="hero-eyebrow">Dein Fortschritt</div>
+          <div class="page-hero">
+            <div>
+              <div class="hero-title">{p}</div>
+              <div class="muted">Jede erledigte Aufgabe zählt sichtbar.</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-value" style="font-size:1.5rem">{stats['total_points']}</div>
-              <div class="stat-label">Gesamt-Pkt</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" style="font-size:1.35rem">{streak_txt}{streak_marker}</div>
-              <div class="stat-label">Streak</div>
+            <div class="page-hero-actions">
+              <span class="badge ok">#{rank_all or "–"} gesamt</span>
             </div>
           </div>
           {goal_bar}
+        </div>
+        <div class="achievement-strip">
+          <div class="achievement-card">
+            <div class="today-value">{stats['week_points']}</div>
+            <div class="today-label">Punkte diese Woche</div>
+          </div>
+          <div class="achievement-card">
+            <div class="today-value">{streak_txt}</div>
+            <div class="today-label">{streak_hint}</div>
+          </div>
+          <div class="achievement-card">
+            <div class="today-value">#{rank_month or "–"}</div>
+            <div class="today-label">Monatsrang</div>
+          </div>
+        </div>
+        <div class="today-grid" style="margin-bottom:1rem">
+          <div class="today-stat">
+            <div class="today-value">{stats['tasks_done']}</div>
+            <div class="today-label">Aufgaben</div>
+          </div>
+          <div class="today-stat">
+            <div class="today-value">{stats['proj_steps']}</div>
+            <div class="today-label">Projektschritte</div>
+          </div>
+          <div class="today-stat">
+            <div class="today-value">{stats['total_points']}</div>
+            <div class="today-label">Gesamtpunkte</div>
+          </div>
         </div>"""
 
+    total_points_period = sum(s.get("points", 0) for s in data)
+    total_done_period = sum(s.get("tasks_done", 0) + s.get("project_steps_done", 0) for s in data)
+    leader = data[0]["person"] if data else "–"
     content = f"""
-    <h2>Bestenliste</h2>
     {personal_section}
+    <div class="page-header">
+      <div>
+        <h2>Bestenliste</h2>
+        <div class="muted">{total_points_period} Punkte · {total_done_period} Erledigungen · Spitze: {leader}</div>
+      </div>
+      <div style="color:var(--primary);display:flex;align-items:center">{_icon("star", 22, "var(--primary)")}</div>
+    </div>
     {tabs}
-    <div class="card card-flush" style="padding:0 1.25rem">{rows}</div>
+    <div class="card card-flush">{rows}</div>
     {note}"""
     return render(content, request, page="scores", person=p)

@@ -1,3 +1,10 @@
+## 1.3.8
+
+- Punkte: persönlicher Fortschrittsbereich mit Rang, Wochenziel und motivierendem Zielhinweis
+- Punkte: Erfolgs-Kacheln für Wochenpunkte, Streak, Monatsrang, Aufgaben, Projektschritte und Gesamtpunkte
+- Bestenliste: modernisierte Darstellung mit Rangkreis, hervorgehobener eigener Zeile und klarer Quellenaufschlüsselung
+- Punkte: Zeitraum-Zusammenfassung zeigt Gesamtpunkte, Erledigungen und aktuelle Spitze
+
 ## 1.3.7
 
 - Aufgaben: redundanten Filter "Meine" entfernt, weil die Standardansicht bereits persönliche Aufgaben zeigt
