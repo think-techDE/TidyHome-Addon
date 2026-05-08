@@ -22,6 +22,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Aufwand-Feld (wenig / mittel / viel) mit Badge und Filter
 - ✅ Startdatum wählbar (Aufgabe erst ab diesem Datum sichtbar und fällig)
 - ✅ Fälligkeit einmalig verschieben (Snooze) ohne Intervall zu ändern
+- ✅ Kommentare / Notizen zu Aufgaben hinterlegen
 - 📋 Aufgaben-Pausen: Intervalle temporär einfrieren
 - 📋 Kalenderstreifen (Wochenübersicht mit Aufgaben pro Tag)
 - 💡 Fotos pro Aufgabe (Hinweisfoto wo/was, Vorher/Nachher bei Erledigung)
@@ -42,6 +43,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Abgeschlossene Projekte in eigenem Tab mit Archivieren-Button
 - ✅ Projekt-Icons können aus Aufgaben-Icons und Raum-/Orts-Icons gewählt werden
 - ✅ Projekt-Icons nutzen ohne manuelle Auswahl die konservative Raum-Erkennung
+- ✅ Kommentare / Notizen zu Projekten hinterlegen
 - 💡 Fotos pro Projekt und Schritt (Vorher/Nachher, Hinweisfotos)
 
 ## Gamification & Punkte
@@ -64,7 +66,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Admin definiert Geräte (Notify-Services per Checkbox aus HA)
 - ✅ Test-Benachrichtigung direkt aus der UI
 - 💡 Erinnerung an andere Person schicken ("Küche ist noch offen")
-- ✅ Urlaubsmodus (keine Notifications, fällige Aufgaben pausiert)
+- ✅ Persönlicher Urlaubsmodus (keine Notifications, fällige Aufgaben pausiert)
 
 ## Benutzerverwaltung & Rollen
 
@@ -79,7 +81,7 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
   - Mitglied/Haushaltshilfe: nur eigene + nicht zugeordnete
 - ✅ Räume pro Person individuell ausblendbar
 - ✅ Persönliche Einstellungen auf /settings, alle Personen im Admin-Panel
-- ✅ Urlaubsmodus (fällige Aufgaben pausieren, keine Notifications)
+- ✅ Persönlicher Urlaubsmodus (fällige Aufgaben pausieren, keine Notifications)
 
 ## Haushaltshilfe
 
@@ -92,10 +94,10 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 
 ## Familie & Kommunikation
 
-- 📋 Kommentare / Notizen zu Aufgaben und Projekten hinterlassen
+- ✅ Kommentare / Notizen zu Aufgaben und Projekten hinterlassen
 - 📋 Erinnerung senden: andere Person auf offene Aufgabe hinweisen
 - 📋 Einkaufsliste als eigener Bereich (ähnlich wie Projekte, ohne Intervall)
-- ✅ Urlaubsmodus: fällige Aufgaben pausieren, keine Notifications
+- ✅ Persönlicher Urlaubsmodus: fällige Aufgaben pausieren, keine Notifications
 
 ## Barrierefreiheit & Neurodiversität
 

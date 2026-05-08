@@ -1,6 +1,6 @@
 from tinydb import TinyDB, Query
-from models import Task, Project, Step
-from datetime import date
+from models import Comment, Project, Step, Task
+from datetime import date, datetime
 import os
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
@@ -18,6 +18,10 @@ def get_scores_table():
     return _db.table("scores")
 
 
+def get_comments_table():
+    return _db.table("comments")
+
+
 def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = False,
                effort: str = None) -> list[Task]:
     table = get_tasks_table()
@@ -25,9 +29,6 @@ def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = F
 
     rows = table.search(Q.room == room) if room else table.all()
     tasks = [Task(**r) for r in rows if r.get("active", True)]
-
-    if is_vacation_mode_active():
-        return []
 
     # Aufgaben mit Startdatum in der Zukunft ausblenden
     today = date.today().isoformat()
@@ -293,6 +294,32 @@ def delete_step(step_id: str) -> bool:
     return len(removed) > 0
 
 
+def list_comments(entity_type: str, entity_id: str) -> list[Comment]:
+    Q = Query()
+    rows = get_comments_table().search(
+        (Q.entity_type == entity_type) & (Q.entity_id == entity_id)
+    )
+    comments = [Comment(**r) for r in rows]
+    comments.sort(key=lambda c: c.created_at)
+    return comments
+
+
+def add_comment(entity_type: str, entity_id: str, text: str,
+                author: str = "") -> Comment | None:
+    clean_text = text.strip()
+    if not clean_text:
+        return None
+    comment = Comment(
+        entity_type=entity_type,
+        entity_id=entity_id,
+        text=clean_text,
+        author=author or None,
+        created_at=datetime.now().isoformat(),
+    )
+    get_comments_table().insert(comment.model_dump())
+    return comment
+
+
 def get_settings_table():
     return _db.table("person_settings")
 
@@ -311,18 +338,23 @@ def get_person_settings(person: str) -> dict:
     row = get_settings_table().get(Q.person == person)
     return row or {"person": person, "services": [], "notify_time": "08:00",
                    "enabled": False, "hidden_rooms": [], "weekly_goal": 0,
-                   "role": "member", "can_see_children": False}
+                   "role": "member", "can_see_children": False,
+                   "vacation_enabled": False, "vacation_until": ""}
 
 
 def save_person_settings(person: str, services: list[str], notify_time: str,
                          enabled: bool, hidden_rooms: list[str] | None = None,
                          weekly_goal: int = 0, role: str = "member",
-                         can_see_children: bool = False) -> dict:
+                         can_see_children: bool = False,
+                         vacation_enabled: bool = False,
+                         vacation_until: str = "") -> dict:
     Q = Query()
     data = {"person": person, "services": services,
             "notify_time": notify_time, "enabled": enabled,
             "hidden_rooms": hidden_rooms or [], "weekly_goal": weekly_goal,
-            "role": role, "can_see_children": can_see_children}
+            "role": role, "can_see_children": can_see_children,
+            "vacation_enabled": vacation_enabled,
+            "vacation_until": vacation_until or ""}
     if get_settings_table().get(Q.person == person):
         get_settings_table().update(data, Q.person == person)
     else:
@@ -439,7 +471,13 @@ def save_room_icons(icons: dict[str, str]) -> None:
     _save_app_value("room_icons", icons)
 
 
-def get_vacation_mode() -> dict:
+def get_vacation_mode(person: str = "") -> dict:
+    if person:
+        cfg = get_person_settings(person)
+        return {
+            "enabled": bool(cfg.get("vacation_enabled")),
+            "until": cfg.get("vacation_until") or "",
+        }
     cfg = _get_app_value("vacation_mode", {}) or {}
     return {
         "enabled": bool(cfg.get("enabled")),
@@ -454,8 +492,8 @@ def save_vacation_mode(enabled: bool, until: str = "") -> None:
     })
 
 
-def is_vacation_mode_active() -> bool:
-    cfg = get_vacation_mode()
+def is_vacation_mode_active(person: str = "") -> bool:
+    cfg = get_vacation_mode(person)
     if not cfg.get("enabled"):
         return False
     until = cfg.get("until") or ""

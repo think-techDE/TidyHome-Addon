@@ -18,7 +18,7 @@ def parse_time(raw: str) -> str:
 
 
 async def _do_notify(person: str, services: list[str]) -> None:
-    if is_vacation_mode_active():
+    if is_vacation_mode_active(person):
         logger.info("Urlaubsmodus aktiv, keine Benachrichtigung fuer %s", person)
         return
 

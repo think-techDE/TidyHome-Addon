@@ -1,14 +1,16 @@
+from datetime import date
+
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_notify_services, get_persons
 from render import (_base, _ha_user, _ICON_LABELS, ROOM_ICON_CHOICES, ROOM_ICON_LABELS,
-                    _auto_room_icon_config, _room_icon, person_suffix, render)
+                    _auto_room_icon_config, _room_icon, format_date_de,
+                    person_suffix, render)
 from scheduler import notify_person_now, parse_time
 from storage import (ROLES, get_admins, get_person_settings, get_room_icons,
                      get_vacation_mode, is_vacation_mode_active, list_person_settings,
-                     save_admins, save_person_settings, save_room_icons,
-                     save_vacation_mode)
+                     save_admins, save_person_settings, save_room_icons)
 
 router = APIRouter()
 
@@ -25,6 +27,24 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
     weekly_goal = cfg.get("weekly_goal", 0) or 0
     role = cfg.get("role", "member")
     can_see_children = cfg.get("can_see_children", False)
+    vacation = get_vacation_mode(pn)
+    vacation_active = is_vacation_mode_active(pn)
+    vacation_checked = "checked" if vacation.get("enabled") else ""
+    vacation_until = vacation.get("until", "")
+    vacation_expired = False
+    if vacation.get("enabled") and vacation_until:
+        try:
+            vacation_expired = date.fromisoformat(vacation_until) < date.today()
+        except ValueError:
+            vacation_expired = False
+    vacation_state = (
+        f' <span class="admin-badge">Pausiert bis {format_date_de(vacation_until)}</span>'
+        if vacation_active and vacation_until else
+        ' <span class="admin-badge">Pausiert</span>'
+        if vacation_active else
+        f' <span class="badge ok" style="font-size:0.68rem">Abgelaufen am {format_date_de(vacation_until)}</span>'
+        if vacation_expired else ""
+    )
     svc_info = (
         f'<div class="muted" style="margin-bottom:0.75rem">Geräte: {", ".join(services)}</div>'
         if services else
@@ -70,7 +90,7 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
     <div class="card" style="margin-bottom:0.75rem">
       <form method="post" action="{base}{action}">
         <input type="hidden" name="person" value="{pn}">
-        <div style="font-weight:700;margin-bottom:0.5rem">{pn}{admin_b}</div>
+        <div style="font-weight:700;margin-bottom:0.5rem">{pn}{admin_b}{vacation_state}</div>
         {svc_info}
         <div class="grid-2">
           <div class="form-group">
@@ -89,6 +109,20 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
           <label>Wochenziel (Aufgaben)</label>
           <input name="weekly_goal" type="number" min="0" max="99" value="{weekly_goal}"
                  placeholder="0 = kein Ziel">
+        </div>
+        <div class="grid-2">
+          <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:0.75rem">
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;
+                          text-transform:none;font-size:0.84rem;letter-spacing:0;font-weight:500;margin:0">
+              <input type="checkbox" name="vacation_enabled" value="1" {vacation_checked}
+                     style="width:1rem;height:1rem;accent-color:var(--primary)">
+              Urlaubsmodus
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Urlaub bis einschließlich</label>
+            <input type="date" name="vacation_until" value="{vacation_until}">
+          </div>
         </div>
         {admin_fields}
         <div class="form-group">
@@ -186,15 +220,23 @@ async def settings_save(request: Request):
         weekly_goal = int(form.get("weekly_goal", 0) or 0)
     except ValueError:
         weekly_goal = 0
-    role = form.get("role", "member")
+    cfg = get_person_settings(person)
+    role = form.get("role", cfg.get("role", "member"))
     if role not in ROLES:
         role = "member"
-    can_see_children = form.get("can_see_children", "") == "1"
-    cfg = get_person_settings(person)
+    can_see_children = (
+        form.get("can_see_children", "") == "1"
+        if "can_see_children" in form else
+        cfg.get("can_see_children", False)
+    )
+    vacation_enabled = form.get("vacation_enabled", "") == "1"
+    vacation_until = str(form.get("vacation_until") or "")
     save_person_settings(person=person, services=cfg.get("services") or [],
                          notify_time=notify_time, enabled=enabled,
                          hidden_rooms=hidden_rooms, weekly_goal=weekly_goal,
-                         role=role, can_see_children=can_see_children)
+                         role=role, can_see_children=can_see_children,
+                         vacation_enabled=vacation_enabled,
+                         vacation_until=vacation_until)
     return RedirectResponse(_base(request) + f"settings{person_suffix(person)}", status_code=303)
 
 
@@ -238,43 +280,6 @@ async def admin_form(request: Request, saved: str = ""):
       <form method="post" action="{base}admin/admins">
         <div class="admin-list">{person_cbs}</div>
         <button class="btn btn-primary btn-sm admin-save" type="submit">Admin-Rechte speichern</button>
-      </form>
-    </section>"""
-
-    vacation = get_vacation_mode()
-    vacation_active = is_vacation_mode_active()
-    vacation_checked = "checked" if vacation.get("enabled") else ""
-    vacation_until = vacation.get("until", "")
-    vacation_state = (
-        '<span class="admin-badge">Aktiv</span>'
-        if vacation_active else
-        '<span class="badge ok" style="font-size:0.68rem">Inaktiv</span>'
-    )
-    vacation_section = f"""
-    <section class="card admin-section">
-      <div class="admin-section-head">
-        <div>
-          <h3>Urlaubsmodus</h3>
-          <p class="muted">Pausiert fällige Aufgaben und tägliche Benachrichtigungen global.</p>
-        </div>
-        {vacation_state}
-      </div>
-      <form method="post" action="{base}admin/vacation">
-        <div class="grid-2">
-          <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:0.75rem">
-            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;
-                          text-transform:none;font-size:0.84rem;letter-spacing:0;font-weight:500;margin:0">
-              <input type="checkbox" name="enabled" value="1" {vacation_checked}
-                     style="width:1rem;height:1rem;accent-color:var(--primary)">
-              Aktiv
-            </label>
-          </div>
-          <div class="form-group">
-            <label>Bis einschließlich</label>
-            <input type="date" name="until" value="{vacation_until}">
-          </div>
-        </div>
-        <button class="btn btn-primary btn-sm admin-save" type="submit">Urlaubsmodus speichern</button>
       </form>
     </section>"""
 
@@ -457,7 +462,6 @@ function filterRoomIcons(input){
     </div>
     <div class="admin-stack">
       {admin_section}
-      {vacation_section}
       {room_icons_section}
       {device_section}
       <section class="admin-section">
@@ -481,18 +485,6 @@ async def admin_save_admins(request: Request):
     form = await request.form()
     selected = form.getlist("admins")
     save_admins(selected)
-    return RedirectResponse(_base(request) + "admin?saved=1", status_code=303)
-
-
-@router.post("/admin/vacation")
-async def admin_save_vacation(request: Request):
-    if not get_admins():
-        raise HTTPException(403)
-    form = await request.form()
-    save_vacation_mode(
-        enabled=(form.get("enabled", "") == "1"),
-        until=str(form.get("until") or ""),
-    )
     return RedirectResponse(_base(request) + "admin?saved=1", status_code=303)
 
 
@@ -522,7 +514,13 @@ async def admin_save_devices(request: Request):
     cfg = get_person_settings(person)
     save_person_settings(person=person, services=svc_list,
                          notify_time=cfg.get("notify_time", "08:00"),
-                         enabled=cfg.get("enabled", False))
+                         enabled=cfg.get("enabled", False),
+                         hidden_rooms=cfg.get("hidden_rooms") or [],
+                         weekly_goal=cfg.get("weekly_goal", 0) or 0,
+                         role=cfg.get("role", "member"),
+                         can_see_children=cfg.get("can_see_children", False),
+                         vacation_enabled=cfg.get("vacation_enabled", False),
+                         vacation_until=cfg.get("vacation_until", ""))
     return RedirectResponse(_base(request) + "admin?saved=1", status_code=303)
 
 

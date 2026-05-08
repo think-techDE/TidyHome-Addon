@@ -1,3 +1,15 @@
+## 1.3.10
+
+- Neu: persönlicher Urlaubsmodus in den Einstellungen mit optionalem Enddatum
+- Urlaubsmodus: Aufgaben bleiben sichtbar und erhalten den Status "Pausiert"
+- Urlaubsmodus: pausierte Aufgaben zählen nicht als heute fällig oder überfällig
+- Urlaubsmodus: tägliche Push-Benachrichtigungen und Test-Benachrichtigungen werden unterdrückt
+- UI: Hinweisbanner und Personenkarte zeigen den aktiven Urlaubsmodus mit deutschem Datum
+- Neu: Notizen zu Aufgaben und Projekten mit Autor und Zeitstempel
+- Aufgaben: Notizen sind in der Bearbeiten-Ansicht sichtbar und ergänzbar
+- Projekte: Notizen sind in der Detailansicht sichtbar und ergänzbar
+- Doku: README, Feature-Liste und Roadmap aktualisiert
+
 ## 1.3.9
 
 - Neu: globaler Urlaubsmodus im Admin-Bereich mit optionalem Enddatum

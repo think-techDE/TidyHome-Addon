@@ -7,7 +7,8 @@ from ha_client import get_areas
 from render import (_base, _icon, _ring_chart, _room_icon, _task_icon,
                     person_suffix, render, resolve_person)
 from storage import (filter_tasks_by_role, get_admins, get_person_settings,
-                     get_room_icons, list_projects, list_steps, list_tasks)
+                     get_room_icons, is_vacation_mode_active, list_projects,
+                     list_steps, list_tasks)
 
 router = APIRouter()
 
@@ -40,6 +41,11 @@ async def dashboard(request: Request, p: str = ""):
     if hidden_rooms:
         own_tasks_raw = [t for t in own_tasks_raw if t.room not in hidden_rooms]
     own_tasks = filter_tasks_by_role(own_tasks_raw, p, admins)
+    vacation_active = is_vacation_mode_active(p)
+    due_relevant_tasks = [
+        t for t in own_tasks
+        if not (vacation_active and p and p in t.assigned_to)
+    ]
 
     # Own projects (filtered to current person)
     own_projects_raw = list_projects()
@@ -56,7 +62,7 @@ async def dashboard(request: Request, p: str = ""):
         own_projects = own_projects_raw
 
     # For ring-chart stats use own_tasks
-    all_tasks = own_tasks
+    all_tasks = due_relevant_tasks
     overdue_tasks = [t for t in all_tasks if t.days_until_due() < 0]
     due_today     = [t for t in all_tasks if t.days_until_due() == 0]
     done_today    = [t for t in all_tasks if t.last_done == today]
@@ -215,7 +221,11 @@ async def dashboard(request: Request, p: str = ""):
     def _render_room_row(r: str, tasks_src: list, proj_src: list, muted: bool = False) -> str:
         r_tasks    = [t for t in tasks_src if t.room == r]
         r_projects = [pr for pr in proj_src if pr.room == r]
-        r_overdue  = sum(1 for t in r_tasks if t.days_until_due() < 0)
+        r_overdue  = sum(
+            1 for t in r_tasks
+            if t.days_until_due() < 0
+            and not (vacation_active and p and p in t.assigned_to)
+        )
         sub = f"{len(r_tasks)} Aufg." if r_tasks else ""
         if r_projects:
             sub += (" · " if sub else "") + f"{len(r_projects)} Proj."

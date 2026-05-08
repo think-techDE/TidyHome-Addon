@@ -85,6 +85,15 @@ class Step(BaseModel):
     completed_at: Optional[str] = None
 
 
+class Comment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    entity_type: str
+    entity_id: str
+    text: str
+    author: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+
+
 class TaskCreate(BaseModel):
     name: str
     room: str

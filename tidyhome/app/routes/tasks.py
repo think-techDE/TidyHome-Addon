@@ -1,4 +1,5 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from html import escape
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -6,15 +7,69 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from ha_client import get_areas, get_persons
 from models import Task
 from render import (INTERVALS, _base, _icon, _icon_chooser, _selected, _task_icon,
-                    interval_label, person_suffix, render, resolve_person, urgency_class)
-from storage import (create_task, delete_task, edit_task, filter_tasks_by_role,
-                     get_admins, get_person_settings, get_task, list_people_by_role,
+                    format_date_de, interval_label, person_suffix, render,
+                    resolve_person, urgency_class)
+from storage import (add_comment, create_task, delete_task, edit_task, filter_tasks_by_role,
+                     get_admins, get_person_settings, get_task, get_vacation_mode,
+                     is_vacation_mode_active, list_comments, list_people_by_role,
                      list_tasks, mark_done, snooze_task)
 
 router = APIRouter(prefix="/tasks")
 
 _EFFORT_LABELS = {"low": "Wenig", "medium": "Mittel", "high": "Viel"}
 _EFFORT_BADGE  = {"low": "ok", "medium": "today", "high": "overdue"}
+
+
+def _comment_time(raw: str) -> str:
+    try:
+        return datetime.fromisoformat(raw).strftime("%d.%m.%Y %H:%M")
+    except ValueError:
+        return raw[:16].replace("T", " ")
+
+
+def _comments_card(entity_type: str, entity_id: str, action: str,
+                   person: str = "") -> str:
+    comments = list_comments(entity_type, entity_id)
+    if comments:
+        rows = ""
+        for c in comments:
+            author = escape(c.author or "Unbekannt")
+            text = escape(c.text).replace("\n", "<br>")
+            created = escape(_comment_time(c.created_at))
+            rows += f"""
+            <div class="task-row" style="align-items:flex-start">
+              <div class="task-body">
+                <div class="task-header">
+                  <span class="task-name">{author}</span>
+                  <span class="task-meta">{created}</span>
+                </div>
+                <div class="muted" style="margin-top:0.25rem;line-height:1.45">{text}</div>
+              </div>
+            </div>"""
+    else:
+        rows = (
+            '<div class="empty">'
+            '<div style="font-weight:600">Noch keine Notizen</div>'
+            '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
+            'Halte Hinweise oder Absprachen direkt hier fest.</div>'
+            '</div>'
+        )
+
+    return f"""
+    <div class="card card-flush" style="margin-top:1rem">
+      <div style="padding:1rem 1.25rem 0.5rem">
+        <h3 style="margin-bottom:0.35rem">Notizen</h3>
+      </div>
+      {rows}
+      <form method="post" action="{action}" style="padding:1rem 1.25rem">
+        <input type="hidden" name="return_p" value="{person}">
+        <div class="form-group">
+          <label>Neue Notiz</label>
+          <textarea name="text" rows="3" required placeholder="Hinweis oder Kommentar"></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" type="submit">Notiz speichern</button>
+      </form>
+    </div>"""
 
 
 @router.get("", response_class=HTMLResponse)
@@ -60,10 +115,17 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     elif not show_grouped:
         tasks = filter_tasks_by_role(tasks, p, admins)
 
+    vacation_active = is_vacation_mode_active(p)
+    vacation_until = get_vacation_mode(p).get("until", "") if vacation_active else ""
+
+    def _is_paused_for_view(t: Task) -> bool:
+        return bool(vacation_active and p and p in t.assigned_to)
+
     base = _base(request)
 
     def _task_row(t: Task) -> str:
         due = t.days_until_due()
+        paused = _is_paused_for_view(t)
 
         if due < 0:
             badge_text, badge_cls = "Überfällig", "overdue"
@@ -84,6 +146,14 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
                     badge_text, badge_cls = "Verschoben", "ok"
             except ValueError:
                 pass
+
+        if paused:
+            badge_text, badge_cls = "Pausiert", "ok"
+            date_text = (
+                f"Pausiert bis {format_date_de(vacation_until)}"
+                if vacation_until else
+                "Pausiert"
+            )
 
         important_cls = " important" if t.important else ""
         star = f'{_icon("star", 13, "var(--warning)", 2.5)}' if t.important else ""
@@ -177,9 +247,10 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             rows += _task_row(t)
 
     psuffix_q = f"?p={p}" if p else ""
-    overdue_count = len([t for t in tasks if t.days_until_due() < 0])
-    today_count = len([t for t in tasks if t.days_until_due() == 0])
-    planned_count = len(tasks) - overdue_count - today_count
+    active_tasks = [t for t in tasks if not _is_paused_for_view(t)]
+    overdue_count = len([t for t in active_tasks if t.days_until_due() < 0])
+    today_count = len([t for t in active_tasks if t.days_until_due() == 0])
+    planned_count = len(active_tasks) - overdue_count - today_count
     content = f"""
     <div class="hero-card page-hero">
       <div>
@@ -349,6 +420,16 @@ async def task_snooze(task_id: str, request: Request):
     return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
 
 
+@router.post("/{task_id}/comments")
+async def task_comment_add(task_id: str, request: Request,
+                           text: str = Form(...), return_p: str = Form("")):
+    if not get_task(task_id):
+        raise HTTPException(404)
+    author = resolve_person(request, return_p)
+    add_comment("task", task_id, text, author=author)
+    return RedirectResponse(_base(request) + f"tasks/{task_id}/edit{person_suffix(return_p)}", status_code=303)
+
+
 @router.get("/{task_id}/delete")
 async def task_delete(task_id: str, request: Request, p: str = ""):
     delete_task(task_id)
@@ -421,6 +502,11 @@ async def _task_form(request: Request, title: str, action: str,
         </div>"""
 
     psuffix_q = f"?p={person}" if person else ""
+    comments = (
+        _comments_card("task", task.id, f"tasks/{task.id}/comments", person)
+        if task else ""
+    )
+
     content = f"""
     <div class="page-header">
       <h2>{title}</h2>
@@ -482,5 +568,6 @@ async def _task_form(request: Request, title: str, action: str,
         <a class="btn btn-ghost btn-full" href="tasks{psuffix_q}"
            style="margin-top:0.5rem">Abbrechen</a>
       </form>
-    </div>"""
+    </div>
+    {comments}"""
     return render(content, request, page="tasks", person=person)
