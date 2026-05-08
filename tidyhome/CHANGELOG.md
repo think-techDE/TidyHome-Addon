@@ -1,3 +1,11 @@
+## 1.3.3
+
+- Admin: Raum-Icon-Auswahl um weitere OpenMoji-Symbole für Räume, Orte, Reisen, Tiere und Hobbybereiche erweitert
+- Raum-Icons: automatische Erkennung bleibt konservativ, erkennt aber passende Raumbezeichnungen auch als Teilstring
+- Projekte: Icon-Auswahl bietet jetzt Aufgaben-Icons und Raum-/Orts-Icons gemeinsam an
+- Projekte: automatische Projekt-Icons nutzen die gleiche Raum-Erkennung wie der Admin-Bereich
+- Doku: README, Feature-Liste und Roadmap auf den aktuellen Icon-Stand gebracht
+
 ## 1.3.2
 
 - Fix: Aufwand-Auswahl im Aufgabenformular ist jetzt klickbar und zeigt die aktive Auswahl direkt an

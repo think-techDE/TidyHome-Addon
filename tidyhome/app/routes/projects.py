@@ -205,7 +205,7 @@ async def project_new_form(request: Request, p: str = ""):
           <label>Beschreibung (optional)</label>
           <input name="description" placeholder="Was soll erreicht werden?">
         </div>
-        {_icon_chooser("", "icon")}
+        {_icon_chooser("", "icon", include_room_icons=True)}
         <button class="btn btn-primary btn-full" type="submit">Projekt anlegen</button>
         <a class="btn btn-ghost btn-full" href="projects{_p_suffix(p)}" style="margin-top:0.5rem">Abbrechen</a>
       </form>
@@ -398,7 +398,7 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
           <label>Beschreibung</label>
           <input name="description" value="{proj.description or ''}">
         </div>
-        {_icon_chooser(proj.icon, "icon")}
+        {_icon_chooser(proj.icon, "icon", include_room_icons=True)}
         <button class="btn btn-primary btn-full" type="submit">Speichern</button>
         <a class="btn btn-ghost btn-full" href="{base}projects/{project_id}{_p_suffix(p)}"
            style="margin-top:0.5rem">Abbrechen</a>

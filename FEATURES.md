@@ -40,6 +40,8 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Teilschritte löschen
 - ✅ Projekte automatisch abschließen wenn alle Schritte erledigt
 - ✅ Abgeschlossene Projekte in eigenem Tab mit Archivieren-Button
+- ✅ Projekt-Icons können aus Aufgaben-Icons und Raum-/Orts-Icons gewählt werden
+- ✅ Projekt-Icons nutzen ohne manuelle Auswahl die konservative Raum-Erkennung
 - 💡 Fotos pro Projekt und Schritt (Vorher/Nachher, Hinweisfotos)
 
 ## Gamification & Punkte
@@ -121,6 +123,8 @@ Alle Anforderungen und Ideen. Status: ✅ umgesetzt · 🔄 in Arbeit · 📋 ge
 - ✅ Dashboard: Ring-Charts (Erledigt/Überfällig/Zustand) als einzelne Karten
 - ✅ Aufgabenliste: kompaktes Layout, Badge-Semantik, OpenMoji-Icons, SVG-Aktions-Buttons
 - ✅ Icon-Chooser im Formular: manuelle Auswahl oder automatische Erkennung
+- ✅ Erweiterte Raum-/Orts-Icon-Auswahl im Admin-Bereich mit konservativer Namens-Erkennung
+- ✅ Projekt-Icon-Chooser kombiniert Aufgaben-Icons und Raum-/Orts-Icons
 - ✅ Projektkarten mit sichtbarem Fortschritt
 - ✅ Filter als kompakte Chip-Leiste
 - ✅ Empty States mit Icon und Hinweistext

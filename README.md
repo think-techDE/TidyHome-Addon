@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.2-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.3-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -17,6 +17,7 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 - Mehrfachzuweisung an mehrere Personen
 - Einmalige und wiederkehrende Aufgaben
 - Ordnungsprojekte mit Teilschritten, Fortschritt und Punkten
+- Aufgaben-, Raum- und Projekt-Icons mit OpenMoji-Auswahl und automatischer Erkennung
 - Bestenliste und persönliche Statistik mit Streak, Wochenpunkten und Wochenziel
 - Tägliche Push-Benachrichtigungen pro Person und Gerät
 - Rollen für Elternteil, Kind, Haushaltshilfe und Mitglied
@@ -34,6 +35,7 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Dashboard als Heute-Ansicht mit Status, nächsten Aufgaben und Raumüberblick
 - Aufgabenlisten mit klaren Fälligkeits-Badges und schnellen Icon-Aktionen
 - Projektkarten mit sichtbarem Fortschritt und nächstem Schritt
+- Erweiterte OpenMoji-Iconauswahl für Aufgaben, Räume und Projekte
 - Filter als kompakte Chip-Leiste
 - Gute Lesbarkeit, ausreichende Touch-Ziele und reduzierte Schatten
 
@@ -56,6 +58,7 @@ Der Modern UI Refresh ist umgesetzt; die nächsten Feinschliffe sind in [FEATURE
 
 - Projekte mit Raum, Person und Beschreibung
 - Teilschritte mit eigenen Punkten
+- Projekt-Icons aus Aufgaben- und Raum-/Orts-Icons auswählbar
 - Fortschrittsbalken pro Projekt
 - Automatischer Abschluss, wenn alle Schritte erledigt sind
 - Abgeschlossene Projekte in eigener Ansicht
@@ -81,6 +84,7 @@ Der Modern UI Refresh ist umgesetzt; die nächsten Feinschliffe sind in [FEATURE
 - Angemeldeter Nutzer wird über Home Assistant Ingress erkannt
 - Der Home-Assistant-Sidebar-Eintrag ist auch für Nicht-Admin-Benutzer sichtbar
 - Admins können Personen, Rollen, Räume und Geräte verwalten
+- Raum-Icons im Admin-Bereich per visueller Auswahl konfigurierbar
 - Rollenbasierte Sichtbarkeit für Elternteil, Kind, Haushaltshilfe und Mitglied
 - Räume können pro Person individuell ausgeblendet werden
 
@@ -133,6 +137,7 @@ tidyhome/
   assets/
     app.css          # Light/Dark Design-System
     logo.svg         # App-Logo
+    icons/           # lokale OpenMoji-SVGs
   config.yaml        # Add-on-Metadaten
   Dockerfile
   run.sh
@@ -147,4 +152,4 @@ Daten werden unter `/data/tidyhome.json` persistiert.
 - [Feature-Liste](FEATURES.md)
 - [Roadmap](ROADMAP.md)
 - [Changelog](tidyhome/CHANGELOG.md)
-- [Gitea Repository](https://git.think-tech.eu/Danny/TidyHome-Addon)
+- [GitHub Repository](https://github.com/think-techDE/TidyHome-Addon)

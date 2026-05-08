@@ -1,6 +1,6 @@
 # TidyHome – Roadmap
 
-Stand: 2026-05-07 · Aktuelle Version: 1.2.10
+Stand: 2026-05-08 · Aktuelle Version: 1.3.3
 
 ---
 
@@ -94,6 +94,8 @@ Stand: 2026-05-07 · Aktuelle Version: 1.2.10
 - **Aufwand-Feld**: wenig / mittel / viel — Badge in der Zeile, Filter-Chip in der Liste
 - **Startdatum**: Aufgabe erst ab einem bestimmten Datum sichtbar und fällig
 - **Fälligkeit einmalig verschieben (Snooze)**: Schnell-Seite mit +1/+3/+7/+14/+30 Tage und eigenem Datum; Snooze-Button direkt in der Aufgabenzeile; Verschiebung wird nach Erledigung automatisch aufgehoben
+- **Erweiterte OpenMoji-Icons**: größere Raum-/Orts-Auswahl im Admin-Bereich, konservative automatische Raumerkennung per Teilstring
+- **Projekt-Icons**: Projektformulare bieten Aufgaben-Icons und Raum-/Orts-Icons gemeinsam an
 
 ---
 

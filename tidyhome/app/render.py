@@ -29,42 +29,209 @@ ROOM_ICONS: dict[str, tuple[str, str]] = {
 }
 
 ROOM_ICON_CHOICES: dict[str, tuple[str, str]] = {
-    "kitchen":       ("1F373",      "var(--warning-bg)"),
-    "living_room":   ("1F6CB",      "var(--primary-soft)"),
-    "bedroom":       ("1F6CF-FE0F", "rgba(59,130,246,0.12)"),
-    "bathroom":      ("1F6C0",      "rgba(59,130,246,0.12)"),
-    "hallway":       ("1F6AA",      "var(--surface-2)"),
-    "basement":      ("1F4E6",      "var(--surface-2)"),
-    "garden":        ("1F333",      "var(--success-bg)"),
-    "garage":        ("1F697",      "var(--surface-2)"),
-    "office":        ("1F4BB",      "var(--primary-soft)"),
-    "dining_room":   ("1F37D-FE0F", "var(--warning-bg)"),
-    "kids_room":     ("1F392",      "var(--primary-soft)"),
-    "balcony":       ("1FAB4",      "var(--success-bg)"),
-    "terrace":       ("2600",       "var(--warning-bg)"),
-    "laundry":       ("1F9FA",      "var(--primary-soft)"),
-    "storage":       ("1F4E6",      "var(--warning-bg)"),
-    "home":          ("1F3E0",      "var(--primary-soft)"),
+    "kitchen":             ("1F373",      "var(--warning-bg)"),
+    "dining_room":         ("1F37D-FE0F", "var(--warning-bg)"),
+    "living_room":         ("1F6CB",      "var(--primary-soft)"),
+    "living_room_tv":      ("1F4FA",      "var(--primary-soft)"),
+    "bedroom":             ("1F6CF-FE0F", "rgba(59,130,246,0.12)"),
+    "bathroom":            ("1F6C0",      "rgba(59,130,246,0.12)"),
+    "shower":              ("1F6BF",      "rgba(59,130,246,0.12)"),
+    "toilet":              ("1F6BD",      "rgba(59,130,246,0.12)"),
+    "sink":                ("1F6C1",      "rgba(59,130,246,0.12)"),
+    "bubbles":             ("1FAE7",      "rgba(59,130,246,0.12)"),
+    "hallway":             ("1F6AA",      "var(--surface-2)"),
+    "office":              ("1F4BB",      "var(--primary-soft)"),
+    "library":             ("1F4DA",      "var(--primary-soft)"),
+    "kids_room":           ("1F392",      "var(--primary-soft)"),
+    "wardrobe":            ("1F455",      "var(--primary-soft)"),
+    "laundry":             ("1F9FA",      "var(--primary-soft)"),
+    "cleaning_room":       ("1F9F9",      "var(--success-bg)"),
+    "cleaning_sponge":     ("1F9FD",      "var(--success-bg)"),
+    "basement":            ("1F4E6",      "var(--surface-2)"),
+    "storage":             ("1F4E6",      "var(--warning-bg)"),
+    "home":                ("1F3E0",      "var(--primary-soft)"),
+    "garden":              ("1F333",      "var(--success-bg)"),
+    "garden_bed":          ("1F33F",      "var(--success-bg)"),
+    "seedling":            ("1F331",      "var(--success-bg)"),
+    "sunflower":           ("1F33B",      "var(--warning-bg)"),
+    "flowers":             ("1F490",      "var(--success-bg)"),
+    "balcony":             ("1FAB4",      "var(--success-bg)"),
+    "terrace":             ("2600",       "var(--warning-bg)"),
+    "terrace_umbrella":    ("26F1-FE0F",  "var(--warning-bg)"),
+    "property":            ("1F3E1",      "var(--success-bg)"),
+    "car":                 ("1F697",      "var(--surface-2)"),
+    "suv":                 ("1F698",      "var(--surface-2)"),
+    "gas_station":         ("26FD",       "var(--warning-bg)"),
+    "bike":                ("1F6B2",      "var(--success-bg)"),
+    "scooter":             ("1F6F5",      "var(--surface-2)"),
+    "motorcycle":          ("1F3CD-FE0F", "var(--surface-2)"),
+    "work":                ("1F3E2",      "var(--primary-soft)"),
+    "briefcase":           ("1F4BC",      "var(--primary-soft)"),
+    "school":              ("1F3EB",      "var(--warning-bg)"),
+    "doctor":              ("1F3E5",      "rgba(59,130,246,0.12)"),
+    "shop":                ("1F3EA",      "var(--warning-bg)"),
+    "shopping":            ("1F6D2",      "var(--warning-bg)"),
+    "authority":           ("1F3DB-FE0F", "var(--surface-2)"),
+    "bank":                ("1F3E6",      "var(--primary-soft)"),
+    "post_office":         ("1F3E3",      "var(--warning-bg)"),
+    "beach":               ("1F3D6-FE0F", "var(--warning-bg)"),
+    "island":              ("1F3DD-FE0F", "var(--success-bg)"),
+    "ski_mountain":        ("1F3D4-FE0F", "rgba(59,130,246,0.12)"),
+    "hiking_mountain":     ("26F0-FE0F",  "var(--surface-2)"),
+    "camping":             ("1F3D5-FE0F", "var(--success-bg)"),
+    "tent":                ("26FA",       "var(--warning-bg)"),
+    "hotel":               ("1F3E8",      "var(--primary-soft)"),
+    "travel_plane":        ("2708-FE0F",  "rgba(59,130,246,0.12)"),
+    "travel_world":        ("1F30D",      "var(--success-bg)"),
+    "luggage":             ("1F9F3",      "var(--warning-bg)"),
+    "dog":                 ("1F415",      "var(--warning-bg)"),
+    "cat":                 ("1F408",      "var(--warning-bg)"),
+    "pets":                ("1F43E",      "var(--warning-bg)"),
+    "aquarium":            ("1F41F",      "rgba(59,130,246,0.12)"),
+    "chicken_coop":        ("1F414",      "var(--warning-bg)"),
+    "stable":              ("1F40E",      "var(--warning-bg)"),
+    "gym":                 ("1F3CB-FE0F", "var(--primary-soft)"),
+    "atelier":             ("1F3A8",      "var(--primary-soft)"),
+    "workshop":            ("1F527",      "var(--surface-2)"),
+    "toolbox":             ("1F9F0",      "var(--surface-2)"),
+    "music_guitar":        ("1F3B8",      "var(--primary-soft)"),
+    "music_piano":         ("1F3B9",      "var(--primary-soft)"),
+    "gaming":              ("1F3AE",      "var(--primary-soft)"),
+    "wine_cellar":         ("1F377",      "var(--warning-bg)"),
+    "home_bar":            ("1F37A",      "var(--warning-bg)"),
+    "seasonal_christmas":  ("1F384",      "var(--success-bg)"),
+    "sewing":              ("1FAA1",      "var(--primary-soft)"),
+    "thread":              ("1F9F5",      "var(--primary-soft)"),
 }
 
 ROOM_ICON_LABELS: dict[str, str] = {
     "kitchen": "Küche",
+    "dining_room": "Esszimmer",
     "living_room": "Wohnzimmer",
+    "living_room_tv": "Fernseher",
     "bedroom": "Schlafzimmer",
     "bathroom": "Bad",
+    "shower": "Dusche",
+    "toilet": "Toilette",
+    "sink": "Waschbecken",
+    "bubbles": "Seifenblasen",
     "hallway": "Flur",
-    "basement": "Keller",
-    "garden": "Garten",
-    "garage": "Garage",
     "office": "Büro",
-    "dining_room": "Esszimmer",
+    "library": "Bibliothek",
     "kids_room": "Kinderzimmer",
-    "balcony": "Balkon",
-    "terrace": "Terrasse",
+    "wardrobe": "Ankleide",
     "laundry": "Wäsche",
+    "cleaning_room": "Putzraum",
+    "cleaning_sponge": "Schwamm",
+    "basement": "Keller",
     "storage": "Lager",
     "home": "Allgemein",
+    "garden": "Garten",
+    "garden_bed": "Beet",
+    "seedling": "Aussaat",
+    "sunflower": "Sonnenblume",
+    "flowers": "Blumen",
+    "balcony": "Balkon",
+    "terrace": "Terrasse",
+    "terrace_umbrella": "Sonnenschirm",
+    "property": "Grundstück",
+    "car": "Auto",
+    "suv": "Zweitwagen",
+    "gas_station": "Tanken",
+    "bike": "Fahrrad",
+    "scooter": "Roller",
+    "motorcycle": "Motorrad",
+    "work": "Arbeit",
+    "briefcase": "Aktentasche",
+    "school": "Schule",
+    "doctor": "Arzt",
+    "shop": "Geschäft",
+    "shopping": "Einkaufen",
+    "authority": "Behörde",
+    "bank": "Bank",
+    "post_office": "Post",
+    "beach": "Strand",
+    "island": "Insel",
+    "ski_mountain": "Skiurlaub",
+    "hiking_mountain": "Wandern",
+    "camping": "Camping",
+    "tent": "Zelt",
+    "hotel": "Hotel",
+    "travel_plane": "Reise",
+    "travel_world": "Welt",
+    "luggage": "Koffer",
+    "dog": "Hund",
+    "cat": "Katze",
+    "pets": "Haustiere",
+    "aquarium": "Aquarium",
+    "chicken_coop": "Hühnerstall",
+    "stable": "Stall",
+    "gym": "Fitnessraum",
+    "atelier": "Atelier",
+    "workshop": "Werkstatt",
+    "toolbox": "Werkzeugkasten",
+    "music_guitar": "Musikzimmer",
+    "music_piano": "Klavier",
+    "gaming": "Gaming",
+    "wine_cellar": "Weinkeller",
+    "home_bar": "Hausbar",
+    "seasonal_christmas": "Saison",
+    "sewing": "Nähzimmer",
+    "thread": "Garn",
 }
+
+ROOM_ICON_ALIASES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("toilet", ("toilette", "wc", "gäste-wc", "gaeste-wc", "klo")),
+    ("shower", ("dusche", "duschbad")),
+    ("sink", ("waschbecken", "spüle", "spuele")),
+    ("laundry", ("wäsche", "waesche", "waschküche", "waschkueche", "hauswirtschaft")),
+    ("cleaning_room", ("putzraum", "besenkammer", "reinigung")),
+    ("workshop", ("werkstatt",)),
+    ("bike", ("fahrrad", "rad", "bike")),
+    ("scooter", ("roller",)),
+    ("motorcycle", ("motorrad",)),
+    ("car", ("garage", "auto", "carport", "stellplatz")),
+    ("bathroom", ("badezimmer", "bad")),
+    ("kitchen", ("küche", "kueche", "kochküche", "koch", "pantry")),
+    ("dining_room", ("esszimmer", "speisezimmer", "essen")),
+    ("living_room", ("wohnzimmer", "wohnraum", "stube", "lounge")),
+    ("bedroom", ("schlafzimmer", "schlafraum", "gästezimmer", "gaestezimmer")),
+    ("kids_room", ("kinderzimmer", "spielzimmer", "babyzimmer")),
+    ("office", ("büro", "buero", "arbeitszimmer", "homeoffice")),
+    ("library", ("bibliothek", "bücher", "buecher")),
+    ("wardrobe", ("ankleide", "schrank", "garderobe")),
+    ("hallway", ("flur", "diele", "eingang", "treppe", "treppenhaus")),
+    ("basement", ("keller", "untergeschoss")),
+    ("storage", ("lager", "abstell", "speicher", "vorrat", "kammer")),
+    ("garden", ("garten", "rasen", "hof")),
+    ("garden_bed", ("beet", "gemüse", "gemuese", "kräuter", "kraeuter")),
+    ("balcony", ("balkon", "loggia")),
+    ("terrace", ("terrasse",)),
+    ("property", ("grundstück", "grundstueck")),
+    ("work", ("arbeit", "firma")),
+    ("school", ("schule", "schul")),
+    ("doctor", ("arzt", "praxis", "klinik")),
+    ("shopping", ("einkauf", "einkaufen")),
+    ("shop", ("geschäft", "geschaeft", "laden")),
+    ("authority", ("behörde", "behoerde", "amt")),
+    ("bank", ("bank",)),
+    ("post_office", ("post",)),
+    ("beach", ("strand",)),
+    ("camping", ("camping",)),
+    ("hotel", ("hotel",)),
+    ("dog", ("hund",)),
+    ("cat", ("katze",)),
+    ("pets", ("haustier", "haustiere", "tier")),
+    ("aquarium", ("aquarium",)),
+    ("chicken_coop", ("hühner", "huehner", "hühnerstall", "huehnerstall")),
+    ("stable", ("stall", "pferd")),
+    ("gym", ("fitness", "sport")),
+    ("atelier", ("atelier",)),
+    ("gaming", ("gaming", "spiel")),
+    ("wine_cellar", ("weinkeller",)),
+    ("home_bar", ("bar", "hausbar")),
+    ("sewing", ("nähen", "naehen", "nähzimmer", "naehzimmer")),
+)
 
 # ── SVG icon paths (Feather-style 24×24) ─────────────────────────────────────
 _ICON_PATHS: dict[str, str] = {
@@ -253,7 +420,8 @@ _ICON_LABELS: dict[str, str] = {
 }
 
 
-def _icon_chooser(current_key: str = "", input_name: str = "icon") -> str:
+def _icon_chooser(current_key: str = "", input_name: str = "icon",
+                  include_room_icons: bool = False) -> str:
     """Icon-Chooser grid für Aufgaben- und Projekt-Formulare."""
     items = ""
     for key, (filename, bg) in _TASK_ICONS.items():
@@ -266,6 +434,17 @@ def _icon_chooser(current_key: str = "", input_name: str = "icon") -> str:
             f' style="display:block">'
             f'</button>'
         )
+    if include_room_icons:
+        for key, (filename, bg) in ROOM_ICON_CHOICES.items():
+            active = ' active' if key == current_key else ''
+            label = ROOM_ICON_LABELS.get(key, key)
+            items += (
+                f'<button type="button" class="icon-choice{active}" data-key="{key}"'
+                f' title="{label}" onclick="pickIcon(this,\'{input_name}\')">'
+                f'<img src="assets/icons/{filename}.svg" width="26" height="26"'
+                f' style="display:block">'
+                f'</button>'
+            )
     auto_active = ' active' if not current_key else ''
     auto_btn = (
         f'<button type="button" class="icon-choice{auto_active}" data-key=""'
@@ -294,18 +473,12 @@ function pickIcon(el,name){
 
 def _proj_icon(room: str = "", size: int = 46, icon: str = "") -> str:
     """Round icon bubble for a project — uses OpenMoji like task icons."""
-    if icon and icon in _TASK_ICONS:
-        key = icon
+    if icon and icon in ROOM_ICON_CHOICES:
+        filename, bg = ROOM_ICON_CHOICES[icon]
+    elif icon and icon in _TASK_ICONS:
+        filename, bg = _TASK_ICONS[icon]
     else:
-        r = room.lower()
-        if any(w in r for w in ["keller", "lager"]):     key = "lager"
-        elif any(w in r for w in ["bad", "toilette"]):   key = "bad"
-        elif any(w in r for w in ["küche"]):             key = "kochen"
-        elif any(w in r for w in ["garten", "balkon"]):  key = "garten"
-        elif any(w in r for w in ["schlaf"]):            key = "bett"
-        elif any(w in r for w in ["kinder"]):            key = "rucksack"
-        else:                                            key = "default"
-    filename, bg = _TASK_ICONS.get(key, _TASK_ICONS["default"])
+        filename, bg = _auto_room_icon_config(room)
     img_size = int(size * 0.62)
     return (
         f'<div style="width:{size}px;height:{size}px;border-radius:50%;'
@@ -317,6 +490,14 @@ def _proj_icon(room: str = "", size: int = 46, icon: str = "") -> str:
     )
 
 
+def _auto_room_icon_config(room: str) -> tuple[str, str]:
+    room_name = (room or "").casefold()
+    for key, aliases in ROOM_ICON_ALIASES:
+        if any(alias in room_name for alias in aliases):
+            return ROOM_ICON_CHOICES[key]
+    return ROOM_ICONS.get(room, ROOM_ICON_CHOICES["home"])
+
+
 def _room_icon(room: str, size: int = 40,
                stored: dict[str, str] | None = None) -> str:
     """Round icon bubble using OpenMoji SVG for a room.
@@ -326,7 +507,7 @@ def _room_icon(room: str, size: int = 40,
     elif stored and room in stored and stored[room] in _TASK_ICONS:
         filename, bg = _TASK_ICONS[stored[room]]
     else:
-        filename, bg = ROOM_ICONS.get(room, ("1F3E0", "var(--primary-soft)"))
+        filename, bg = _auto_room_icon_config(room)
     img_size = int(size * 0.60)
     return (
         f'<div style="width:{size}px;height:{size}px;border-radius:50%;'

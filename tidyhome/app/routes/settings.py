@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_notify_services, get_persons
 from render import (_base, _ha_user, _ICON_LABELS, ROOM_ICON_CHOICES, ROOM_ICON_LABELS,
-                    ROOM_ICONS, _room_icon, person_suffix, render)
+                    _auto_room_icon_config, _room_icon, person_suffix, render)
 from scheduler import notify_person_now, parse_time
 from storage import (get_admins, get_person_settings, get_room_icons, list_person_settings,
                      save_admins, save_person_settings, save_room_icons, ROLES)
@@ -325,13 +325,14 @@ async def admin_form(request: Request, saved: str = ""):
         if current_key in ROOM_ICON_CHOICES:
             prev_img, prev_bg = ROOM_ICON_CHOICES[current_key]
         else:
-            prev_img, prev_bg = ROOM_ICONS.get(r, ("1F3E0", "var(--primary-soft)"))
+            prev_img, prev_bg = _auto_room_icon_config(r)
 
         # Auto button
         auto_active = " ri-active" if not current_key else ""
         choices_html = (
             f'<button type="button" class="ri-choice{auto_active}" '
             f'data-key="" data-room="{safe_name}" title="Automatisch" '
+            f'data-img="assets/icons/{prev_img}.svg" data-bg="{prev_bg}" '
             f'onclick="pickRoomIcon(this)">🔮</button>'
         )
         for key, (filename, bg) in ROOM_ICON_CHOICES.items():
