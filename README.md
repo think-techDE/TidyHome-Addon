@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.21-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.22-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -76,6 +76,7 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Wichtig-Flag für priorisierte Aufgaben
 - Vorher/Nachher-Fotos direkt an der Aufgabe
 - Fotoaufnahme per Live-Kamera oder Datei-Upload
+- Foto-Indikator in Aufgabenlisten, wenn Fotos vorhanden sind
 
 ### Ordnungsprojekte
 
@@ -84,6 +85,7 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Notizen direkt am Projekt sammeln
 - Vorher/Nachher-Fotos am Projekt und an einzelnen Schritten
 - Live-Kameraaufnahme auch für Projekt- und Schritt-Fotos
+- Foto-Indikatoren in Projekt- und Schrittansichten
 - Erinnerungen an zuständige Projektschritte senden, mit Notiz-Fallback
 - Projektliste zeigt, wenn offene Schritte bei anderen Personen liegen
 - Projekt-Icons aus Aufgaben- und Raum-/Orts-Icons auswählbar

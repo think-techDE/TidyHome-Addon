@@ -400,6 +400,10 @@ def list_photos(entity_type: str, entity_id: str) -> list[dict]:
     return rows
 
 
+def count_photos(entity_type: str, entity_id: str) -> int:
+    return len(list_photos(entity_type, entity_id))
+
+
 def delete_photo(photo_id: str, entity_type: str = "", entity_id: str = "") -> bool:
     Q = Query()
     table = get_photos_table()

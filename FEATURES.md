@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-08 · Version 1.3.21
+Stand: 2026-05-08 · Version 1.3.22
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -23,6 +23,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Kommentare und Notizen direkt an Aufgaben
 - [x] Vorher/Nachher-Fotos direkt an Aufgaben
 - [x] Live-Kameraaufnahme und Datei-Upload für Aufgabenfotos
+- [x] Foto-Indikator in Aufgabenlisten
 - [x] Mobile Aufgabenzeilen mit separater Aktionszeile gegen Überlagerungen
 - [x] Erinnerung an andere zugewiesene Personen senden
 
@@ -37,6 +38,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Kommentare und Notizen direkt an Projekten
 - [x] Vorher/Nachher-Fotos an Projekten und einzelnen Projektschritten
 - [x] Live-Kameraaufnahme und Datei-Upload für Projekt- und Schritt-Fotos
+- [x] Foto-Indikatoren in Projekt- und Schrittansichten
 - [x] Erinnerung an zuständige Person eines offenen Projektschritts senden
 - [x] Projektliste zeigt offene Schritte bei anderen Personen direkt an
 - [x] Projekt-Icons aus Aufgaben-, Raum- und Orts-Icons auswählbar

@@ -1,3 +1,10 @@
+## 1.3.22
+
+- Fotos: Aufgabenlisten zeigen einen Foto-Indikator mit Anzahl vorhandener Fotos
+- Fotos: Projektlisten zeigen die Summe aus Projekt- und Schritt-Fotos
+- Fotos: Projektschritte zeigen vorhandene Schritt-Fotos in der Metazeile
+- UI: Foto-Karten sind einklappbar und öffnen automatisch, wenn Fotos vorhanden sind
+
 ## 1.3.21
 
 - UI: Mobile Aufgabenzeilen nutzen ein kompakteres Grid, damit Titel, Status und Aktionen nicht überlappen

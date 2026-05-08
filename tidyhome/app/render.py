@@ -5,7 +5,7 @@ from html import escape
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from storage import (get_admins, get_vacation_mode, is_vacation_mode_active,
-                     list_comments, list_photos)
+                     count_photos, list_comments, list_photos)
 
 INTERVALS = {
     1: "Täglich", 2: "Alle 2 Tage", 7: "Wöchentlich", 14: "Alle 2 Wochen",
@@ -670,6 +670,7 @@ def photos_card(entity_type: str, entity_id: str, action: str,
                 person: str = "", title: str = "Fotos",
                 margin_top: bool = False) -> str:
     photos = list_photos(entity_type, entity_id)
+    total = len(photos)
     sections = {"before": "", "after": ""}
     for photo in photos:
         ptype = photo.get("photo_type") if photo.get("photo_type") in sections else "before"
@@ -697,14 +698,17 @@ def photos_card(entity_type: str, entity_id: str, action: str,
         </div>"""
 
     margin = "margin-top:1rem;" if margin_top else "margin-bottom:1rem;"
+    open_attr = " open" if total else ""
+    count_label = f"{total} Foto{'s' if total != 1 else ''}" if total else "Keine Fotos"
     return f"""
-    <div class="card photos-card" style="{margin}">
-      <div class="photos-head">
+    <details class="card photos-card" style="{margin}"{open_attr}>
+      <summary class="photos-head">
         <div>
           <h3>{title}</h3>
-          <div class="muted">Vorher/Nachher dokumentieren</div>
+          <div class="muted">{count_label} · Vorher/Nachher dokumentieren</div>
         </div>
-      </div>
+        <span class="photo-summary-icon">{_icon("camera", 15)}</span>
+      </summary>
       {_section("Vorher", "before")}
       {_section("Nachher", "after")}
       <form class="photo-upload" method="post" action="{action}" enctype="multipart/form-data">
@@ -737,7 +741,7 @@ def photos_card(entity_type: str, entity_id: str, action: str,
           <div class="camera-msg muted"></div>
         </div>
       </div>
-    </div>"""
+    </details>"""
 
 
 def task_row(task, base: str = "", person: str = "", show_assigned: bool = False,
@@ -795,6 +799,12 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
             f'→ {", ".join(task.assigned_to)}</span>'
         )
     task_meta_inline = f'<span class="task-name-meta"> · {date_text}</span>'
+    photo_count = count_photos("task", task.id)
+    photo_badge = (
+        f'<span class="task-photo-badge" title="{photo_count} Foto'
+        f'{"s" if photo_count != 1 else ""}">{_icon("camera", 12)} {photo_count}</span>'
+        if photo_count else ""
+    )
     psuffix = person_suffix(person)
 
     done_btn = (
@@ -833,7 +843,7 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
             {sub_badges}
           </div>
         </div>
-        {f'<div class="task-date">{assigned_txt}</div>' if assigned_txt else ''}
+        {f'<div class="task-date">{assigned_txt}{photo_badge}</div>' if assigned_txt or photo_badge else ''}
       </div>
       <div class="task-actions">
         {done_btn}{snooze_btn}{remind_btn}{edit_btn}{del_btn}
@@ -859,6 +869,14 @@ def project_row(project, visible_steps: list, all_steps: list, person: str = "",
     status_badge = (
         '<span class="badge ok">Abgeschlossen</span>'
         if project.completed else f'<span class="badge today">{done}/{total}</span>'
+    )
+    project_photo_count = count_photos("project", project.id)
+    step_photo_count = sum(count_photos("step", step.id) for step in all_steps)
+    photo_count = project_photo_count + step_photo_count
+    photo_hint = (
+        f'<span class="task-photo-badge" title="{photo_count} Foto'
+        f'{"s" if photo_count != 1 else ""}">{_icon("camera", 12)} {photo_count}</span>'
+        if photo_count else ""
     )
     reference_person = person_name or person
     foreign_open_assignees: list[str] = []
@@ -915,6 +933,7 @@ def project_row(project, visible_steps: list, all_steps: list, person: str = "",
           <span>{project.room}{person_hint}</span>
           <span>{len(all_steps)} Schritte</span>
           {assigned}
+          {photo_hint}
           {foreign_hint}
         </div>
         <div class="proj-progress">
@@ -931,6 +950,12 @@ def project_row(project, visible_steps: list, all_steps: list, person: str = "",
 def project_step_row(project, step, assignee: str, person_options: str,
                      base: str, person: str = "") -> str:
     psuffix = person_suffix(person)
+    photo_count = count_photos("step", step.id)
+    photo_hint = (
+        f' · <span class="task-photo-badge" title="{photo_count} Foto'
+        f'{"s" if photo_count != 1 else ""}">{_icon("camera", 12)} {photo_count}</span>'
+        if photo_count else ""
+    )
     if step.completed:
         who = f" · {step.completed_by}" if step.completed_by else ""
         return f"""
@@ -940,7 +965,7 @@ def project_step_row(project, step, assignee: str, person_options: str,
           </span>
           <div class="project-step-main">
             <span class="project-step-title">{step.name}</span>
-            <span class="project-step-meta">{step.points} Pkt · → {assignee or "Niemand"}{who}</span>
+            <span class="project-step-meta">{step.points} Pkt · → {assignee or "Niemand"}{who}{photo_hint}</span>
           </div>
         </div>"""
 
@@ -953,7 +978,7 @@ def project_step_row(project, step, assignee: str, person_options: str,
     <div class="project-step-row">
       <div class="project-step-main">
         <span class="project-step-title">{step.name}</span>
-        <span class="project-step-meta">{step.points} Pkt</span>
+        <span class="project-step-meta">{step.points} Pkt{photo_hint}</span>
       </div>
       <div class="project-step-actions">
         <form class="project-step-form" method="post" action="{base}projects/{project.id}/steps/{step.id}/assign">

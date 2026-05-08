@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-08 · Aktuelle Version: 1.3.21
+Stand: 2026-05-08 · Aktuelle Version: 1.3.22
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -32,6 +32,11 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.22
+
+- Foto-Indikatoren in Aufgaben-, Projekt- und Schrittzeilen ergänzt
+- Foto-Karten sind einklappbar und öffnen automatisch, wenn Fotos vorhanden sind
 
 ### v1.3.21
 
@@ -154,7 +159,6 @@ Ziel: Daten leichter sichern und auswerten.
 
 ### Foto-Ausbau
 
-- Thumbnail-Indikatoren in Aufgaben- und Projektlisten
 - optionaler Bildvergleich für Vorher/Nachher
 
 ### Aufgaben-Vorlagen
