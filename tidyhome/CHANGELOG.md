@@ -1,3 +1,9 @@
+## 1.3.20
+
+- Fotos: Live-Kameraaufnahme mit Vorschau und Aufnahme-Button ergänzt
+- Fotos: Kamera-Snapshots werden als JPEG an die bestehenden Upload-Routen gesendet
+- Fotos: Datei-Upload bleibt als Fallback für Browser ohne Kamera erhalten
+
 ## 1.3.19
 
 - Fotos: Upload-Feld für Smartphone-Kameraaufnahme optimiert (`capture="environment"`)
