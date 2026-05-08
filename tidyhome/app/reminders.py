@@ -3,6 +3,16 @@ from models import Task
 from storage import add_comment, get_person_settings, is_vacation_mode_active
 
 
+def task_reminder_recipients(task: Task, sender: str = "") -> list[str]:
+    sender = (sender or "").strip()
+    recipients: list[str] = []
+    for person in task.assigned_to:
+        person = person.strip()
+        if person and person != sender and person not in recipients:
+            recipients.append(person)
+    return recipients
+
+
 async def send_task_reminder(task: Task, target_person: str, message: str,
                              sender: str = "") -> bool:
     clean_message = message.strip()
@@ -25,3 +35,11 @@ async def send_task_reminder(task: Task, target_person: str, message: str,
         )
     add_comment("task", task.id, note, author=sender)
     return sent
+
+
+async def send_task_reminders(task: Task, recipients: list[str], message: str,
+                              sender: str = "") -> bool:
+    sent_any = False
+    for person in recipients:
+        sent_any = await send_task_reminder(task, person, message, sender=sender) or sent_any
+    return sent_any

@@ -1,3 +1,9 @@
+## 1.3.12
+
+- Aufgaben: Erinnerungs-Glocke erscheint nur, wenn andere zugewiesene Personen erinnert werden können
+- Zuhause: Erinnerungs-Glocke auch in der nächsten Aufgabenliste anzeigen
+- Erinnerung: Bei Aufgaben mit mehreren Zugewiesenen automatisch alle anderen Personen erinnern
+
 ## 1.3.11
 
 - Aufgaben: Erinnerung an zugewiesene Personen senden; bei fehlendem Gerät oder Versandfehler wird eine Notiz hinterlegt

@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Task
-from reminders import send_task_reminder
+from reminders import send_task_reminders, task_reminder_recipients
 from render import (INTERVALS, _base, _icon, _icon_chooser, _selected, _task_icon,
                     comments_card, format_date_de, interval_label, person_suffix,
                     render, resolve_person, urgency_class)
@@ -135,10 +135,11 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             f'<a class="icon-btn" href="tasks/{t.id}/snooze{person_suffix(p)}" '
             f'title="Verschieben">{_icon("clock", 16)}</a>'
         )
+        remind_recipients = task_reminder_recipients(t, p)
         remind_btn = (
             f'<a class="icon-btn" href="tasks/{t.id}/remind{person_suffix(p)}" '
-            f'title="Erinnern">{_icon("bell", 16)}</a>'
-        )
+            f'title="Andere erinnern">{_icon("bell", 16)}</a>'
+        ) if remind_recipients else ""
         edit_btn = (
             f'<a class="icon-btn" href="tasks/{t.id}/edit{person_suffix(p)}" title="Bearbeiten">'
             f'{_icon("edit", 16)}</a>'
@@ -380,11 +381,11 @@ async def task_remind_form(task_id: str, request: Request, p: str = ""):
     if not task:
         raise HTTPException(404)
 
-    people = task.assigned_to or await get_persons()
-    person_opts = "".join(
-        f'<option value="{pn}"{_selected(pn, p)}>{pn}</option>'
-        for pn in people
-    )
+    recipients = task_reminder_recipients(task, p)
+    if not recipients:
+        return RedirectResponse(_base(request) + f"tasks{person_suffix(p)}", status_code=303)
+
+    recipient_label = ", ".join(recipients)
     default_message = f"Kannst du bitte an {task.name} denken?"
     psuffix_q = f"?p={p}" if p else ""
     content = f"""
@@ -401,7 +402,10 @@ async def task_remind_form(task_id: str, request: Request, p: str = ""):
         <input type="hidden" name="return_p" value="{p}">
         <div class="form-group">
           <label>Erinnerung an</label>
-          <select name="target_person">{person_opts}</select>
+          <div style="padding:0.7rem 0.8rem;border:1px solid var(--border);
+                      border-radius:8px;background:var(--bg-soft);font-weight:600">
+            {recipient_label}
+          </div>
         </div>
         <div class="form-group">
           <label>Nachricht</label>
@@ -416,7 +420,6 @@ async def task_remind_form(task_id: str, request: Request, p: str = ""):
 
 @router.post("/{task_id}/remind")
 async def task_remind_send(task_id: str, request: Request,
-                           target_person: str = Form(...),
                            message: str = Form(...),
                            return_p: str = Form("")):
     task = get_task(task_id)
@@ -424,7 +427,9 @@ async def task_remind_send(task_id: str, request: Request,
         raise HTTPException(404)
 
     sender = resolve_person(request, return_p)
-    await send_task_reminder(task, target_person, message, sender=sender)
+    recipients = task_reminder_recipients(task, sender)
+    if recipients:
+        await send_task_reminders(task, recipients, message, sender=sender)
     return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
 
 

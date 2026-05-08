@@ -4,6 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 from ha_client import get_areas
+from reminders import task_reminder_recipients
 from render import (_base, _icon, _ring_chart, _room_icon, _task_icon,
                     person_suffix, render, resolve_person)
 from storage import (filter_tasks_by_role, get_admins, get_person_settings,
@@ -152,6 +153,11 @@ async def dashboard(request: Request, p: str = ""):
                 f'<a class="icon-btn" href="{base}tasks/{t.id}/snooze{person_suffix(p)}" '
                 f'title="Verschieben">{_icon("clock", 16)}</a>'
             )
+            remind_recipients = task_reminder_recipients(t, p)
+            remind_btn = (
+                f'<a class="icon-btn" href="{base}tasks/{t.id}/remind{person_suffix(p)}" '
+                f'title="Andere erinnern">{_icon("bell", 16)}</a>'
+            ) if remind_recipients else ""
             edit_btn = (
                 f'<a class="icon-btn" href="{base}tasks/{t.id}/edit{person_suffix(p)}" '
                 f'title="Bearbeiten">{_icon("edit", 16)}</a>'
@@ -175,7 +181,7 @@ async def dashboard(request: Request, p: str = ""):
                 </div>
               </div>
               <div class="task-actions">
-                {done_btn}{snooze_btn}{edit_btn}{del_btn}
+                {done_btn}{snooze_btn}{remind_btn}{edit_btn}{del_btn}
               </div>
             </div>"""
 
