@@ -1,3 +1,10 @@
+## 1.3.4
+
+- UI: Icon-Picker in Aufgaben-/Projektformularen und im Admin-Bereich sind jetzt durchsuchbar
+- UI: Große Icon-Auswahlen sind auf eine feste Höhe begrenzt und scrollbar
+- Aufgabenliste: Aufwand-Badge steht jetzt unter dem Status-Badge; Status bleibt ohne Aufwand vertikal mittig
+- Dashboard: "Nächste Aufgaben" nutzt dieselbe Aufgabenzeilen-Darstellung wie die Aufgabenliste inklusive Aufwand, Status und Aktionsbuttons
+
 ## 1.3.3
 
 - Admin: Raum-Icon-Auswahl um weitere OpenMoji-Symbole für Räume, Orte, Reisen, Tiere und Hobbybereiche erweitert

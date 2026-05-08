@@ -4,11 +4,15 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 from ha_client import get_areas
-from render import _base, _icon, _ring_chart, _room_icon, _task_icon, render, resolve_person
+from render import (_base, _icon, _ring_chart, _room_icon, _task_icon,
+                    person_suffix, render, resolve_person)
 from storage import (filter_tasks_by_role, get_admins, get_person_settings,
                      get_room_icons, list_projects, list_steps, list_tasks)
 
 router = APIRouter()
+
+_EFFORT_LABELS = {"low": "Wenig", "medium": "Mittel", "high": "Viel"}
+_EFFORT_BADGE = {"low": "ok", "medium": "today", "high": "overdue"}
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -125,6 +129,14 @@ async def dashboard(request: Request, p: str = ""):
                 '<span class="badge" style="background:var(--muted);color:#fff;'
                 'font-size:0.62rem;flex-shrink:0">1×</span>'
             ) if t.onetime else ""
+            effort_badge = (
+                f'<span class="badge {_EFFORT_BADGE[t.effort]}" '
+                f'style="font-size:0.62rem;flex-shrink:0">{_EFFORT_LABELS[t.effort]}</span>'
+            ) if t.effort in _EFFORT_LABELS else ""
+            sub_badges = f'<div class="task-badge-subrow">{effort_badge}{onetime_badge}</div>' if effort_badge or onetime_badge else ""
+            assigned_txt = (
+                f'<span class="task-meta" style="font-size:0.72rem">→ {", ".join(t.assigned_to)}</span>'
+            ) if t.assigned_to else ""
 
             done_btn = (
                 f'<form class="inline" method="post" action="{base}tasks/{t.id}/done">'
@@ -133,26 +145,39 @@ async def dashboard(request: Request, p: str = ""):
                 + f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
                 f'</form>'
             )
+            snooze_btn = (
+                f'<a class="icon-btn" href="{base}tasks/{t.id}/snooze{person_suffix(p)}" '
+                f'title="Verschieben">{_icon("clock", 16)}</a>'
+            )
+            edit_btn = (
+                f'<a class="icon-btn" href="{base}tasks/{t.id}/edit{person_suffix(p)}" '
+                f'title="Bearbeiten">{_icon("edit", 16)}</a>'
+            )
+            del_btn = (
+                f'<a class="icon-btn danger" href="{base}tasks/{t.id}/delete{person_suffix(p)}" '
+                f'onclick="return confirm(\'Aufgabe löschen?\')" title="Löschen">'
+                f'{_icon("trash", 16)}</a>'
+            )
 
             task_rows += f"""
-            <div class="dash-task{important_cls}">
-              {_task_icon(t.name, t.room, icon=t.icon, size=36)}
-              <div style="flex:1;min-width:0">
-                <div style="display:flex;align-items:center;gap:0.35rem;
-                            justify-content:space-between;margin-bottom:0.18rem">
-                  <span class="task-name" style="font-size:0.87rem;line-height:1.3">
-                    {star}{t.name}
-                  </span>
-                  <div style="display:flex;align-items:center;gap:0.25rem;flex-shrink:0">
-                    {onetime_badge}
-                    <span class="badge {badge_cls}" style="font-size:0.65rem">{badge_text}</span>
+            <div class="task-row{important_cls}">
+              {_task_icon(t.name, t.room, icon=t.icon, size=40)}
+              <div class="task-body">
+                <div class="task-header">
+                  <span class="task-name">{star}{t.name}</span>
+                  <div class="task-badges">
+                    <span class="badge {badge_cls}">{badge_text}</span>
+                    {sub_badges}
                   </div>
                 </div>
                 <div class="task-date">{cal_icon}
                   <span class="task-meta">{date_text}</span>
+                  {assigned_txt}
                 </div>
               </div>
-              {done_btn}
+              <div class="task-actions">
+                {done_btn}{snooze_btn}{edit_btn}{del_btn}
+              </div>
             </div>"""
 
         next_tasks_section = f"""

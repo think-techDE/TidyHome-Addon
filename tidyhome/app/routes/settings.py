@@ -332,6 +332,7 @@ async def admin_form(request: Request, saved: str = ""):
         choices_html = (
             f'<button type="button" class="ri-choice{auto_active}" '
             f'data-key="" data-room="{safe_name}" title="Automatisch" '
+            f'data-label="automatisch auto" '
             f'data-img="assets/icons/{prev_img}.svg" data-bg="{prev_bg}" '
             f'onclick="pickRoomIcon(this)">🔮</button>'
         )
@@ -341,6 +342,7 @@ async def admin_form(request: Request, saved: str = ""):
             choices_html += (
                 f'<button type="button" class="ri-choice{active}" '
                 f'data-key="{key}" data-room="{safe_name}" '
+                f'data-label="{label.casefold()} {key}" '
                 f'data-img="assets/icons/{filename}.svg" data-bg="{bg}" '
                 f'title="{label}" onclick="pickRoomIcon(this)">'
                 f'<img src="assets/icons/{filename}.svg" width="22" height="22" style="display:block">'
@@ -376,6 +378,13 @@ function pickRoomIcon(btn){
     preview.style.background=btn.dataset.bg||'var(--primary-soft)';
   }
 }
+function filterRoomIcons(input){
+  var query=(input.value||'').trim().toLowerCase();
+  document.querySelectorAll('.ri-choice').forEach(function(btn){
+    var label=(btn.dataset.label||'').toLowerCase();
+    btn.style.display=(!query || label.indexOf(query)!==-1) ? '' : 'none';
+  });
+}
 </script>"""
 
     room_icons_section = f"""
@@ -385,6 +394,7 @@ function pickRoomIcon(btn){
         Klicke ein Symbol an – 🔮 nutzt automatisch den Raumnamen.
       </p>
       <form method="post" action="{base}admin/room-icons">
+        <div class="icon-filter"><input type="search" placeholder="Raum-Icon suchen" oninput="filterRoomIcons(this)" autocomplete="off"></div>
         <div class="ri-grid">{room_cards}</div>
         <button class="btn btn-primary btn-sm admin-save" type="submit">Speichern</button>
       </form>

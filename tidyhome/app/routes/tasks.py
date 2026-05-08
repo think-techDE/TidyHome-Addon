@@ -102,6 +102,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             f'<span class="badge {_EFFORT_BADGE[t.effort]}" '
             f'style="font-size:0.62rem;flex-shrink:0">{_EFFORT_LABELS[t.effort]}</span>'
         ) if t.effort in _EFFORT_LABELS else ""
+        sub_badges = f'<div class="task-badge-subrow">{effort_badge}{onetime_badge}</div>' if effort_badge or onetime_badge else ""
 
         assigned_txt = ""
         if t.assigned_to and not show_grouped:
@@ -137,9 +138,9 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
           <div class="task-body">
             <div class="task-header">
               <span class="task-name">{star}{t.name}</span>
-              <div style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0">
-                {effort_badge}{onetime_badge}
+              <div class="task-badges">
                 <span class="badge {badge_cls}">{badge_text}</span>
+                {sub_badges}
               </div>
             </div>
             <div class="task-date">{cal}

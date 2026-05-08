@@ -429,7 +429,8 @@ def _icon_chooser(current_key: str = "", input_name: str = "icon",
         label = _ICON_LABELS.get(key, key)
         items += (
             f'<button type="button" class="icon-choice{active}" data-key="{key}"'
-            f' title="{label}" onclick="pickIcon(this,\'{input_name}\')">'
+            f' data-label="{label.casefold()} {key}" title="{label}"'
+            f' onclick="pickIcon(this,\'{input_name}\')">'
             f'<img src="assets/icons/{filename}.svg" width="26" height="26"'
             f' style="display:block">'
             f'</button>'
@@ -440,7 +441,8 @@ def _icon_chooser(current_key: str = "", input_name: str = "icon",
             label = ROOM_ICON_LABELS.get(key, key)
             items += (
                 f'<button type="button" class="icon-choice{active}" data-key="{key}"'
-                f' title="{label}" onclick="pickIcon(this,\'{input_name}\')">'
+                f' data-label="{label.casefold()} {key}" title="{label}"'
+                f' onclick="pickIcon(this,\'{input_name}\')">'
                 f'<img src="assets/icons/{filename}.svg" width="26" height="26"'
                 f' style="display:block">'
                 f'</button>'
@@ -448,6 +450,7 @@ def _icon_chooser(current_key: str = "", input_name: str = "icon",
     auto_active = ' active' if not current_key else ''
     auto_btn = (
         f'<button type="button" class="icon-choice{auto_active}" data-key=""'
+        f' data-label="automatisch auto"'
         f' title="Automatisch" onclick="pickIcon(this,\'{input_name}\')"'
         f' style="font-size:1.1rem">🔮</button>'
     )
@@ -458,11 +461,21 @@ function pickIcon(el,name){
   el.classList.add('active');
   document.getElementById('icon-input-'+name).value=el.dataset.key;
 }
+function filterIcons(input){
+  var query=(input.value||'').trim().toLowerCase();
+  var root=input.closest('.form-group');
+  root.querySelectorAll('.icon-choice').forEach(function(btn){
+    var label=(btn.dataset.label||'').toLowerCase();
+    btn.style.display=(!query || label.indexOf(query)!==-1) ? '' : 'none';
+  });
+}
 </script>"""
     return (
         f'<div class="form-group">'
         f'<label>Icon <span class="muted" style="font-weight:400;font-size:0.75rem">'
         f'— optional, wird sonst automatisch erkannt</span></label>'
+        f'<div class="icon-filter"><input type="search" placeholder="Icon suchen" '
+        f'oninput="filterIcons(this)" autocomplete="off"></div>'
         f'<div class="icon-chooser">{auto_btn}{items}</div>'
         f'<input type="hidden" name="{input_name}" id="icon-input-{input_name}"'
         f' value="{current_key}">'
