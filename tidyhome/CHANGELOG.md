@@ -1,3 +1,9 @@
+## 1.3.1
+
+- Fix: Home-Assistant-Sidebar-Eintrag ist jetzt auch für Nicht-Admin-Benutzer sichtbar (`panel_admin: false`)
+- Fix: interne App-Version wieder mit Add-on-Version synchronisiert
+- Doku: README beschreibt die Sichtbarkeit für Nicht-Admin-Benutzer
+
 ## 1.3.0
 
 - Neu: Aufwand-Feld pro Aufgabe (Wenig / Mittel / Viel) – Badge in der Zeile, Filter-Chip in der Liste
