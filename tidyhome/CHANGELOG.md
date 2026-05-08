@@ -1,3 +1,10 @@
+## 1.3.6
+
+- Aufgaben: Listenansicht mit Dashboard-nahem Kopfbereich und kompakten Statuskacheln für Heute, spät/offen und geplant
+- Projekte: Listenansicht mit Dashboard-nahem Kopfbereich, Fortschrittskacheln und moderneren Projektzeilen
+- Projekte: Fortschritt, Status und Metadaten sind in der Liste klarer scanbar
+- Projektformulare: neue und bearbeitete Projekte nutzen konsistente Seitenköpfe mit Zurück-Aktion
+
 ## 1.3.5
 
 - Aufgabenliste: Fälligkeit steht jetzt direkt hinter dem Aufgabennamen statt in einer eigenen Kalenderzeile

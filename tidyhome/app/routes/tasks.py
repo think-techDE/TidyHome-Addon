@@ -183,13 +183,34 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
             rows += _task_row(t)
 
     psuffix_q = f"?p={p}" if p else ""
+    overdue_count = len([t for t in tasks if t.days_until_due() < 0])
+    today_count = len([t for t in tasks if t.days_until_due() == 0])
+    planned_count = len(tasks) - overdue_count - today_count
     content = f"""
-    <div class="section-title">
-      <h2>Aufgaben <span class="muted" style="font-weight:400">({len(tasks)})</span></h2>
-      <a class="btn btn-primary btn-sm" href="tasks/new{psuffix_q}"
-         style="display:flex;align-items:center;gap:0.3rem">
-        {_icon("plus", 14)} Neu
-      </a>
+    <div class="hero-card page-hero">
+      <div>
+        <div class="hero-eyebrow">Heute im Blick</div>
+        <div class="hero-title">Aufgaben</div>
+      </div>
+      <div class="page-hero-actions">
+        <a class="btn btn-primary btn-sm" href="tasks/new{psuffix_q}">
+          {_icon("plus", 14, "white")} Neu
+        </a>
+      </div>
+    </div>
+    <div class="today-grid" style="margin-bottom:1rem">
+      <div class="today-stat">
+        <div class="today-value">{today_count}</div>
+        <div class="today-label">Heute</div>
+      </div>
+      <div class="today-stat">
+        <div class="today-value">{overdue_count}</div>
+        <div class="today-label">Offen spät</div>
+      </div>
+      <div class="today-stat">
+        <div class="today-value">{planned_count}</div>
+        <div class="today-label">Geplant</div>
+      </div>
     </div>
     {filters}
     <div class="card card-flush">{rows}</div>"""

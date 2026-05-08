@@ -96,7 +96,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
             steps = list_steps(proj.id)
             done, total = proj.progress(visible)
             pct = int(done / total * 100) if total else 0
-            assigned = f"<span class='task-meta'>→ {proj.assigned_to}</span>" if proj.assigned_to else ""
+            assigned = f"<span>→ {proj.assigned_to}</span>" if proj.assigned_to and not grouped_by_person else ""
             fill_class = "green" if proj.completed else ""
             opacity = "opacity:0.65;" if proj.completed else ""
 
@@ -118,20 +118,30 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
 
             person_suffix = f" · {person_name}" if person_name else ""
             detail_suffix = f"?scope=people{_p_suffix(p, '&')}" if grouped_by_person else _p_suffix(p)
+            status_badge = (
+                '<span class="badge ok">Abgeschlossen</span>'
+                if proj.completed else f'<span class="badge today">{done}/{total}</span>'
+            )
             return f"""
             <div class="proj-row" style="{opacity}">
               <a href="projects/{proj.id}{detail_suffix}" style="display:contents;text-decoration:none">
                 {_proj_icon(proj.room, icon=proj.icon)}
               </a>
-              <div style="flex:1;min-width:0">
-                <a href="projects/{proj.id}{detail_suffix}"
-                   style="text-decoration:none;color:inherit;font-weight:600;
-                          font-size:0.9rem;display:block;margin-bottom:0.15rem">
-                  {proj.name}
-                </a>
-                <div class="task-meta">{proj.room}{person_suffix} · {done}/{total} sichtbare Schritte {assigned}</div>
-                <div class="progress-track" style="margin-top:0.4rem">
-                  <div class="progress-fill {fill_class}" style="width:{pct}%"></div>
+              <div class="proj-main">
+                <div class="proj-head">
+                  <a class="proj-title" href="projects/{proj.id}{detail_suffix}">{proj.name}</a>
+                  {status_badge}
+                </div>
+                <div class="proj-meta">
+                  <span>{proj.room}{person_suffix}</span>
+                  <span>{total} Schritte</span>
+                  {assigned}
+                </div>
+                <div class="proj-progress">
+                  <div class="progress-track">
+                    <div class="progress-fill {fill_class}" style="width:{pct}%"></div>
+                  </div>
+                  <span class="proj-percent">{pct}%</span>
                 </div>
               </div>
               <div class="task-actions">{action_btns}{del_btn}</div>
@@ -161,13 +171,39 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
                 rows += project_row(proj, _visible_steps(proj, steps, p, admins))
 
     psuffix_q = f"?p={p}" if p else ""
+    visible_step_count = 0
+    done_step_count = 0
+    for pr in active_projects:
+        pr_steps = list_steps(pr.id)
+        visible = pr_steps if grouped_by_person else _visible_steps(pr, pr_steps, p, admins)
+        d, total = pr.progress(visible)
+        visible_step_count += total
+        done_step_count += d
     content = f"""
-    <div class="page-header">
-      <h2>Projekte <span class="muted" style="font-weight:400">({len(active_projects)} offen)</span></h2>
-      <a class="btn btn-primary btn-sm" href="projects/new{psuffix_q}"
-         style="display:flex;align-items:center;gap:0.3rem">
-        {_icon("plus", 14, "white")} Neu
-      </a>
+    <div class="hero-card page-hero">
+      <div>
+        <div class="hero-eyebrow">Fortschritt planen</div>
+        <div class="hero-title">Projekte</div>
+      </div>
+      <div class="page-hero-actions">
+        <a class="btn btn-primary btn-sm" href="projects/new{psuffix_q}">
+          {_icon("plus", 14, "white")} Neu
+        </a>
+      </div>
+    </div>
+    <div class="today-grid" style="margin-bottom:1rem">
+      <div class="today-stat">
+        <div class="today-value">{len(active_projects)}</div>
+        <div class="today-label">Offen</div>
+      </div>
+      <div class="today-stat">
+        <div class="today-value">{done_step_count}/{visible_step_count}</div>
+        <div class="today-label">Schritte</div>
+      </div>
+      <div class="today-stat">
+        <div class="today-value">{len(done_projects)}</div>
+        <div class="today-label">Fertig</div>
+      </div>
     </div>
     {filters}
     <div class="card card-flush">{rows}</div>"""
@@ -183,7 +219,10 @@ async def project_new_form(request: Request, p: str = ""):
     person_opts = '<option value="">— Niemand —</option>' + "".join(
         f'<option value="{pn}">{pn}</option>' for pn in persons)
     content = f"""
-    <h2>Neues Ordnungsprojekt</h2>
+    <div class="page-header">
+      <h2>Neues Projekt</h2>
+      <a class="icon-btn" href="projects{_p_suffix(p)}" title="Abbrechen">{_icon("chevron_l", 20)}</a>
+    </div>
     <div class="card">
       <form method="post" action="projects">
         <input type="hidden" name="return_p" value="{p}">
@@ -376,7 +415,10 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
         + "".join(f'<option value="{pn}"{_selected(pn, proj.assigned_to or "")}>{pn}</option>'
                   for pn in persons))
     content = f"""
-    <h2>Projekt bearbeiten</h2>
+    <div class="page-header">
+      <h2>Projekt bearbeiten</h2>
+      <a class="icon-btn" href="{base}projects/{project_id}{_p_suffix(p)}" title="Abbrechen">{_icon("chevron_l", 20)}</a>
+    </div>
     <div class="card">
       <form method="post" action="{base}projects/{project_id}/edit">
         <input type="hidden" name="return_p" value="{p}">
