@@ -1,3 +1,8 @@
+## 1.3.26
+
+- Fotos: Kamera-Button nutzt bei WebViews ohne `getUserMedia` automatisch den nativen Kamera-/Dateidialog
+- Fotos: Hinweistext für Geräte ohne direkte Live-Kamera angepasst
+
 ## 1.3.25
 
 - Fotos: Kameraaufnahme wieder als Live-Kamera mit Vorschau umgesetzt

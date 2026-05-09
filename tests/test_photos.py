@@ -78,6 +78,7 @@ class PhotoTests(unittest.TestCase):
         self.assertIn("photo-file-input", html)
         self.assertIn('accept="image/*,android/force-camera-workaround"', html)
         self.assertIn('capture="environment"', html)
+        self.assertIn("nativen Kamera-/Dateidialog", html)
 
 
 if __name__ == "__main__":

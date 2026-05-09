@@ -744,7 +744,7 @@ def photos_card(entity_type: str, entity_id: str, action: str,
           </div>
         </div>
         <div class="camera-msg muted"></div>
-        <div class="muted photo-upload-hint">Wenn die Home-Assistant-App die Kamera blockiert, bleibt die Dateiauswahl als Fallback.</div>
+        <div class="muted photo-upload-hint">Wenn die WebView keine Live-Kamera bereitstellt, öffnet TidyHome den nativen Kamera-/Dateidialog.</div>
       </form>
     </details>"""
 
@@ -1195,6 +1195,16 @@ def render(content: str, request: Request, page: str = "home",
     if (msg) msg.textContent = text || '';
   }}
 
+  function openNativeCameraFallback(card){{
+    var input = card.querySelector('.photo-file-input');
+    if (!input) {{
+      setCameraMessage(card, 'Diese WebView stellt keine direkte Kamera bereit.');
+      return;
+    }}
+    setCameraMessage(card, 'Direkte Kamera nicht verfügbar. Öffne Kamera-/Dateidialog...');
+    input.click();
+  }}
+
   async function stopCamera(card){{
     var stream = card._cameraStream;
     if (stream) stream.getTracks().forEach(function(track){{ track.stop(); }});
@@ -1220,7 +1230,7 @@ def render(content: str, request: Request, page: str = "home",
 
   async function startCamera(card){{
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {{
-      setCameraMessage(card, 'Diese WebView stellt keine direkte Kamera bereit. Bitte Datei auswählen nutzen.');
+      openNativeCameraFallback(card);
       return;
     }}
     try {{
