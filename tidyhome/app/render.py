@@ -741,7 +741,7 @@ def photos_card(entity_type: str, entity_id: str, action: str,
           <button class="btn btn-ghost btn-sm camera-start" type="button" hidden>
             {_icon("camera", 14)} Kamera öffnen
           </button>
-          <label class="btn btn-outline btn-sm photo-file-button" for="{file_input_id}" hidden>
+          <label class="btn btn-outline btn-sm photo-file-button" for="{file_input_id}">
             {_icon("plus", 14)} Datei auswählen
           </label>
         </div>
@@ -755,7 +755,7 @@ def photos_card(entity_type: str, entity_id: str, action: str,
           </div>
         </div>
         <div class="camera-msg muted"></div>
-        <div class="muted photo-upload-hint">Öffnet normalerweise die Live-Kamera. Fallbacks erscheinen nur, wenn die WebView sie blockiert.</div>
+        <div class="muted photo-upload-hint">Kamera öffnet die Aufnahme. Datei auswählen lädt ein vorhandenes Foto hoch.</div>
       </form>
     </details>"""
 
@@ -1232,10 +1232,8 @@ def render(content: str, request: Request, page: str = "home",
   function setCameraMode(card, liveMode){{
     var nativeButton = card.querySelector('.camera-native-button');
     var liveButton = card.querySelector('.camera-start');
-    var fileButton = card.querySelector('.photo-file-button');
     if (nativeButton) nativeButton.hidden = !!liveMode;
     if (liveButton) liveButton.hidden = !liveMode;
-    if (fileButton) fileButton.hidden = !!liveMode;
   }}
 
   function enhanceCameraControls(){{

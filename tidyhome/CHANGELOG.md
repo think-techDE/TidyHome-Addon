@@ -1,3 +1,8 @@
+## 1.3.30
+
+- Fotos: Datei-Upload ist wieder dauerhaft als eigener Button sichtbar
+- Fotos: Kameraaufnahme und Datei-Upload werden im Hinweistext klar getrennt
+
 ## 1.3.29
 
 - Fotos: versteckte Fallback-Buttons werden nicht mehr durch Button-CSS sichtbar gemacht
