@@ -46,6 +46,28 @@ class UiFormTests(unittest.TestCase):
         self.assertLess(html.index("Als wichtig markieren"), html.index("Planung"))
         self.assertLess(html.index("Als wichtig markieren"), html.index("Raum"))
 
+    def test_edit_task_form_contains_pause_controls(self):
+        task = storage.create_task(
+            storage.Task(
+                name="Bad putzen",
+                room="Bad",
+                interval_days=7,
+                assigned_to=["Ben"],
+            )
+        )
+        with patch("routes.tasks.get_areas", AsyncMock(return_value=["Bad"])), \
+             patch("routes.tasks.get_persons", AsyncMock(return_value=["Ben"])):
+            response = asyncio.run(
+                _task_form(DummyRequest(), "Aufgabe bearbeiten", "tasks/x/edit",
+                           "Speichern", task=task, person="Ben")
+            )
+
+        html = response.body.decode("utf-8")
+
+        self.assertIn('name="paused"', html)
+        self.assertIn('name="pause_until"', html)
+        self.assertIn('name="pause_reason"', html)
+
     def test_person_settings_card_uses_compact_sections(self):
         storage.save_person_settings(
             person="Ben",

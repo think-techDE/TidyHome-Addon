@@ -30,6 +30,10 @@ def get_photos_table():
     return _db.table("photos")
 
 
+def get_task_templates_table():
+    return _db.table("task_templates")
+
+
 def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = False,
                effort: str = None) -> list[Task]:
     table = get_tasks_table()
@@ -47,12 +51,12 @@ def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = F
         tasks = [t for t in tasks if assigned_to in t.assigned_to]
 
     if overdue_only:
-        tasks = [t for t in tasks if t.is_overdue()]
+        tasks = [t for t in tasks if not t.is_paused() and t.is_overdue()]
 
     if effort:
         tasks = [t for t in tasks if t.effort == effort]
 
-    tasks.sort(key=lambda t: (not t.important, t.days_until_due()))
+    tasks.sort(key=lambda t: (t.is_paused(), not t.important, t.days_until_due()))
     return tasks
 
 
@@ -68,6 +72,94 @@ def list_task_history() -> list[Task]:
         reverse=True,
     )
     return tasks
+
+
+def list_task_templates() -> list[dict]:
+    rows = get_task_templates_table().all()
+    rows.sort(key=lambda r: (r.get("name", "").casefold(), r.get("created_at", "")))
+    return rows
+
+
+def get_task_template(template_id: str) -> dict | None:
+    Q = Query()
+    row = get_task_templates_table().get(Q.id == template_id)
+    return dict(row) if row else None
+
+
+def save_task_template(name: str, task_name: str, room: str,
+                       interval_days: int, assigned_to: list[str],
+                       points: int = 10, important: bool = False,
+                       onetime: bool = True, icon: str = "",
+                       effort: str = "") -> dict:
+    row = {
+        "id": str(uuid.uuid4()),
+        "name": (name or task_name or "Neue Vorlage").strip(),
+        "task_name": (task_name or name or "Neue Aufgabe").strip(),
+        "room": room,
+        "interval_days": max(int(interval_days or 0), 0),
+        "assigned_to": assigned_to or [],
+        "points": max(int(points or 1), 1),
+        "important": bool(important),
+        "onetime": bool(onetime),
+        "icon": icon or "",
+        "effort": effort or "",
+        "created_at": datetime.now().isoformat(),
+    }
+    get_task_templates_table().insert(row)
+    return row
+
+
+def update_task_template(template_id: str, name: str, task_name: str, room: str,
+                         interval_days: int, assigned_to: list[str],
+                         points: int = 10, important: bool = False,
+                         onetime: bool = True, icon: str = "",
+                         effort: str = "") -> dict | None:
+    row = get_task_template(template_id)
+    if not row:
+        return None
+    updated = dict(row)
+    updated.update({
+        "name": (name or task_name or row.get("name") or "Vorlage").strip(),
+        "task_name": (task_name or name or row.get("task_name") or "Neue Aufgabe").strip(),
+        "room": room,
+        "interval_days": max(int(interval_days or 0), 0),
+        "assigned_to": assigned_to or [],
+        "points": max(int(points or 1), 1),
+        "important": bool(important),
+        "onetime": bool(onetime),
+        "icon": icon or "",
+        "effort": effort or "",
+        "updated_at": datetime.now().isoformat(),
+    })
+    Q = Query()
+    get_task_templates_table().update(updated, Q.id == template_id)
+    return updated
+
+
+def delete_task_template(template_id: str) -> bool:
+    Q = Query()
+    return bool(get_task_templates_table().remove(Q.id == template_id))
+
+
+def create_task_from_template(template_id: str, assigned_to: list[str] | None = None,
+                              start_date: str = "") -> Task | None:
+    row = get_task_template(template_id)
+    if not row:
+        return None
+    assignees = assigned_to if assigned_to is not None else row.get("assigned_to", [])
+    task = Task(
+        name=row.get("task_name") or row.get("name", "Neue Aufgabe"),
+        room=row.get("room", ""),
+        interval_days=int(row.get("interval_days", 0) or 0),
+        assigned_to=assignees or [],
+        points=int(row.get("points", 10) or 10),
+        important=bool(row.get("important")),
+        onetime=bool(row.get("onetime", True)),
+        icon=row.get("icon", ""),
+        effort=row.get("effort", ""),
+        start_date=start_date or None,
+    )
+    return create_task(task)
 
 
 def get_task(task_id: str) -> Task | None:
@@ -94,7 +186,9 @@ def edit_task(task_id: str, name: str, room: str, interval_days: int,
               assigned_to: list[str], points: int,
               important: bool = False, onetime: bool = False,
               icon: str = "", effort: str = "",
-              start_date: str = "", snooze_until: str = "") -> Task | None:
+              start_date: str = "", snooze_until: str = "",
+              paused: bool = False, pause_until: str = "",
+              pause_reason: str = "") -> Task | None:
     task = get_task(task_id)
     if not task:
         return None
@@ -109,6 +203,9 @@ def edit_task(task_id: str, name: str, room: str, interval_days: int,
     task.effort = effort
     task.start_date = start_date or None
     task.snooze_until = snooze_until or None
+    task.paused = bool(paused)
+    task.pause_until = pause_until or None
+    task.pause_reason = pause_reason.strip() or None
     return update_task(task)
 
 
@@ -121,6 +218,17 @@ def snooze_task(task_id: str, until_date: str) -> Task | None:
     return update_task(task)
 
 
+def pause_task(task_id: str, paused: bool = True,
+               pause_until: str = "", reason: str = "") -> Task | None:
+    task = get_task(task_id)
+    if not task:
+        return None
+    task.paused = bool(paused)
+    task.pause_until = pause_until or None if paused else None
+    task.pause_reason = reason.strip() or None if paused else None
+    return update_task(task)
+
+
 def reactivate_task(task_id: str) -> Task | None:
     task = get_task(task_id)
     if not task:
@@ -128,6 +236,9 @@ def reactivate_task(task_id: str) -> Task | None:
     task.active = True
     task.last_done = None
     task.snooze_until = None
+    task.paused = False
+    task.pause_until = None
+    task.pause_reason = None
     if task.onetime:
         task.start_date = date.today().isoformat()
     return update_task(task)
@@ -148,6 +259,9 @@ def mark_done(task_id: str, done_by: str = None, done_at: str = None) -> Task | 
     done_date = done_at or date.today().isoformat()
     task.last_done = done_date
     task.snooze_until = None  # Snooze nach Erledigung aufheben
+    task.paused = False
+    task.pause_until = None
+    task.pause_reason = None
     person = done_by or (task.assigned_to[0] if task.assigned_to else None)
 
     if person:
@@ -824,6 +938,134 @@ def get_housekeeping_month_summary(person: str = "", month: str = "") -> dict:
     }
 
 
+def export_backup_data() -> dict:
+    return {
+        "exported_at": datetime.now().isoformat(),
+        "format": "tidyhome-tinydb",
+        "tables": {
+            table_name: _db.table(table_name).all()
+            for table_name in sorted(_db.tables())
+        },
+    }
+
+
+def task_export_rows() -> list[dict]:
+    return [
+        {
+            "id": t.id,
+            "name": t.name,
+            "room": t.room,
+            "assigned_to": ", ".join(t.assigned_to),
+            "interval_days": t.interval_days,
+            "onetime": t.onetime,
+            "points": t.points,
+            "effort": t.effort,
+            "important": t.important,
+            "active": t.active,
+            "paused": t.is_paused(),
+            "pause_until": t.pause_until or "",
+            "start_date": t.start_date or "",
+            "snooze_until": t.snooze_until or "",
+            "last_done": t.last_done or "",
+            "next_due": t.next_due().isoformat() if t.active else "",
+        }
+        for t in [Task(**row) for row in get_tasks_table().all()]
+    ]
+
+
+def project_export_rows() -> list[dict]:
+    rows = []
+    for project in [Project(**row) for row in get_projects_table().all()]:
+        steps = list_steps(project.id)
+        done, total = project.progress(steps)
+        rows.append({
+            "id": project.id,
+            "name": project.name,
+            "room": project.room,
+            "assigned_to": project.assigned_to or "",
+            "active": project.active,
+            "completed": project.completed,
+            "steps": total,
+            "steps_done": done,
+            "created_at": project.created_at,
+        })
+    return rows
+
+
+def score_export_rows() -> list[dict]:
+    rows = _db.table("score_log").all()
+    rows.sort(key=lambda r: (r.get("date", ""), r.get("created_at", "")))
+    return rows
+
+
+def diagnose_data(known_people: list[str], known_rooms: list[str]) -> dict:
+    people = set(known_people or [])
+    rooms = set(known_rooms or [])
+    issues: list[dict] = []
+    task_ids = {row.get("id") for row in get_tasks_table().all()}
+    project_ids = {row.get("id") for row in get_projects_table().all()}
+    step_ids = {row.get("id") for row in get_steps_table().all()}
+
+    for row in get_tasks_table().all():
+        name = row.get("name", row.get("id", "Aufgabe"))
+        if rooms and row.get("room") not in rooms:
+            issues.append({"type": "task_room", "severity": "warn",
+                           "label": name, "detail": row.get("room", "")})
+        for person in row.get("assigned_to", []) or []:
+            if people and person not in people:
+                issues.append({"type": "task_person", "severity": "warn",
+                               "label": name, "detail": person})
+
+    for row in get_projects_table().all():
+        name = row.get("name", row.get("id", "Projekt"))
+        if rooms and row.get("room") not in rooms:
+            issues.append({"type": "project_room", "severity": "warn",
+                           "label": name, "detail": row.get("room", "")})
+        person = row.get("assigned_to")
+        if person and people and person not in people:
+            issues.append({"type": "project_person", "severity": "warn",
+                           "label": name, "detail": person})
+
+    for row in get_steps_table().all():
+        name = row.get("name", row.get("id", "Schritt"))
+        if row.get("project_id") not in project_ids:
+            issues.append({"type": "orphan_step", "severity": "error",
+                           "label": name, "detail": row.get("project_id", "")})
+        person = row.get("assigned_to")
+        if person and people and person not in people:
+            issues.append({"type": "step_person", "severity": "warn",
+                           "label": name, "detail": person})
+
+    for row in get_photos_table().all():
+        entity_type = row.get("entity_type")
+        entity_id = row.get("entity_id")
+        filename = os.path.basename(row.get("filename", ""))
+        if filename and not os.path.isfile(os.path.join(PHOTO_DIR, filename)):
+            issues.append({"type": "missing_photo_file", "severity": "error",
+                           "label": filename, "detail": entity_id})
+        valid_entity = (
+            entity_type == "task" and entity_id in task_ids
+            or entity_type == "project" and entity_id in project_ids
+            or entity_type == "step" and entity_id in step_ids
+        )
+        if not valid_entity:
+            issues.append({"type": "orphan_photo", "severity": "warn",
+                           "label": filename or row.get("id", "Foto"),
+                           "detail": f"{entity_type}:{entity_id}"})
+
+    return {
+        "checked_at": datetime.now().isoformat(),
+        "issues": issues,
+        "counts": {
+            "tasks": len(task_ids),
+            "projects": len(project_ids),
+            "steps": len(step_ids),
+            "photos": len(get_photos_table().all()),
+            "issues": len(issues),
+        },
+    }
+
+
 def filter_tasks_by_role(tasks: list, person: str, admins: set[str]) -> list:
     """Filtert Aufgaben nach Rolle der Person.
     Standardansichten sind persönlich; Admin-Rechte werden in expliziten
@@ -882,6 +1124,79 @@ def get_person_stats(person: str) -> dict:
         "week_tasks": week_tasks,
         "streak": streak,
     }
+
+
+def get_person_achievements(person: str) -> list[dict]:
+    stats = get_person_stats(person)
+    definitions = [
+        ("first_task", "Erster Schritt", "Erste Aufgabe erledigt", stats["tasks_done"] >= 1),
+        ("tasks_10", "10 Aufgaben", "10 Haushaltsaufgaben erledigt", stats["tasks_done"] >= 10),
+        ("tasks_50", "50 Aufgaben", "50 Haushaltsaufgaben erledigt", stats["tasks_done"] >= 50),
+        ("points_100", "100 Punkte", "100 Gesamtpunkte erreicht", stats["total_points"] >= 100),
+        ("points_500", "500 Punkte", "500 Gesamtpunkte erreicht", stats["total_points"] >= 500),
+        ("streak_3", "3-Tage-Serie", "An 3 Tagen in Folge aktiv", stats["streak"] >= 3),
+        ("streak_7", "7-Tage-Serie", "An 7 Tagen in Folge aktiv", stats["streak"] >= 7),
+        ("project_step", "Projektstart", "Ersten Projektschritt erledigt", stats["proj_steps"] >= 1),
+        ("project_steps_5", "Projektmotor", "5 Projektschritte erledigt", stats["proj_steps"] >= 5),
+    ]
+    return [
+        {"id": key, "title": title, "description": description, "unlocked": unlocked}
+        for key, title, description, unlocked in definitions
+    ]
+
+
+def get_person_score_history(person: str, weeks: int = 8, months: int = 6) -> dict:
+    today = date.today()
+    rows = [
+        r for r in _db.table("score_log").all()
+        if r.get("person") == person and r.get("date")
+    ]
+
+    week_items = []
+    current_week_start = today - timedelta(days=today.weekday())
+    for offset in range(weeks):
+        start = current_week_start - timedelta(days=offset * 7)
+        end = start + timedelta(days=7)
+        entries = [
+            r for r in rows
+            if start.isoformat() <= r.get("date", "") < end.isoformat()
+        ]
+        week_items.append({
+            "label": f"KW {start.isocalendar().week}",
+            "from": start.isoformat(),
+            "to": (end - timedelta(days=1)).isoformat(),
+            "points": sum(int(r.get("points", 0) or 0) for r in entries),
+            "tasks": sum(1 for r in entries if r.get("type") != "project"),
+            "projects": sum(1 for r in entries if r.get("type") == "project"),
+        })
+    week_items.reverse()
+
+    month_items = []
+    year = today.year
+    month = today.month
+    for offset in range(months):
+        m = month - offset
+        y = year
+        while m <= 0:
+            m += 12
+            y -= 1
+        start = date(y, m, 1)
+        next_month = date(y + 1, 1, 1) if m == 12 else date(y, m + 1, 1)
+        entries = [
+            r for r in rows
+            if start.isoformat() <= r.get("date", "") < next_month.isoformat()
+        ]
+        month_items.append({
+            "label": start.strftime("%m.%Y"),
+            "from": start.isoformat(),
+            "to": (next_month - timedelta(days=1)).isoformat(),
+            "points": sum(int(r.get("points", 0) or 0) for r in entries),
+            "tasks": sum(1 for r in entries if r.get("type") != "project"),
+            "projects": sum(1 for r in entries if r.get("type") == "project"),
+        })
+    month_items.reverse()
+
+    return {"weeks": week_items, "months": month_items}
 
 
 def list_person_settings() -> list[dict]:

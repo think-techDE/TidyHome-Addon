@@ -1,20 +1,45 @@
+import csv
+import json
 from datetime import date
 from html import escape
+from io import StringIO
 from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from ha_client import get_areas, get_notify_services, get_persons
-from render import (_base, _ha_user, _ICON_LABELS, ROOM_ICON_CHOICES, ROOM_ICON_LABELS,
+from render import (_base, _ha_user, _icon, _ICON_LABELS, ROOM_ICON_CHOICES, ROOM_ICON_LABELS,
                     _auto_room_icon_config, _room_icon, format_date_de,
                     person_suffix, render)
 from scheduler import notify_person_now, parse_time
-from storage import (ROLES, get_admins, get_person_settings, get_room_icons,
-                     get_vacation_mode, is_vacation_mode_active, list_person_settings,
-                     save_admins, save_person_settings, save_room_icons)
+from storage import (ROLES, diagnose_data, export_backup_data, get_admins,
+                     get_person_settings, get_room_icons, get_vacation_mode,
+                     is_vacation_mode_active, list_person_settings,
+                     project_export_rows, save_admins, save_person_settings,
+                     save_room_icons, score_export_rows, task_export_rows)
 
 router = APIRouter()
+
+
+def _require_admin(request: Request) -> None:
+    user = _ha_user(request)
+    if user not in get_admins():
+        raise HTTPException(403)
+
+
+def _csv_response(filename: str, rows: list[dict]) -> Response:
+    out = StringIO()
+    fieldnames = sorted({key for row in rows for key in row.keys()}) if rows else ["empty"]
+    writer = csv.DictWriter(out, fieldnames=fieldnames, delimiter=";")
+    writer.writeheader()
+    for row in rows:
+        writer.writerow(row)
+    return Response(
+        out.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 def _person_settings_card(pn: str, areas: list[str], admins: set[str],
@@ -325,6 +350,23 @@ async def admin_form(request: Request, saved: str = ""):
       </form>
     </section>"""
 
+    data_section = f"""
+    <section id="admin-data" class="card admin-section">
+      <div class="admin-section-head">
+        <div>
+          <h3>Daten & Diagnose</h3>
+          <p class="muted">Backup, CSV-Exporte und Prüfung auf verwaiste Referenzen.</p>
+        </div>
+      </div>
+      <div class="admin-data-actions">
+        <a class="btn btn-primary btn-sm" href="{base}admin/export.json">{_icon("download", 14, "white")} JSON-Backup</a>
+        <a class="btn btn-ghost btn-sm" href="{base}admin/export/tasks.csv">Aufgaben CSV</a>
+        <a class="btn btn-ghost btn-sm" href="{base}admin/export/projects.csv">Projekte CSV</a>
+        <a class="btn btn-ghost btn-sm" href="{base}admin/export/scores.csv">Punkte CSV</a>
+        <a class="btn btn-outline btn-sm" href="{base}admin/diagnostics">{_icon("alert", 14)} Diagnose öffnen</a>
+      </div>
+    </section>"""
+
     # ── Geräte-Verwaltung ─────────────────────────────────────────────────
     if not admins:
         device_section = """
@@ -508,6 +550,9 @@ function filterRoomIcons(input){
       <a class="admin-overview-card" href="#admin-people">
         <strong>{len(persons)}</strong><span>Profile</span>
       </a>
+      <a class="admin-overview-card" href="#admin-data">
+        <strong>CSV</strong><span>Daten</span>
+      </a>
     </div>"""
 
     content = f"""
@@ -521,6 +566,7 @@ function filterRoomIcons(input){
     {admin_overview}
     <div class="admin-stack">
       {admin_section}
+      {data_section}
       {room_icons_section}
       {device_section}
       <section id="admin-people" class="admin-section">
@@ -537,6 +583,81 @@ function filterRoomIcons(input){
     # Admin-Person aus Header für die Nav-Pill
     ha_user = _ha_user(request)
     return render(content, request, page="settings", person=ha_user)
+
+
+@router.get("/admin/export.json")
+async def admin_export_json(request: Request):
+    _require_admin(request)
+    payload = json.dumps(export_backup_data(), ensure_ascii=False, indent=2)
+    return Response(
+        payload,
+        media_type="application/json; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="tidyhome-backup.json"'},
+    )
+
+
+@router.get("/admin/export/tasks.csv")
+async def admin_export_tasks(request: Request):
+    _require_admin(request)
+    return _csv_response("tidyhome-tasks.csv", task_export_rows())
+
+
+@router.get("/admin/export/projects.csv")
+async def admin_export_projects(request: Request):
+    _require_admin(request)
+    return _csv_response("tidyhome-projects.csv", project_export_rows())
+
+
+@router.get("/admin/export/scores.csv")
+async def admin_export_scores(request: Request):
+    _require_admin(request)
+    return _csv_response("tidyhome-scores.csv", score_export_rows())
+
+
+@router.get("/admin/diagnostics", response_class=HTMLResponse)
+async def admin_diagnostics(request: Request):
+    _require_admin(request)
+    persons = await get_persons()
+    areas = await get_areas()
+    result = diagnose_data(persons, areas)
+    issue_rows = ""
+    for issue in result["issues"]:
+        badge_cls = "overdue" if issue.get("severity") == "error" else "today"
+        issue_rows += f"""
+        <div class="admin-row">
+          <div class="admin-row-main">
+            <div class="admin-row-title">{escape(issue.get("label", ""))}</div>
+            <div class="admin-row-sub">{escape(issue.get("type", ""))} · {escape(issue.get("detail", ""))}</div>
+          </div>
+          <span class="badge {badge_cls}">{escape(issue.get("severity", ""))}</span>
+        </div>"""
+    if not issue_rows:
+        issue_rows = (
+            '<div class="empty"><div class="empty-icon">✓</div>'
+            '<div style="font-weight:700">Keine Probleme gefunden</div>'
+            '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
+            'Personen, Räume, Projekte, Schritte und Fotos wirken konsistent.</div></div>'
+        )
+
+    counts = result["counts"]
+    content = f"""
+    <div class="hero-card page-hero">
+      <div>
+        <div class="hero-eyebrow">Datenprüfung</div>
+        <div class="hero-title">Admin-Diagnose</div>
+        <div class="muted">{counts["issues"]} Hinweis(e) · {counts["tasks"]} Aufgaben · {counts["photos"]} Fotos</div>
+      </div>
+      <div class="page-hero-actions">
+        <a class="btn btn-ghost btn-sm" href="{_base(request)}admin">{_icon("chevron_l", 14)} Admin</a>
+      </div>
+    </div>
+    <div class="today-grid" style="margin-bottom:1rem">
+      <div class="today-stat"><div class="today-value">{counts["tasks"]}</div><div class="today-label">Aufgaben</div></div>
+      <div class="today-stat"><div class="today-value">{counts["projects"]}</div><div class="today-label">Projekte</div></div>
+      <div class="today-stat"><div class="today-value">{counts["issues"]}</div><div class="today-label">Hinweise</div></div>
+    </div>
+    <div class="card card-flush">{issue_rows}</div>"""
+    return render(content, request, page="settings", person=_ha_user(request))
 
 
 @router.post("/admin/admins")

@@ -264,6 +264,9 @@ _ICON_PATHS: dict[str, str] = {
     "star":      '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
     "archive":   '<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>',
     "clock":     '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    "pause":     '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+    "download":  '<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    "alert":     '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
     "flag":      '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
     "settings":  '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>',
 }
@@ -796,14 +799,21 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
         except ValueError:
             pass
 
-    if paused:
+    task_paused = bool(paused or getattr(task, "is_paused", lambda: False)())
+    pause_until = getattr(task, "pause_until", "") or vacation_until
+    pause_reason = getattr(task, "pause_reason", "") or ""
+
+    if task_paused:
         badge_text, badge_cls = "Pausiert", "ok"
         date_text = (
-            f"Pausiert bis {format_date_de(vacation_until)}"
-            if vacation_until else "Pausiert"
+            f"Pausiert bis {format_date_de(pause_until)}"
+            if pause_until else "Pausiert"
         )
+        if pause_reason:
+            date_text += f" · {pause_reason}"
 
     important_cls = " important" if task.important else ""
+    paused_cls = " is-paused" if task_paused else ""
     star = _icon("star", 13, "var(--warning)", 2.5) if task.important else ""
     effort_badge = (
         f'<span class="badge {effort_badges[task.effort]}" '
@@ -839,6 +849,10 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
         f'<a class="icon-btn" href="{base}tasks/{task.id}/snooze{psuffix}" '
         f'title="Verschieben">{_icon("clock", 16)}</a>'
     )
+    pause_btn = (
+        f'<a class="icon-btn" href="{base}tasks/{task.id}/pause{psuffix}" '
+        f'title="Pause bearbeiten">{_icon("pause", 15)}</a>'
+    )
     remind_btn = (
         f'<a class="icon-btn" href="{base}tasks/{task.id}/remind{psuffix}" '
         f'title="Andere erinnern">{_icon("bell", 16)}</a>'
@@ -854,7 +868,7 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
     )
 
     return f"""
-    <div class="task-row{important_cls}">
+    <div class="task-row{important_cls}{paused_cls}">
       {_task_icon(task.name, task.room, icon=task.icon, size=40)}
       <div class="task-body">
         <div class="task-header">
@@ -867,7 +881,7 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
         {f'<div class="task-date">{assigned_txt}{photo_badge}</div>' if assigned_txt or photo_badge else ''}
       </div>
       <div class="task-actions">
-        {done_btn}{snooze_btn}{remind_btn}{edit_btn}{del_btn}
+        {done_btn}{snooze_btn}{pause_btn}{remind_btn}{edit_btn}{del_btn}
       </div>
     </div>"""
 

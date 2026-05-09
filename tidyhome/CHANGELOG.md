@@ -1,3 +1,12 @@
+## 1.3.44
+
+- Aufgaben: einzelne Aufgaben können mit optionalem Enddatum und Grund pausiert werden
+- Aufgaben: Wochenübersicht mit Tagesfilter ergänzt
+- Aufgaben: Vorlagen speichern, bearbeiten, löschen und daraus neue Aufgaben erstellen
+- Punkte: Achievements für persönliche Meilensteine ergänzt
+- Punkte: persönliche Verlaufsseite mit Wochen- und Monatsentwicklung ergänzt
+- Admin: JSON-Backup, CSV-Exporte und Daten-Diagnose ergänzt
+
 ## 1.3.43
 
 - Haushaltshilfen: Monatsabrechnung mit Status offen, geprüft und bezahlt ergänzt

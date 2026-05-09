@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-10 · Version 1.3.43
+Stand: 2026-05-10 · Version 1.3.44
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -18,10 +18,14 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Erledigte Aufgaben aus der Historie bearbeiten und wieder aktivieren
 - [x] Startdatum: Aufgaben erst ab einem gewählten Datum sichtbar und fällig
 - [x] Fälligkeit einmalig verschieben, ohne das Intervall zu ändern
+- [x] Einzelne Aufgaben pausieren, optional mit Enddatum und Grund
+- [x] Pausierte Aufgaben bleiben sichtbar, zählen aber nicht als fällig
+- [x] Wochenübersicht mit Tagesfilter für anstehende Aufgaben
 - [x] Statusanzeige für geplant, heute, überfällig und ok
 - [x] Raum, Punkte, Aufwand und Wichtig-Flag pro Aufgabe
 - [x] Wichtig-Flag direkt im oberen Bereich des Aufgabenformulars
 - [x] Aufgabenformular in Abschnitte für Aufgabe, Planung, Zuständigkeit und Darstellung gegliedert
+- [x] Aufgaben-Vorlagen speichern, bearbeiten, löschen und daraus neue Aufgaben erzeugen
 - [x] Mehrfachzuweisung an mehrere Personen
 - [x] Neue Aufgaben werden standardmäßig der angemeldeten Person zugeordnet
 - [x] Dashboard zeigt nur heutige und überfällige Aufgaben unter „Nächste Aufgaben“
@@ -76,6 +80,8 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Persönliche Statistik mit Streak, Wochenpunkten, Gesamtpunkten und Wochenziel
 - [x] Erfolgsmeldung mit Punkten direkt nach dem Erledigen
 - [x] Verlauf der letzten Erfolge mit Aufgabe, Datum und Punktzahl
+- [x] Achievements für persönliche Meilensteine
+- [x] Persönliche Verlaufsseite mit Wochen- und Monatsentwicklung
 
 ### Haushaltshilfen
 
@@ -115,6 +121,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Räume pro Person individuell ausblendbar
 - [x] Persönliche Einstellungen auf `/settings`
 - [x] Admin-Bereich für Personen, Rollen, Räume und Geräte
+- [x] Admin-Bereich mit JSON-Backup, CSV-Export und Daten-Diagnose
 - [x] Einstellungen mit kompakten Abschnitten für Benachrichtigung, Motivation, Urlaub und Räume
 - [x] Admin-Übersicht mit Sprungmarken für Rechte, Räume, Benachrichtigungen und Profile
 - [x] Persönlicher Urlaubsmodus in den Einstellungen
@@ -150,6 +157,9 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Lokale OpenMoji-SVGs als Asset-Fallback
 - [x] `CHANGELOG.md` für Home-Assistant-Update-Dialog
 - [x] Unit-Tests für Reminder-Logik, Urlaubsmodus-Fallback und Render-Helfer
+- [x] JSON-Backup der TinyDB
+- [x] CSV-Export für Aufgaben, Projekte und Punkte
+- [x] Admin-Diagnose für verwaiste Personen, Räume, Projektschritte und Fotos
 
 ---
 
@@ -160,13 +170,10 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [ ] Einkaufsliste als eigener Bereich ohne Intervall, Fälligkeit oder Punkte
 - [ ] Mengen, Notizen und Kategorien für Einkaufsliste, z. B. Supermarkt, Drogerie, Baumarkt
 - [ ] Wiederkehrende Einkaufsartikel als Vorschläge, ohne sie automatisch als Aufgabe zu behandeln
-- [ ] Aufgaben-Pausen: einzelne Aufgaben temporär einfrieren
-- [ ] Wochenübersicht mit Kalenderstreifen für heute, morgen und die nächsten Tage
 - [ ] Tagesfokus mit bewusst kleiner Aufgabenliste für Personen, die nur das Nötigste sehen wollen
 
 ### Priorität 2: Aufgaben besser planen
 
-- [ ] Aufgaben-Vorlagen für wiederkehrende Sets, z. B. Frühjahrsputz oder Gästezimmer vorbereiten
 - [ ] Mehrere Aufgaben aus einer Vorlage auf einmal erzeugen
 - [ ] Tags oder Kategorien zusätzlich zu Räumen
 - [ ] Aufgabenabhängigkeiten, z. B. erst aufräumen, dann saugen
@@ -175,8 +182,6 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
 ### Priorität 3: Motivation sichtbarer machen
 
-- [ ] Abzeichen und Achievements für persönliche Meilensteine
-- [ ] Persönliche Verlaufsseite mit Wochen-, Monats- und Langzeitentwicklung
 - [ ] Familienziele, z. B. gemeinsame Wochenpunkte oder erledigte Aufgaben
 - [ ] Belohnungsziele für Kinder mit frei definierbaren Zielwerten
 - [ ] sanftere Sprache und bessere Gruppierung für überfällige Aufgaben
@@ -201,9 +206,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
 ### Priorität 6: Daten & Betrieb
 
-- [ ] JSON-Export der gesamten TinyDB als Backup
-- [ ] CSV-Export für Aufgaben, Projekte und Punkte
 - [ ] Import-/Wiederherstellungsfunktion für TidyHome-Daten
-- [ ] Admin-Ansicht für Datenprüfung, z. B. verwaiste Personen, Räume oder Fotos
+- [ ] Admin-Aktionen zum Bereinigen verwaister Fotos oder alter Referenzen
 - [ ] optionale automatische Foto-Bereinigung für gelöschte oder archivierte Einträge
 - [ ] Mehrsprachigkeit Deutsch/Englisch

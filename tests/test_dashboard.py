@@ -43,6 +43,28 @@ class DashboardTests(unittest.TestCase):
 
         self.assertEqual([t.name for t in result], ["Alt", "Heute"])
 
+    def test_due_today_or_overdue_excludes_paused_tasks(self):
+        today = date.today()
+        paused = Task(
+            name="Pausiert",
+            room="Kueche",
+            interval_days=7,
+            assigned_to=["Danny"],
+            start_date=today.isoformat(),
+            paused=True,
+        )
+        due_today = Task(
+            name="Heute",
+            room="Kueche",
+            interval_days=7,
+            assigned_to=["Danny"],
+            start_date=today.isoformat(),
+        )
+
+        result = due_today_or_overdue([paused, due_today])
+
+        self.assertEqual([t.name for t in result], ["Heute"])
+
 
 if __name__ == "__main__":
     unittest.main()

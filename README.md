@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.43-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.44-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -17,6 +17,9 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 - Dashboard zeigt unter „Nächste Aufgaben“ nur heutige und überfällige Aufgaben
 - Mehrfachzuweisung an mehrere Personen
 - Einmalige Aufgaben als Standard sowie wiederkehrende Aufgaben
+- Aufgaben-Pausen mit optionalem Enddatum, getrennt vom Urlaubsmodus
+- Wochenübersicht mit Tagesfilter für anstehende Aufgaben
+- Aufgaben-Vorlagen zum schnellen Erstellen wiederkehrender Aufgaben
 - Aufgaben-Historie zum Bearbeiten und Wieder-Aktivieren erledigter Aufgaben
 - Übersichtlicheres Aufgabenformular mit Wichtig-Markierung direkt im oberen Bereich
 - Ordnungsprojekte mit Teilschritten, Fortschritt, Punkten und Hinweisen auf offene Schritte bei anderen Personen
@@ -27,12 +30,12 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 - Erinnerungen an zugewiesene Personen und Projekt-Schritte, inklusive Notiz-Fallback
 - Automatische Benachrichtigung, wenn eine Aufgabe für eine andere Person erstellt wird
 - Aufgaben-, Raum- und Projekt-Icons mit OpenMoji-Auswahl und automatischer Erkennung
-- Bestenliste, Erfolgshistorie und persönliche Statistik mit Streak, Wochenpunkten und Wochenziel
+- Bestenliste, Achievements, persönliche Verlaufsseite und Statistik mit Streak, Wochenpunkten und Wochenziel
 - Tägliche Push-Benachrichtigungen pro Person und Gerät
 - Persönlicher Urlaubsmodus zum Pausieren fälliger Aufgaben und Benachrichtigungen
 - Rollen für Elternteil, Kind, Haushaltshilfe und Mitglied
 - Haushaltshilfe-Zeiterfassung mit Stundenlohn, Monatsstunden und Gesamtkosten
-- Aufgeräumte Einstellungen und Admin-Übersicht für Rechte, Räume, Geräte und Profile
+- Aufgeräumte Einstellungen und Admin-Übersicht für Rechte, Räume, Geräte, Profile, Export und Diagnose
 - Automatische Personen- und Raumintegration aus Home Assistant
 - Responsive Web-UI über Home Assistant Ingress
 
@@ -43,10 +46,10 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 Die Basisfunktionen sind nutzbar. Die nächsten sinnvollen Ausbauschritte sind:
 
 1. Einkaufsliste als einfacher gemeinsamer Bereich ohne Intervall
-2. Aufgaben-Pausen für einzelne Aufgaben, getrennt vom Urlaubsmodus
-3. Wochenübersicht für anstehende Aufgaben
-4. Home-Assistant-Entities für Automationen
-5. Export und Backup der gespeicherten Daten
+2. Home-Assistant-Entities für Automationen
+3. Home-Assistant-Todo- oder Kalender-Integration
+4. Import-/Wiederherstellungsfunktion für TidyHome-Daten
+5. Erweiterte Motivation mit Familien- und Kinderzielen
 
 Details stehen in [ROADMAP.md](ROADMAP.md).
 
@@ -83,6 +86,9 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Einmalige Aufgaben als Standard im Intervall-Dropdown, nach Erledigung automatisch archiviert
 - Historie erledigter Aufgaben mit Bearbeiten und Wieder-Aktivieren
 - Startdatum und einmaliges Verschieben der Fälligkeit
+- Aufgabe pausieren, optional bis zu einem bestimmten Datum
+- Wochenübersicht mit Tagesfilter
+- Aufgaben-Vorlagen speichern, bearbeiten, löschen und daraus neue Aufgaben erzeugen
 - Fälligkeit nach Status: überfällig, heute, bald oder ok
 - Filter nach Raum, Person, Überfälligkeit und Aufwand
 - Wichtig-Flag für priorisierte Aufgaben
@@ -113,6 +119,8 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Persönliche Statistik mit Streak, Wochenpunkten und Wochenziel
 - Sichtbare Erfolgsmeldung nach Erledigung mit vergebenen Punkten
 - Verlauf der letzten Erfolge mit Aufgabe, Datum und Punktzahl
+- Achievements für persönliche Meilensteine
+- Persönliche Verlaufsseite mit Wochen- und Monatsentwicklung
 
 ### Haushaltshilfen
 
@@ -148,6 +156,12 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Rollenbasierte Sichtbarkeit für Elternteil, Kind, Haushaltshilfe und Mitglied
 - Räume können pro Person individuell ausgeblendet werden
 - Personenmenü mit klar getrennten Bereichen für Ansicht, Einstellungen und Verwaltung
+
+### Daten & Admin
+
+- JSON-Backup der TinyDB direkt aus dem Admin-Bereich
+- CSV-Export für Aufgaben, Projekte und Punkte
+- Admin-Diagnose für verwaiste Personen, Räume, Projektschritte und Fotodateien
 
 ---
 

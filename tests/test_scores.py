@@ -57,6 +57,28 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual(events[0]["points"], 4)
         self.assertEqual(events[0]["type"], "project")
 
+    def test_achievements_and_history_use_score_log(self):
+        task = storage.create_task(
+            Task(
+                name="Biomuell",
+                room="Kueche",
+                interval_days=7,
+                assigned_to=["Danny"],
+                points=10,
+            )
+        )
+
+        storage.mark_done(task.id, done_by="Danny")
+
+        achievements = storage.get_person_achievements("Danny")
+        history = storage.get_person_score_history("Danny")
+
+        unlocked = {a["id"] for a in achievements if a["unlocked"]}
+        self.assertIn("first_task", unlocked)
+        self.assertIn("points_100", {a["id"] for a in achievements})
+        self.assertEqual(history["weeks"][-1]["points"], 10)
+        self.assertEqual(history["months"][-1]["points"], 10)
+
 
 if __name__ == "__main__":
     unittest.main()

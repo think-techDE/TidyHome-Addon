@@ -2,8 +2,9 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from html import escape
 
-from render import _icon, format_date_de, render, resolve_person
-from storage import (get_person_settings, get_person_stats,
+from render import _icon, format_date_de, person_suffix, render, resolve_person
+from storage import (get_person_achievements, get_person_score_history,
+                     get_person_settings, get_person_stats,
                      get_recent_score_events, get_scores)
 
 router = APIRouter()
@@ -74,6 +75,7 @@ async def scores(request: Request, period: str = "all", p: str = ""):
         stats = get_person_stats(p)
         cfg = get_person_settings(p)
         recent = get_recent_score_events(p, limit=5)
+        achievements = get_person_achievements(p)
         goal = cfg.get("weekly_goal", 0)
         rank_all = next((i + 1 for i, s in enumerate(all_time) if s["person"] == p), None)
         rank_month = next((i + 1 for i, s in enumerate(month_data) if s["person"] == p), None)
@@ -125,6 +127,20 @@ async def scores(request: Request, period: str = "all", p: str = ""):
                 'Erledigte Aufgaben erscheinen hier als Verlauf.</div></div>'
             )
 
+        unlocked_count = len([a for a in achievements if a["unlocked"]])
+        achievement_rows = ""
+        for ach in achievements[:6]:
+            state = "unlocked" if ach["unlocked"] else "locked"
+            icon = "star" if ach["unlocked"] else "flag"
+            achievement_rows += f"""
+            <div class="mini-achievement {state}">
+              <span>{_icon(icon, 15)}</span>
+              <div>
+                <strong>{escape(ach["title"])}</strong>
+                <small>{escape(ach["description"])}</small>
+              </div>
+            </div>"""
+
         personal_section = f"""
         <div class="hero-card">
           <div class="hero-eyebrow">Dein Fortschritt</div>
@@ -135,6 +151,9 @@ async def scores(request: Request, period: str = "all", p: str = ""):
             </div>
             <div class="page-hero-actions">
               <span class="badge ok">#{rank_all or "–"} gesamt</span>
+              <a class="btn btn-ghost btn-sm" href="scores/history{person_suffix(p)}">
+                {_icon("calendar", 14)} Verlauf
+              </a>
             </div>
           </div>
           {goal_bar}
@@ -167,6 +186,16 @@ async def scores(request: Request, period: str = "all", p: str = ""):
             <div class="today-label">Gesamtpunkte</div>
           </div>
         </div>
+        <div class="card achievement-summary-card">
+          <div class="score-activity-head">
+            <div>
+              <h3>Achievements</h3>
+              <div class="muted">{unlocked_count}/{len(achievements)} freigeschaltet</div>
+            </div>
+            <a class="btn btn-ghost btn-sm" href="scores/history{person_suffix(p)}">Alle ansehen</a>
+          </div>
+          <div class="mini-achievement-grid">{achievement_rows}</div>
+        </div>
         <div class="card card-flush score-activity-card">
           <div class="score-activity-head">
             <div>
@@ -192,4 +221,80 @@ async def scores(request: Request, period: str = "all", p: str = ""):
     {tabs}
     <div class="card card-flush">{rows}</div>
     {note}"""
+    return render(content, request, page="scores", person=p)
+
+
+def _history_rows(items: list[dict]) -> str:
+    max_points = max([i.get("points", 0) for i in items] + [1])
+    rows = ""
+    for item in items:
+        pct = int(item.get("points", 0) / max_points * 100) if max_points else 0
+        rows += f"""
+        <div class="history-row">
+          <div class="history-row-head">
+            <strong>{escape(item.get("label", ""))}</strong>
+            <span>{item.get("points", 0)} Punkte · {item.get("tasks", 0)} Aufgaben · {item.get("projects", 0)} Projekte</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill green" style="width:{pct}%"></div>
+          </div>
+        </div>"""
+    return rows
+
+
+@router.get("/scores/history", response_class=HTMLResponse)
+async def score_history(request: Request, p: str = ""):
+    p = resolve_person(request, p)
+    if not p:
+        return render(
+            '<div class="empty"><div style="font-weight:700">Keine Person ausgewählt</div></div>',
+            request,
+            page="scores",
+            person=p,
+        )
+    stats = get_person_stats(p)
+    achievements = get_person_achievements(p)
+    history = get_person_score_history(p)
+    unlocked = [a for a in achievements if a["unlocked"]]
+    locked = [a for a in achievements if not a["unlocked"]]
+    achievement_cards = ""
+    for ach in unlocked + locked:
+        state = "unlocked" if ach["unlocked"] else "locked"
+        achievement_cards += f"""
+        <div class="achievement-tile {state}">
+          <div class="achievement-tile-icon">{_icon("star" if ach["unlocked"] else "flag", 18)}</div>
+          <strong>{escape(ach["title"])}</strong>
+          <span>{escape(ach["description"])}</span>
+        </div>"""
+
+    content = f"""
+    <div class="hero-card page-hero">
+      <div>
+        <div class="hero-eyebrow">Persönliche Entwicklung</div>
+        <div class="hero-title">Verlauf von {escape(p)}</div>
+        <div class="muted">{stats["total_points"]} Punkte · {stats["tasks_done"]} Aufgaben · {stats["proj_steps"]} Projektschritte</div>
+      </div>
+      <div class="page-hero-actions">
+        <a class="btn btn-ghost btn-sm" href="scores{person_suffix(p)}">{_icon("chevron_l", 14)} Punkte</a>
+      </div>
+    </div>
+    <div class="card achievement-summary-card">
+      <div class="score-activity-head">
+        <div>
+          <h3>Achievements</h3>
+          <div class="muted">{len(unlocked)}/{len(achievements)} freigeschaltet</div>
+        </div>
+      </div>
+      <div class="achievement-tile-grid">{achievement_cards}</div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="margin-bottom:0.75rem">Letzte Wochen</h3>
+        {_history_rows(history["weeks"])}
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:0.75rem">Letzte Monate</h3>
+        {_history_rows(history["months"])}
+      </div>
+    </div>"""
     return render(content, request, page="scores", person=p)

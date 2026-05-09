@@ -28,6 +28,9 @@ class Task(BaseModel):
     effort: str = ""      # "" | "low" | "medium" | "high"
     start_date: Optional[str] = None    # ISO date: Aufgabe erst ab diesem Datum sichtbar
     snooze_until: Optional[str] = None  # ISO date: Fälligkeit einmalig verschieben
+    paused: bool = False
+    pause_until: Optional[str] = None   # ISO date; leer = unbegrenzt pausiert
+    pause_reason: Optional[str] = None
     last_done: Optional[str] = None  # ISO date string
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
@@ -50,11 +53,21 @@ class Task(BaseModel):
         return calculated
 
     def is_overdue(self) -> bool:
-        return self.next_due() <= date.today()
+        return not self.is_paused() and self.next_due() <= date.today()
 
     def days_until_due(self) -> int:
         delta = self.next_due() - date.today()
         return delta.days
+
+    def is_paused(self) -> bool:
+        if not self.paused:
+            return False
+        if not self.pause_until:
+            return True
+        try:
+            return date.fromisoformat(self.pause_until) >= date.today()
+        except ValueError:
+            return True
 
 
 class Project(BaseModel):

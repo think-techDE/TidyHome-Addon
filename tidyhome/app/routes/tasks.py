@@ -13,12 +13,14 @@ from render import (INTERVALS, _base, _icon, _icon_chooser, _selected,
                     _task_icon, comments_card, format_date_de, interval_label,
                     person_suffix, photos_card, render, resolve_person,
                     task_row)
-from storage import (add_comment, add_photo, create_task, delete_photo, delete_task,
+from storage import (add_comment, add_photo, create_task, create_task_from_template,
+                     delete_photo, delete_task, delete_task_template,
                      edit_task, filter_tasks_by_role,
                      get_admins, get_person_settings, get_task, get_vacation_mode,
                      is_vacation_mode_active, list_people_by_role,
-                     list_task_history, list_tasks, mark_done, reactivate_task,
-                     snooze_task)
+                     list_task_history, list_task_templates, list_tasks, mark_done,
+                     pause_task, reactivate_task, save_task_template, snooze_task,
+                     update_task_template)
 from uploads import selected_photo_upload
 
 router = APIRouter(prefix="/tasks")
@@ -60,10 +62,45 @@ async def _save_initial_task_photo(task: Task, author: str = "",
                           selected_photo.content_type or "", data, author=author))
 
 
+def _valid_day(raw: str = "") -> str:
+    try:
+        return date.fromisoformat(raw or "").isoformat()
+    except ValueError:
+        return ""
+
+
+def _week_strip(tasks: list[Task], selected_day: str = "", person: str = "") -> str:
+    today = date.today()
+    psuffix_amp = person_suffix(person, "&")
+    reset_suffix = person_suffix(person)
+    items = ""
+    for offset in range(7):
+        day = today + timedelta(days=offset)
+        iso = day.isoformat()
+        due_tasks = [
+            t for t in tasks
+            if not t.is_paused() and t.next_due().isoformat() == iso
+        ]
+        active = " active" if selected_day == iso else ""
+        label = "Heute" if offset == 0 else "Morgen" if offset == 1 else day.strftime("%a")
+        items += (
+            f'<a class="week-day{active}" href="tasks?day={iso}{psuffix_amp}">'
+            f'<span>{label}</span><strong>{len(due_tasks)}</strong>'
+            f'<small>{day.strftime("%d.%m.")}</small></a>'
+        )
+    all_active = "" if selected_day else " active"
+    return (
+        '<div class="week-strip">'
+        f'<a class="week-day week-day-all{all_active}" href="tasks{reset_suffix}">'
+        '<span>Alle</span><strong>•</strong><small>Filter</small></a>'
+        f'{items}</div>'
+    )
+
+
 @router.get("", response_class=HTMLResponse)
 async def tasks_list(request: Request, room: str = None, person: str = None,
                      overdue: str = None, effort: str = None,
-                     p: str = ""):
+                     day: str = None, p: str = ""):
     p = resolve_person(request, p)
     admins = get_admins()
     tasks = list_tasks(room=room, assigned_to=person,
@@ -79,7 +116,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     psuffix = f"&p={p}" if p else ""
 
     # Filter bar
-    all_active = not room and not overdue and not effort
+    all_active = not room and not overdue and not effort and not day
     filters = '<div class="filters">'
     filters += f'<a class="filter-btn {"active" if all_active else ""}" href="tasks{("?p="+p) if p else ""}">Alle</a>'
     filters += f'<a class="filter-btn" href="tasks/history{("?p="+p) if p else ""}">Historie</a>'
@@ -106,9 +143,16 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
 
     vacation_active = is_vacation_mode_active(p)
     vacation_until = get_vacation_mode(p).get("until", "") if vacation_active else ""
+    selected_day = _valid_day(day or "")
+    week_source_tasks = list(tasks)
+    if selected_day:
+        tasks = [
+            t for t in tasks
+            if not t.is_paused() and t.next_due().isoformat() == selected_day
+        ]
 
     def _is_paused_for_view(t: Task) -> bool:
-        return bool(vacation_active and p and p in t.assigned_to)
+        return bool(t.is_paused() or (vacation_active and p and p in t.assigned_to))
 
     rows = ""
     if not tasks:
@@ -160,6 +204,9 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
         <div class="hero-title">Aufgaben</div>
       </div>
       <div class="page-hero-actions">
+        <a class="btn btn-ghost btn-sm" href="tasks/templates{psuffix_q}">
+          {_icon("archive", 14)} Vorlagen
+        </a>
         <a class="btn btn-primary btn-sm" href="tasks/new{psuffix_q}">
           {_icon("plus", 14, "white")} Neu
         </a>
@@ -180,6 +227,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
       </div>
     </div>
     {filters}
+    {_week_strip(week_source_tasks, selected_day, p)}
     <div class="card card-flush">{rows}</div>"""
 
     return render(content, request, page="tasks", person=p)
@@ -227,6 +275,227 @@ def _task_history_row(task: Task, person: str = "") -> str:
         </a>
       </div>
     </div>"""
+
+
+def _template_form_html(template: dict | None, areas: list[str], persons: list[str],
+                        base: str, person: str = "") -> str:
+    template = template or {}
+    action = (
+        f"{base}tasks/templates/{template.get('id')}/edit"
+        if template.get("id") else f"{base}tasks/templates"
+    )
+    title = escape(template.get("name", "Neue Vorlage"))
+    task_name = escape(template.get("task_name", ""), quote=True)
+    room = template.get("room", "")
+    interval = _ONETIME_INTERVAL if template.get("onetime", True) else str(template.get("interval_days", 0))
+    points = int(template.get("points", 10) or 10)
+    selected_people = set(template.get("assigned_to", []) or ([person] if person else []))
+    important_checked = "checked" if template.get("important") else ""
+    effort = template.get("effort", "")
+    icon = template.get("icon", "")
+    room_opts = "".join(
+        f'<option value="{escape(r, quote=True)}"{_selected(r, room)}>{escape(r)}</option>'
+        for r in areas
+    )
+    person_boxes = "".join(
+        f'<label class="option-card" style="padding:0.55rem 0.7rem">'
+        f'<input type="checkbox" name="assigned_to" value="{escape(pn, quote=True)}"'
+        f'{" checked" if pn in selected_people else ""}><span>{escape(pn)}</span></label>'
+        for pn in persons
+    )
+    interval_opts = (
+        f'<option value="{_ONETIME_INTERVAL}"{_selected(_ONETIME_INTERVAL, interval)}>'
+        'Einmalig (nach Erledigung archiviert)</option>'
+    )
+    interval_opts += "".join(
+        f'<option value="{d}"{_selected(d, interval)}>{label}</option>'
+        for d, label in INTERVALS.items()
+    )
+    effort_btns = "".join(
+        f'<label class="effort-choice effort-{ef}">'
+        f'<input type="radio" name="effort" value="{ef}"'
+        f'{" checked" if effort == ef else ""}><span>{label}</span></label>'
+        for ef, label in _EFFORT_LABELS.items()
+    )
+    effort_btns += (
+        f'<label class="effort-choice effort-none">'
+        f'<input type="radio" name="effort" value=""{" checked" if not effort else ""}>'
+        f'<span>Ohne</span></label>'
+    )
+    return f"""
+    <form class="template-form" method="post" action="{action}">
+      <input type="hidden" name="return_p" value="{escape(person, quote=True)}">
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Vorlagenname</label>
+          <input name="name" required value="{title}" placeholder="z.B. Frühjahrsputz">
+        </div>
+        <div class="form-group">
+          <label>Aufgabenname</label>
+          <input name="task_name" required value="{task_name}" placeholder="z.B. Fenster putzen">
+        </div>
+        <div class="form-group">
+          <label>Raum</label>
+          <select name="room">{room_opts}</select>
+        </div>
+        <div class="form-group">
+          <label>Intervall</label>
+          <select name="interval_days">{interval_opts}</select>
+        </div>
+        <div class="form-group">
+          <label>Punkte</label>
+          <input name="points" type="number" min="1" max="100" value="{points}">
+        </div>
+        <div class="form-group settings-check-field">
+          <label class="settings-check">
+            <input type="checkbox" name="important" value="1" {important_checked}>
+            <span>Wichtig</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Aufwand</label>
+        <div class="effort-picker">{effort_btns}</div>
+      </div>
+      <div class="form-group">
+        <label>Zugewiesen an</label>
+        <div class="task-assignee-grid">{person_boxes}</div>
+      </div>
+      <div class="form-group">
+        <label>Icon</label>
+        {_icon_chooser(icon)}
+      </div>
+      <button class="btn btn-primary btn-sm" type="submit">Vorlage speichern</button>
+    </form>"""
+
+
+@router.get("/templates", response_class=HTMLResponse)
+async def task_templates(request: Request, p: str = ""):
+    p = resolve_person(request, p)
+    base = _base(request)
+    areas = await get_areas()
+    persons = await get_persons()
+    templates = list_task_templates()
+    psuffix_q = person_suffix(p)
+
+    rows = ""
+    for tpl in templates:
+        assignees = ", ".join(tpl.get("assigned_to", [])) or "Niemand"
+        interval = "Einmalig" if tpl.get("onetime", True) else interval_label(tpl.get("interval_days", 0))
+        rows += f"""
+        <details class="template-card">
+          <summary>
+            {_task_icon(tpl.get("task_name", tpl.get("name", "")), tpl.get("room", ""), icon=tpl.get("icon", ""), size=36)}
+            <span class="template-card-main">
+              <strong>{escape(tpl.get("name", "Vorlage"))}</strong>
+              <small>{escape(tpl.get("task_name", ""))} · {escape(tpl.get("room", ""))} · {escape(interval)} · {escape(assignees)}</small>
+            </span>
+            <span class="badge ok">{tpl.get("points", 10)} Pkt</span>
+          </summary>
+          <div class="template-card-actions">
+            <form method="post" action="{base}tasks/templates/{tpl.get('id')}/use">
+              <input type="hidden" name="return_p" value="{escape(p)}">
+              <button class="btn btn-primary btn-sm" type="submit">{_icon("plus", 14, "white")} Aufgabe erstellen</button>
+            </form>
+            <a class="btn btn-ghost btn-sm" href="{base}tasks/templates/{tpl.get('id')}/delete{psuffix_q}"
+               onclick="return confirm('Vorlage löschen?')">{_icon("trash", 14)} Löschen</a>
+          </div>
+          {_template_form_html(tpl, areas, persons, base, p)}
+        </details>"""
+    if not rows:
+        rows = (
+            '<div class="empty">'
+            '<div class="empty-icon">▦</div>'
+            '<div style="font-weight:700">Noch keine Vorlagen</div>'
+            '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
+            'Lege häufige Aufgaben einmal an und erstelle sie später mit einem Klick.</div></div>'
+        )
+
+    content = f"""
+    <div class="hero-card page-hero">
+      <div>
+        <div class="hero-eyebrow">Schneller planen</div>
+        <div class="hero-title">Aufgaben-Vorlagen</div>
+      </div>
+      <div class="page-hero-actions">
+        <a class="btn btn-ghost btn-sm" href="tasks{psuffix_q}">{_icon("chevron_l", 14)} Aufgaben</a>
+      </div>
+    </div>
+    <details class="card template-create-card" open>
+      <summary class="person-settings-summary">
+        <span class="person-settings-main">
+          <span class="person-settings-title">Neue Vorlage</span>
+          <span class="person-settings-meta">Standardwerte für ähnliche Aufgaben speichern</span>
+        </span>
+      </summary>
+      {_template_form_html(None, areas, persons, base, p)}
+    </details>
+    <div class="template-list">{rows}</div>"""
+    return render(content, request, page="tasks", person=p)
+
+
+@router.post("/templates")
+async def task_template_create(request: Request):
+    form = await request.form()
+    interval_days, onetime = _parse_interval_choice(str(form.get("interval_days") or _ONETIME_INTERVAL))
+    save_task_template(
+        name=str(form.get("name") or ""),
+        task_name=str(form.get("task_name") or ""),
+        room=str(form.get("room") or ""),
+        interval_days=interval_days,
+        assigned_to=list(form.getlist("assigned_to")),
+        points=int(form.get("points") or 10),
+        important=form.get("important", "") == "1",
+        onetime=onetime,
+        icon=str(form.get("icon") or ""),
+        effort=str(form.get("effort") or ""),
+    )
+    return_p = str(form.get("return_p") or "")
+    return RedirectResponse(_base(request) + f"tasks/templates{person_suffix(return_p)}", status_code=303)
+
+
+@router.post("/templates/{template_id}/edit")
+async def task_template_edit(template_id: str, request: Request):
+    form = await request.form()
+    interval_days, onetime = _parse_interval_choice(str(form.get("interval_days") or _ONETIME_INTERVAL))
+    if not update_task_template(
+        template_id,
+        name=str(form.get("name") or ""),
+        task_name=str(form.get("task_name") or ""),
+        room=str(form.get("room") or ""),
+        interval_days=interval_days,
+        assigned_to=list(form.getlist("assigned_to")),
+        points=int(form.get("points") or 10),
+        important=form.get("important", "") == "1",
+        onetime=onetime,
+        icon=str(form.get("icon") or ""),
+        effort=str(form.get("effort") or ""),
+    ):
+        raise HTTPException(404)
+    return_p = str(form.get("return_p") or "")
+    return RedirectResponse(_base(request) + f"tasks/templates{person_suffix(return_p)}", status_code=303)
+
+
+@router.post("/templates/{template_id}/use")
+async def task_template_use(template_id: str, request: Request):
+    form = await request.form()
+    task = create_task_from_template(template_id)
+    if not task:
+        raise HTTPException(404)
+    return_p = str(form.get("return_p") or "")
+    await send_task_assignment_notifications(task, sender=resolve_person(request, return_p))
+    sep = "&" if return_p else "?"
+    return RedirectResponse(
+        _base(request) + f"tasks{person_suffix(return_p)}{sep}msg={quote('Aufgabe aus Vorlage erstellt')}",
+        status_code=303,
+    )
+
+
+@router.get("/templates/{template_id}/delete")
+async def task_template_delete(template_id: str, request: Request, p: str = ""):
+    delete_task_template(template_id)
+    p = resolve_person(request, p) if p else ""
+    return RedirectResponse(_base(request) + f"tasks/templates{person_suffix(p)}", status_code=303)
 
 
 @router.get("/history", response_class=HTMLResponse)
@@ -295,7 +564,9 @@ async def task_edit(task_id: str, request: Request,
                     interval_days: str = Form(_ONETIME_INTERVAL), points: int = Form(10),
                     important: str = Form(""), onetime: str = Form(""),
                     icon: str = Form(""), effort: str = Form(""),
-                    start_date: str = Form(""), snooze_until: str = Form("")):
+                    start_date: str = Form(""), snooze_until: str = Form(""),
+                    paused: str = Form(""), pause_until: str = Form(""),
+                    pause_reason: str = Form("")):
     form = await request.form()
     assigned_to = list(form.getlist("assigned_to"))
     parsed_interval, parsed_onetime = _parse_interval_choice(interval_days, onetime)
@@ -303,7 +574,9 @@ async def task_edit(task_id: str, request: Request,
                      assigned_to=assigned_to, points=points,
                      important=(important == "1"), onetime=parsed_onetime,
                      icon=icon, effort=effort,
-                     start_date=start_date, snooze_until=snooze_until):
+                     start_date=start_date, snooze_until=snooze_until,
+                     paused=(paused == "1"), pause_until=pause_until,
+                     pause_reason=pause_reason):
         raise HTTPException(404)
     return_p = str(form.get("return_p") or "")
     return_to = str(form.get("return_to") or "")
@@ -433,6 +706,74 @@ async def task_snooze(task_id: str, request: Request):
         raise HTTPException(404)
     return_p = str(form.get("return_p") or "")
     return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
+
+
+@router.get("/{task_id}/pause", response_class=HTMLResponse)
+async def task_pause_form(task_id: str, request: Request, p: str = ""):
+    p = resolve_person(request, p)
+    task = get_task(task_id)
+    if not task:
+        raise HTTPException(404)
+    psuffix_q = f"?p={p}" if p else ""
+    checked = "checked" if task.paused else ""
+    until = task.pause_until or ""
+    reason = escape(task.pause_reason or "")
+    content = f"""
+    <div class="page-header">
+      <h2>Aufgabe pausieren</h2>
+      <a class="icon-btn" href="tasks{psuffix_q}" title="Abbrechen">{_icon("chevron_l", 20)}</a>
+    </div>
+    <div class="card" style="margin-bottom:0.75rem">
+      <div style="font-weight:700;margin-bottom:0.2rem">{escape(task.name)}</div>
+      <div class="task-meta">{escape(task.room)} · Fällig: {format_date_de(task.next_due().isoformat())}</div>
+    </div>
+    <div class="card">
+      <form method="post" action="tasks/{task_id}/pause">
+        <input type="hidden" name="return_p" value="{escape(p)}">
+        <label class="option-card task-priority-card" style="margin-bottom:0.85rem">
+          <input type="checkbox" name="paused" value="1" {checked}>
+          <span class="task-priority-main">
+            <span class="task-priority-title">{_icon("pause", 15)} Aufgabe pausieren</span>
+            <span class="task-priority-hint">
+              Pausierte Aufgaben bleiben sichtbar, zählen aber nicht als fällig und werden nicht benachrichtigt.
+            </span>
+          </span>
+        </label>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Pause bis (optional)</label>
+            <input type="date" name="pause_until" value="{escape(until, quote=True)}">
+          </div>
+          <div class="form-group">
+            <label>Grund (optional)</label>
+            <input name="pause_reason" value="{reason}" placeholder="z.B. Urlaub, später, saisonal">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" type="submit">Pause speichern</button>
+        <a class="btn btn-ghost btn-full" href="tasks{psuffix_q}" style="margin-top:0.5rem">Abbrechen</a>
+      </form>
+    </div>"""
+    return render(content, request, page="tasks", person=p)
+
+
+@router.post("/{task_id}/pause")
+async def task_pause_save(task_id: str, request: Request):
+    form = await request.form()
+    paused = form.get("paused", "") == "1"
+    if not pause_task(
+        task_id,
+        paused=paused,
+        pause_until=str(form.get("pause_until") or ""),
+        reason=str(form.get("pause_reason") or ""),
+    ):
+        raise HTTPException(404)
+    return_p = str(form.get("return_p") or "")
+    msg = "Aufgabe pausiert" if paused else "Pause aufgehoben"
+    sep = "&" if return_p else "?"
+    return RedirectResponse(
+        _base(request) + f"tasks{person_suffix(return_p)}{sep}msg={quote(msg)}",
+        status_code=303
+    )
 
 
 @router.get("/{task_id}/remind", response_class=HTMLResponse)
@@ -585,6 +926,9 @@ async def _task_form(request: Request, title: str, action: str,
     cur_effort     = task.effort if task else ""
     cur_start_date = task.start_date or "" if task else ""
     cur_snooze     = task.snooze_until or "" if task else ""
+    cur_paused     = task.paused if task else False
+    cur_pause_until = task.pause_until or "" if task else ""
+    cur_pause_reason = task.pause_reason or "" if task else ""
 
     room_opts = "".join(
         f'<option value="{r}"{_selected(r, cur_room)}>{r}</option>' for r in areas)
@@ -636,6 +980,29 @@ async def _task_form(request: Request, title: str, action: str,
                  min="{(date.today() + timedelta(days=1)).isoformat()}">
           <div class="task-meta" style="margin-top:0.3rem">
             Leer lassen = keine Verschiebung aktiv
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Pause</label>
+          <label class="option-card task-priority-card" style="margin-bottom:0.65rem">
+            <input type="checkbox" name="paused" value="1" {"checked" if cur_paused else ""}>
+            <span class="task-priority-main">
+              <span class="task-priority-title">{_i("pause", 15)} Aufgabe pausieren</span>
+              <span class="task-priority-hint">
+                Pausierte Aufgaben bleiben sichtbar, zählen aber nicht als fällig.
+              </span>
+            </span>
+          </label>
+          <div class="grid-2">
+            <div>
+              <label>Pause bis (optional)</label>
+              <input type="date" name="pause_until" value="{cur_pause_until}">
+            </div>
+            <div>
+              <label>Grund (optional)</label>
+              <input name="pause_reason" value="{escape(cur_pause_reason)}"
+                     placeholder="z.B. Urlaub, saisonal">
+            </div>
           </div>
         </div>"""
 

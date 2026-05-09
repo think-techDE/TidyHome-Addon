@@ -16,7 +16,7 @@ router = APIRouter()
 
 def due_today_or_overdue(tasks: list) -> list:
     return sorted(
-        [t for t in tasks if t.days_until_due() <= 0],
+        [t for t in tasks if not t.is_paused() and t.days_until_due() <= 0],
         key=lambda t: (t.days_until_due(), not getattr(t, "important", False), t.name.lower()),
     )
 
@@ -67,7 +67,7 @@ async def dashboard(request: Request, p: str = ""):
     vacation_active = is_vacation_mode_active(p)
     due_relevant_tasks = [
         t for t in own_tasks
-        if not (vacation_active and p and p in t.assigned_to)
+        if not t.is_paused() and not (vacation_active and p and p in t.assigned_to)
     ]
 
     # Own projects (filtered to current person)
@@ -207,6 +207,7 @@ async def dashboard(request: Request, p: str = ""):
         r_overdue  = sum(
             1 for t in r_tasks
             if t.days_until_due() < 0
+            and not t.is_paused()
             and not (vacation_active and p and p in t.assigned_to)
         )
         sub = f"{len(r_tasks)} Aufg." if r_tasks else ""

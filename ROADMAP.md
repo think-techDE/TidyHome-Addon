@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-10 · Aktuelle Version: 1.3.43
+Stand: 2026-05-10 · Aktuelle Version: 1.3.44
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -11,6 +11,8 @@ Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschr
 TidyHome ist aktuell ein nutzbares Home-Assistant-Add-on für:
 
 - wiederkehrende und einmalige Haushaltsaufgaben
+- pausierbare Aufgaben mit Wochenübersicht und Tagesfilter
+- Aufgaben-Vorlagen zum schnellen Erstellen ähnlicher Aufgaben
 - persönliche Aufgabenansichten mit Rollen und Sichtbarkeit
 - Ordnungsprojekte mit Schritten, Fortschritt und Punkten
 - Kommentare und Notizen an Aufgaben und Projekten
@@ -19,7 +21,8 @@ TidyHome ist aktuell ein nutzbares Home-Assistant-Add-on für:
 - tägliche Benachrichtigungen über Home Assistant Notify-Services
 - persönlichen Urlaubsmodus
 - Haushaltshilfe-Zeiterfassung mit Lohnhistorie, Monatsabrechnung, Status und Export
-- Punkte, Bestenliste, Erfolgshistorie, Streak und Wochenziel
+- Punkte, Bestenliste, Achievements, persönliche Verlaufsauswertung, Streak und Wochenziel
+- JSON-Backup, CSV-Exporte und Admin-Diagnose
 - mobile Web-UI über Home Assistant Ingress
 
 Die Codebasis ist inzwischen modularisiert:
@@ -33,6 +36,15 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.44
+
+- Aufgaben-Pausen mit optionalem Enddatum und Grund umgesetzt
+- Wochenübersicht mit Tagesfilter in der Aufgabenliste ergänzt
+- Aufgaben-Vorlagen mit Speichern, Bearbeiten, Löschen und Erstellen aus Vorlage umgesetzt
+- Achievements für persönliche Meilensteine ergänzt
+- Persönliche Verlaufsseite mit Wochen- und Monatsentwicklung ergänzt
+- Admin-Bereich um JSON-Backup, CSV-Export und Daten-Diagnose erweitert
 
 ### v1.3.43
 
@@ -230,45 +242,31 @@ Ziel: Besorgungen von Aufgaben trennen, damit Aufgaben sauber bei Haushalt und P
 
 Warum zuerst: Die App wird dadurch im Alltag häufiger geöffnet, ohne die bestehende Aufgabenlogik komplizierter zu machen.
 
-### 2. Wochenplanung & Aufgaben-Pausen
+### 2. Aufgaben-Vorlagen 2.0
 
-Ziel: Fälligkeiten besser steuerbar machen, ohne Aufgaben dauerhaft zu verändern.
+Ziel: Aus einzelnen Vorlagen echte Aufgabenpakete machen.
 
-- Kalenderstreifen für heute, morgen und die nächsten Tage
-- Tages- und Wochenfilter in Zuhause und Aufgaben
-- einzelne Aufgaben pausieren
-- optionales Pausen-Enddatum
-- pausierte Aufgaben sichtbar lassen, aber nicht als fällig zählen
-- tägliche Benachrichtigungen ignorieren pausierte Aufgaben
+- mehrere Aufgaben aus einer Vorlage auf einmal erzeugen
+- Vorlagen-Sets für Frühjahrsputz, Gästezimmer, Urlaubsvorbereitung oder Auto
+- Standardwerte für Raum, Punkte, Aufwand, Person und Intervall übernehmen
+- Vorlagen aus bestehenden Projekten ableiten
+- Vorlagen optional als Eltern-/Admin-Funktion schützen
 
-Abgrenzung: Urlaubsmodus pausiert eine Person. Aufgaben-Pausen pausieren einzelne Aufgaben.
+Warum jetzt: Einzelvorlagen sind umgesetzt. Der nächste Nutzen entsteht durch ganze Sets.
 
-### 3. Aufgaben-Vorlagen
-
-Ziel: Wiederkehrende Aufgabenpakete schneller anlegen.
-
-- Vorlagen für Sets wie Frühjahrsputz, Gästezimmer, Urlaubsvorbereitung oder Auto
-- mehrere Aufgaben aus einer Vorlage erzeugen
-- Standardwerte für Raum, Punkte, Aufwand, Person und Intervall
-- Vorlagen bearbeiten und erneut verwenden
-- später Vorlagen aus abgeschlossenen Projekten ableiten
-
-Warum sinnvoll: Nach Fotos, Notizen und Rollen ist das Aufgabenformular mächtig geworden. Vorlagen reduzieren Eingabeaufwand und Fehler.
-
-### 4. Motivation & persönliche Entwicklung
+### 3. Motivation & gemeinsame Ziele
 
 Ziel: Erfolge sichtbarer machen, ohne Druck aufzubauen.
 
-- Abzeichen für persönliche Meilensteine
-- persönliche Verlaufsseite mit Wochen-, Monats- und Langzeitentwicklung
 - Familienziele und Kinderziele
 - Belohnungsziele mit frei definierbarem Zielwert
 - sanftere Sprache und bessere Gruppierung bei überfälligen Aufgaben
 - Energielevel-Modus nach Aufwand und Tagesform
+- optionale reduzierte Ansicht ohne Punkte und Wettbewerb
 
 Wichtig: Motivation sollte optional bleiben. Die App darf nicht strafend wirken, wenn Aufgaben liegen bleiben.
 
-### 5. Haushaltshilfen: Abrechnung 2.0
+### 4. Haushaltshilfen: Abrechnung 2.0
 
 Ziel: Die aktuelle Zeiterfassung revisionssicherer und alltagstauglicher machen.
 
@@ -281,7 +279,7 @@ Ziel: Die aktuelle Zeiterfassung revisionssicherer und alltagstauglicher machen.
 
 Warum nicht zuerst: Die Basis ist jetzt nutzbar. Weitere Abrechnungstiefe ist wichtig, aber weniger breit wirksam als Einkaufsliste und Wochenplanung.
 
-### 6. Home Assistant Automation
+### 5. Home Assistant Automation
 
 Ziel: TidyHome stärker in Home Assistant einbinden.
 
@@ -292,14 +290,13 @@ Ziel: TidyHome stärker in Home Assistant einbinden.
 - REST-API für Automationen, z. B. Aufgabe aus Sensorereignis anlegen
 - Müllkalender-/Trash-Card-Integration als Aufgaben-Trigger
 
-### 7. Daten, Export & Wartung
+### 6. Daten, Import & Wartung
 
 Ziel: Betrieb und Wiederherstellung robuster machen.
 
-- JSON-Export der gesamten TinyDB
-- CSV-Export für Aufgaben, Projekte und Punkte
 - Import-/Wiederherstellungsfunktion
-- Admin-Diagnose für verwaiste Personen, Räume, Fotos und alte Referenzen
+- Backup-Vergleich vor Wiederherstellung
+- Admin-Aktionen zur Bereinigung verwaister Fotos und alter Referenzen
 - optionale Foto-Bereinigung für gelöschte oder archivierte Einträge
 - Mehrsprachigkeit Deutsch/Englisch
 
