@@ -1,3 +1,9 @@
+## 1.3.23
+
+- Fotos: Aufnahme auf den nativen Kamera-/Dateidialog umgestellt
+- Fotos: direkte Live-Kameraansicht entfernt, da Home-Assistant-Panel/Ingress die Browser-Kamera je nach Benutzerkontext blockieren kann
+- Fotos: Upload bleibt ein normaler Formular-Post und funktioniert damit auch für Nicht-Admin-Benutzer
+
 ## 1.3.22
 
 - Fotos: Aufgabenlisten zeigen einen Foto-Indikator mit Anzahl vorhandener Fotos

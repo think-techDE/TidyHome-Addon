@@ -257,14 +257,8 @@
                  display:grid; place-items:center; color:var(--muted); font-size:0.78rem;
                  background:var(--surface-2); }
   .photo-upload { padding:0.85rem 1rem 1rem; display:flex; flex-direction:column; gap:0.55rem; }
+  .photo-upload-hint { font-size:0.74rem; }
   .photo-type-picker { display:grid; grid-template-columns:1fr 1fr; gap:0.45rem; }
-  .camera-capture { padding:0 1rem 1rem; display:flex; flex-direction:column; gap:0.55rem; }
-  .camera-panel { border:1px solid var(--border); border-radius:0.75rem; overflow:hidden;
-                  background:var(--surface-2); }
-  .camera-preview { display:block; width:100%; aspect-ratio:4/3; object-fit:cover; background:#000; }
-  .camera-actions { display:flex; gap:0.5rem; padding:0.65rem; background:var(--surface); }
-  .camera-actions .btn { flex:1; }
-  .camera-msg { padding:0 0.65rem 0.65rem; }
   .admin-badge { font-size: 0.7rem; background: var(--primary-soft); color: var(--primary-dark);
                  padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--primary-border); }
   .admin-hero { display:flex; align-items:flex-start; justify-content:space-between;

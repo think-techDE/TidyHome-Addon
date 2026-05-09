@@ -724,23 +724,9 @@ def photos_card(entity_type: str, entity_id: str, action: str,
           </label>
         </div>
         <input type="file" name="photo" accept="image/*" capture="environment" required>
-        <button class="btn btn-ghost btn-sm" type="submit">{_icon("plus", 14)} Foto hinzufügen</button>
+        <div class="muted photo-upload-hint">Öffnet auf Smartphones die Kamera, sonst die Dateiauswahl.</div>
+        <button class="btn btn-ghost btn-sm" type="submit">{_icon("camera", 14)} Foto aufnehmen / auswählen</button>
       </form>
-      <div class="camera-capture">
-        <button class="btn btn-outline btn-sm camera-start" type="button">
-          {_icon("camera", 14)} Kamera öffnen
-        </button>
-        <div class="camera-panel" hidden>
-          <video class="camera-preview" playsinline autoplay muted></video>
-          <div class="camera-actions">
-            <button class="btn btn-primary btn-sm camera-shot" type="button">
-              {_icon("camera", 14, "white")} Aufnehmen
-            </button>
-            <button class="btn btn-ghost btn-sm camera-stop" type="button">Schließen</button>
-          </div>
-          <div class="camera-msg muted"></div>
-        </div>
-      </div>
     </details>"""
 
 
@@ -1178,97 +1164,6 @@ def render(content: str, request: Request, page: str = "home",
         {content}
       </main>
 <nav class="bottom-nav">{nav_items}</nav>
-<script>
-(function(){{
-  function selectedPhotoType(card){{
-    var selected = card.querySelector('input[name="photo_type"]:checked');
-    return selected ? selected.value : 'before';
-  }}
-  function setMsg(card, text){{
-    var msg = card.querySelector('.camera-msg');
-    if (msg) msg.textContent = text || '';
-  }}
-  async function stopCamera(card){{
-    var stream = card._cameraStream;
-    if (stream) stream.getTracks().forEach(function(track){{ track.stop(); }});
-    card._cameraStream = null;
-    var panel = card.querySelector('.camera-panel');
-    if (panel) panel.hidden = true;
-  }}
-  async function startCamera(card){{
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {{
-      setMsg(card, 'Kameraaufnahme wird von diesem Browser nicht unterstützt.');
-      return;
-    }}
-    try {{
-      await stopCamera(card);
-      var stream = await navigator.mediaDevices.getUserMedia({{
-        video: {{ facingMode: {{ ideal: 'environment' }} }},
-        audio: false
-      }});
-      card._cameraStream = stream;
-      var video = card.querySelector('.camera-preview');
-      var panel = card.querySelector('.camera-panel');
-      video.srcObject = stream;
-      panel.hidden = false;
-      setMsg(card, '');
-    }} catch (err) {{
-      setMsg(card, 'Kamera konnte nicht geöffnet werden. Datei-Upload bleibt verfügbar.');
-    }}
-  }}
-  function snapshotBlob(video){{
-    return new Promise(function(resolve){{
-      var canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth || 1280;
-      canvas.height = video.videoHeight || 960;
-      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(function(blob){{ resolve(blob); }}, 'image/jpeg', 0.9);
-    }});
-  }}
-  async function uploadSnapshot(card){{
-    var video = card.querySelector('.camera-preview');
-    var form = card.querySelector('.photo-upload');
-    if (!video || !form || !video.srcObject) return;
-    setMsg(card, 'Foto wird gespeichert...');
-    var blob = await snapshotBlob(video);
-    if (!blob) {{
-      setMsg(card, 'Foto konnte nicht erzeugt werden.');
-      return;
-    }}
-    var data = new FormData();
-    data.append('photo_type', selectedPhotoType(card));
-    var returnP = form.querySelector('input[name="return_p"]');
-    if (returnP) data.append('return_p', returnP.value);
-    data.append('photo', blob, 'camera.jpg');
-    try {{
-      var response = await fetch(form.action, {{
-        method: 'POST',
-        body: data,
-        credentials: 'same-origin'
-      }});
-      if (response.ok || response.redirected) {{
-        await stopCamera(card);
-        window.location.href = response.url || window.location.href;
-      }} else {{
-        setMsg(card, 'Foto konnte nicht gespeichert werden.');
-      }}
-    }} catch (err) {{
-      setMsg(card, 'Foto konnte nicht hochgeladen werden.');
-    }}
-  }}
-  document.addEventListener('click', function(event){{
-    var start = event.target.closest('.camera-start');
-    var shot = event.target.closest('.camera-shot');
-    var stop = event.target.closest('.camera-stop');
-    if (!start && !shot && !stop) return;
-    var card = event.target.closest('.photos-card');
-    if (!card) return;
-    if (start) startCamera(card);
-    if (shot) uploadSnapshot(card);
-    if (stop) stopCamera(card);
-  }});
-}})();
-</script>
 </body>
 </html>"""
 

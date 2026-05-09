@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-08 · Aktuelle Version: 1.3.22
+Stand: 2026-05-09 · Aktuelle Version: 1.3.23
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -32,6 +32,11 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.23
+
+- Fotoaufnahme auf den nativen Kamera-/Dateidialog umgestellt
+- Direkte Live-Kameraansicht entfernt, damit Fotos auch für Nicht-Admin-Benutzer im Home-Assistant-Panel zuverlässig funktionieren
 
 ### v1.3.22
 
