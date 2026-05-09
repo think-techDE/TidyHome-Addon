@@ -723,12 +723,28 @@ def photos_card(entity_type: str, entity_id: str, action: str,
             <span>Nachher</span>
           </label>
         </div>
-        <label class="btn btn-ghost btn-sm photo-file-button">
-          <input class="photo-file-input" type="file" name="photo" accept="image/*" capture="environment"
-                 required onchange="this.form.submit()">
-          {_icon("camera", 14)} Foto aufnehmen / auswählen
-        </label>
-        <div class="muted photo-upload-hint">Öffnet auf Smartphones die Kamera, sonst die Dateiauswahl.</div>
+        <div class="photo-actions">
+          <button class="btn btn-ghost btn-sm camera-start" type="button">
+            {_icon("camera", 14)} Kamera öffnen
+          </button>
+          <label class="btn btn-outline btn-sm photo-file-button">
+            <input class="photo-file-input" type="file" name="photo"
+                   accept="image/*,android/force-camera-workaround"
+                   capture="environment" required onchange="this.form.submit()">
+            {_icon("plus", 14)} Datei auswählen
+          </label>
+        </div>
+        <div class="camera-panel" hidden>
+          <video class="camera-preview" playsinline autoplay muted></video>
+          <div class="camera-actions">
+            <button class="btn btn-primary btn-sm camera-shot" type="button">
+              {_icon("camera", 14, "white")} Aufnehmen
+            </button>
+            <button class="btn btn-ghost btn-sm camera-stop" type="button">Schließen</button>
+          </div>
+        </div>
+        <div class="camera-msg muted"></div>
+        <div class="muted photo-upload-hint">Wenn die Home-Assistant-App die Kamera blockiert, bleibt die Dateiauswahl als Fallback.</div>
       </form>
     </details>"""
 
@@ -1167,6 +1183,131 @@ def render(content: str, request: Request, page: str = "home",
         {content}
       </main>
 <nav class="bottom-nav">{nav_items}</nav>
+<script>
+(function(){{
+  function selectedPhotoType(card){{
+    var selected = card.querySelector('input[name="photo_type"]:checked');
+    return selected ? selected.value : 'before';
+  }}
+
+  function setCameraMessage(card, text){{
+    var msg = card.querySelector('.camera-msg');
+    if (msg) msg.textContent = text || '';
+  }}
+
+  async function stopCamera(card){{
+    var stream = card._cameraStream;
+    if (stream) stream.getTracks().forEach(function(track){{ track.stop(); }});
+    card._cameraStream = null;
+    var panel = card.querySelector('.camera-panel');
+    if (panel) panel.hidden = true;
+  }}
+
+  function waitForVideo(video){{
+    if (video.videoWidth && video.videoHeight) return Promise.resolve();
+    return new Promise(function(resolve){{
+      var done = function(){{
+        clearTimeout(timer);
+        video.removeEventListener('loadedmetadata', done);
+        video.removeEventListener('canplay', done);
+        resolve();
+      }};
+      var timer = setTimeout(done, 1500);
+      video.addEventListener('loadedmetadata', done);
+      video.addEventListener('canplay', done);
+    }});
+  }}
+
+  async function startCamera(card){{
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {{
+      setCameraMessage(card, 'Diese WebView stellt keine direkte Kamera bereit. Bitte Datei auswählen nutzen.');
+      return;
+    }}
+    try {{
+      await stopCamera(card);
+      var stream = await navigator.mediaDevices.getUserMedia({{
+        video: {{ facingMode: {{ ideal: 'environment' }} }},
+        audio: false
+      }});
+      card._cameraStream = stream;
+      var video = card.querySelector('.camera-preview');
+      var panel = card.querySelector('.camera-panel');
+      video.srcObject = stream;
+      panel.hidden = false;
+      setCameraMessage(card, '');
+    }} catch (err) {{
+      setCameraMessage(card, 'Kamera wurde von Home Assistant oder vom Browser blockiert. Bitte Datei auswählen nutzen.');
+    }}
+  }}
+
+  async function snapshotBlob(video){{
+    await waitForVideo(video);
+    return new Promise(function(resolve){{
+      var canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 960;
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(function(blob){{ resolve(blob); }}, 'image/jpeg', 0.9);
+    }});
+  }}
+
+  async function uploadBlob(card, blob){{
+    var form = card.querySelector('.photo-upload');
+    var input = card.querySelector('.photo-file-input');
+    if (!form || !input || !blob) return;
+
+    if (window.File && window.DataTransfer) {{
+      var file = new File([blob], 'camera.jpg', {{ type: 'image/jpeg' }});
+      var transfer = new DataTransfer();
+      transfer.items.add(file);
+      input.files = transfer.files;
+      await stopCamera(card);
+      form.submit();
+      return;
+    }}
+
+    var data = new FormData();
+    data.append('photo_type', selectedPhotoType(card));
+    var returnP = form.querySelector('input[name="return_p"]');
+    if (returnP) data.append('return_p', returnP.value);
+    data.append('photo', blob, 'camera.jpg');
+
+    var response = await fetch(form.action, {{
+      method: 'POST',
+      body: data,
+      credentials: 'same-origin'
+    }});
+    if (!response.ok && !response.redirected) throw new Error('upload failed');
+    await stopCamera(card);
+    window.location.href = response.url || window.location.href;
+  }}
+
+  async function takePhoto(card){{
+    var video = card.querySelector('.camera-preview');
+    if (!video || !video.srcObject) return;
+    try {{
+      setCameraMessage(card, 'Foto wird gespeichert...');
+      var blob = await snapshotBlob(video);
+      if (!blob) throw new Error('snapshot failed');
+      await uploadBlob(card, blob);
+    }} catch (err) {{
+      setCameraMessage(card, 'Foto konnte nicht gespeichert werden. Bitte Datei auswählen nutzen.');
+    }}
+  }}
+
+  document.addEventListener('click', function(event){{
+    var start = event.target.closest('.camera-start');
+    var shot = event.target.closest('.camera-shot');
+    var stop = event.target.closest('.camera-stop');
+    if (!start && !shot && !stop) return;
+    var card = event.target.closest('.photos-card');
+    if (!card) return;
+    if (start) startCamera(card);
+    if (shot) takePhoto(card);
+    if (stop) stopCamera(card);
+  }});
+}})();
+</script>
 </body>
 </html>"""
 

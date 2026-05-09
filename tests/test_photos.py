@@ -11,6 +11,7 @@ sys.path.insert(0, str(APP_DIR))
 os.environ.setdefault("DATA_DIR", tempfile.mkdtemp(prefix="tidyhome-test-"))
 
 import storage  # noqa: E402
+import render  # noqa: E402
 
 
 class PhotoTests(unittest.TestCase):
@@ -67,6 +68,16 @@ class PhotoTests(unittest.TestCase):
 
         self.assertIsNone(photo)
         self.assertEqual(os.listdir(self.photo_dir), [])
+
+    def test_photos_card_offers_live_camera_and_file_fallback(self):
+        html = render.photos_card("task", "task-1", "tasks/task-1/photos", "Ben")
+
+        self.assertIn("camera-start", html)
+        self.assertIn("Kamera öffnen", html)
+        self.assertIn("camera-preview", html)
+        self.assertIn("photo-file-input", html)
+        self.assertIn('accept="image/*,android/force-camera-workaround"', html)
+        self.assertIn('capture="environment"', html)
 
 
 if __name__ == "__main__":

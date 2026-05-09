@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-09 · Version 1.3.24
+Stand: 2026-05-09 · Version 1.3.25
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 

@@ -1,3 +1,9 @@
+## 1.3.25
+
+- Fotos: Kameraaufnahme wieder als Live-Kamera mit Vorschau umgesetzt
+- Fotos: Kamera-Snapshot wird als Datei in das bestehende Upload-Formular eingesetzt und normal abgesendet
+- Fotos: Datei-Auswahl bleibt als separater Fallback erhalten, falls Home Assistant oder die WebView die Kamera blockiert
+
 ## 1.3.24
 
 - Fotos: sichtbarer Foto-Button öffnet jetzt direkt den nativen Kamera-/Dateidialog
