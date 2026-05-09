@@ -49,6 +49,17 @@ def _save_initial_task_note(task: Task, note: str, author: str = "") -> bool:
     return bool(add_comment("task", task.id, note, author=author))
 
 
+async def _save_initial_task_photo(task: Task, author: str = "",
+                                   photo: UploadFile | None = None,
+                                   photo_camera: UploadFile | None = None,
+                                   photo_file: UploadFile | None = None) -> bool:
+    selected_photo, data = await selected_photo_upload(photo, photo_camera, photo_file)
+    if not selected_photo:
+        return False
+    return bool(add_photo("task", task.id, "before", selected_photo.filename or "",
+                          selected_photo.content_type or "", data, author=author))
+
+
 @router.get("", response_class=HTMLResponse)
 async def tasks_list(request: Request, room: str = None, person: str = None,
                      overdue: str = None, effort: str = None,
@@ -307,7 +318,10 @@ async def task_create(request: Request, name: str = Form(...), room: str = Form(
                       interval_days: str = Form(_ONETIME_INTERVAL), points: int = Form(10),
                       important: str = Form(""), onetime: str = Form(""),
                       icon: str = Form(""), effort: str = Form(""),
-                      start_date: str = Form("")):
+                      start_date: str = Form(""),
+                      photo: UploadFile | None = File(None),
+                      photo_camera: UploadFile | None = File(None),
+                      photo_file: UploadFile | None = File(None)):
     form = await request.form()
     assigned_to = list(form.getlist("assigned_to"))
     parsed_interval, parsed_onetime = _parse_interval_choice(interval_days, onetime)
@@ -320,6 +334,8 @@ async def task_create(request: Request, name: str = Form(...), room: str = Form(
     return_p = str(form.get("return_p") or "")
     creator = resolve_person(request, return_p)
     _save_initial_task_note(task, str(form.get("initial_note") or ""), author=creator)
+    await _save_initial_task_photo(task, author=creator, photo=photo,
+                                   photo_camera=photo_camera, photo_file=photo_file)
     await send_task_assignment_notifications(task, sender=creator)
     return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
 
@@ -642,6 +658,48 @@ async def _task_form(request: Request, title: str, action: str,
           <textarea name="initial_note" rows="3"
                     placeholder="Hinweis oder Absprache direkt mit anlegen"></textarea>
         </div>"""
+    initial_photo = ""
+    if not task:
+        live_input_id = "task-new-photo-live"
+        camera_input_id = "task-new-photo-camera"
+        file_input_id = "task-new-photo-file"
+        initial_photo = f"""
+        <div class="task-form-section">
+          <div class="task-form-section-title">Vorher-Foto</div>
+          <div class="task-create-photo-card photos-card photo-pending-card">
+            <input id="{live_input_id}" class="photo-file-input photo-live-input" type="file"
+                   name="photo" accept="image/*">
+            <input id="{camera_input_id}" class="photo-file-input" type="file"
+                   name="photo_camera" accept="image/*,android/force-camera-workaround"
+                   capture="environment">
+            <input id="{file_input_id}" class="photo-file-input" type="file"
+                   name="photo_file" accept="image/*">
+            <div class="photo-actions">
+              <label class="btn btn-ghost btn-sm camera-native-button" for="{camera_input_id}">
+                {_i("camera", 14)} Kamera öffnen
+              </label>
+              <button class="btn btn-ghost btn-sm camera-start" type="button" hidden>
+                {_i("camera", 14)} Kamera öffnen
+              </button>
+              <label class="btn btn-outline btn-sm photo-file-button" for="{file_input_id}">
+                {_i("plus", 14)} Datei auswählen
+              </label>
+            </div>
+            <div class="camera-panel" hidden>
+              <video class="camera-preview" playsinline autoplay muted></video>
+              <div class="camera-actions">
+                <button class="btn btn-primary btn-sm camera-shot" type="button">
+                  {_i("camera", 14, "white")} Aufnehmen
+                </button>
+                <button class="btn btn-ghost btn-sm camera-stop" type="button">Schließen</button>
+              </div>
+            </div>
+            <div class="camera-msg muted"></div>
+            <div class="muted photo-upload-hint">
+              Optional. Das Vorher-Foto wird zusammen mit der Aufgabe gespeichert.
+            </div>
+          </div>
+        </div>"""
     priority_option = f"""
         <label class="option-card task-priority-card">
           <input type="checkbox" name="important" value="1" {important_checked}>
@@ -661,7 +719,7 @@ async def _task_form(request: Request, title: str, action: str,
       <a class="icon-btn" href="{back_url}" title="Abbrechen">{_i("chevron_l", 20)}</a>
     </div>
     <div class="card task-form-card">
-      <form method="post" action="{action}">
+      <form method="post" action="{action}" enctype="multipart/form-data">
         <input type="hidden" name="return_p" value="{person}">
         <input type="hidden" name="return_to" value="{return_to}">
         <div class="task-form-section">
@@ -673,6 +731,7 @@ async def _task_form(request: Request, title: str, action: str,
           {priority_option}
           {initial_note}
         </div>
+        {initial_photo}
 
         <div class="task-form-section">
           <div class="task-form-section-title">Planung</div>

@@ -265,6 +265,11 @@
                       clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }
   .photo-upload-hint { font-size:0.74rem; }
   .photo-type-picker { display:grid; grid-template-columns:1fr 1fr; gap:0.45rem; }
+  .task-create-photo-card { border:1px solid var(--border); border-radius:0.75rem;
+                            background:var(--surface-2); padding:0.85rem; }
+  .task-create-photo-card.has-pending-photo { border-color:var(--success);
+                                              background:var(--success-bg); }
+  .task-create-photo-card .photo-actions { margin-bottom:0.55rem; }
   .camera-panel { border:1px solid var(--border); border-radius:0.75rem; overflow:hidden;
                   background:var(--surface-2); }
   .camera-preview { display:block; width:100%; aspect-ratio:4/3; object-fit:cover; background:#000; }

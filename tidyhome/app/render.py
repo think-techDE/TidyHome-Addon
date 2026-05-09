@@ -1248,6 +1248,16 @@ def render(content: str, request: Request, page: str = "home",
     }});
   }}
 
+  function markPendingPhoto(card, input){{
+    if (!card || !card.classList.contains('photo-pending-card')) return;
+    card.querySelectorAll('.photo-file-input').forEach(function(other){{
+      if (other !== input) other.value = '';
+    }});
+    var filename = input && input.files && input.files.length ? input.files[0].name : '';
+    card.classList.toggle('has-pending-photo', !!filename);
+    setCameraMessage(card, filename ? 'Vorher-Foto ausgewählt: ' + filename : '');
+  }}
+
   async function startCamera(card){{
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {{
       setCameraMode(card, false);
@@ -1284,7 +1294,8 @@ def render(content: str, request: Request, page: str = "home",
   }}
 
   async function uploadBlob(card, blob){{
-    var form = card.querySelector('.photo-upload');
+    var pending = card.classList.contains('photo-pending-card');
+    var form = card.querySelector('.photo-upload') || card.closest('form');
     var input = card.querySelector('.photo-live-input');
     if (!form || !input || !blob) return;
 
@@ -1294,7 +1305,17 @@ def render(content: str, request: Request, page: str = "home",
       transfer.items.add(file);
       input.files = transfer.files;
       await stopCamera(card);
+      if (pending) {{
+        markPendingPhoto(card, input);
+        return;
+      }}
       form.submit();
+      return;
+    }}
+
+    if (pending) {{
+      await stopCamera(card);
+      setCameraMessage(card, 'Live-Foto konnte nicht übernommen werden. Bitte Kamera öffnen oder Datei auswählen nutzen.');
       return;
     }}
 
@@ -1337,6 +1358,12 @@ def render(content: str, request: Request, page: str = "home",
     if (start) startCamera(card);
     if (shot) takePhoto(card);
     if (stop) stopCamera(card);
+  }});
+  document.addEventListener('change', function(event){{
+    var input = event.target.closest('.photo-file-input');
+    if (!input) return;
+    var card = input.closest('.photos-card');
+    markPendingPhoto(card, input);
   }});
   document.addEventListener('DOMContentLoaded', enhanceCameraControls);
   enhanceCameraControls();

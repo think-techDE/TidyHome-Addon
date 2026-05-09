@@ -1,3 +1,8 @@
+## 1.3.37
+
+- Aufgaben: neue Aufgaben können direkt beim Erstellen ein optionales Vorher-Foto erhalten
+- Fotos: Kameraaufnahme und Datei-Auswahl werden im Aufgabenformular vorgemerkt und erst beim Speichern der Aufgabe hochgeladen
+
 ## 1.3.36
 
 - UI: Aufgabenformular in klare Abschnitte gegliedert

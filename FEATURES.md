@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-09 · Version 1.3.36
+Stand: 2026-05-09 · Version 1.3.37
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -31,6 +31,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Optionale Notiz direkt beim Erstellen neuer Aufgaben
 - [x] Einklappbare Notizen-Karten mit kompaktem Leerzustand
 - [x] Vorher/Nachher-Fotos direkt an Aufgaben
+- [x] Optionales Vorher-Foto direkt beim Erstellen neuer Aufgaben
 - [x] Smartphone-Kameraaufnahme und Datei-Upload für Aufgabenfotos
 - [x] Foto-Indikator in Aufgabenlisten
 - [x] Mobile Aufgabenzeilen mit separater Aktionszeile gegen Überlagerungen

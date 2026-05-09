@@ -36,6 +36,13 @@ class UiFormTests(unittest.TestCase):
 
         self.assertIn('task-form-section-title">Aufgabe', html)
         self.assertIn("task-priority-card", html)
+        self.assertIn('task-form-section-title">Vorher-Foto', html)
+        self.assertIn("photo-pending-card", html)
+        self.assertIn('name="photo_camera"', html)
+        self.assertIn('name="photo_file"', html)
+        self.assertIn('enctype="multipart/form-data"', html)
+        self.assertNotIn('name="photo_camera" accept="image/*,android/force-camera-workaround"\n'
+                         '                   capture="environment" onchange=', html)
         self.assertLess(html.index("Als wichtig markieren"), html.index("Planung"))
         self.assertLess(html.index("Als wichtig markieren"), html.index("Raum"))
 
