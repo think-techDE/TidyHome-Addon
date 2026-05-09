@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.37-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.38-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -31,6 +31,7 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 - Tägliche Push-Benachrichtigungen pro Person und Gerät
 - Persönlicher Urlaubsmodus zum Pausieren fälliger Aufgaben und Benachrichtigungen
 - Rollen für Elternteil, Kind, Haushaltshilfe und Mitglied
+- Haushaltshilfe-Zeiterfassung mit Stundenlohn, Monatsstunden und Gesamtkosten
 - Aufgeräumte Einstellungen und Admin-Übersicht für Rechte, Räume, Geräte und Profile
 - Automatische Personen- und Raumintegration aus Home Assistant
 - Responsive Web-UI über Home Assistant Ingress
@@ -113,6 +114,14 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Sichtbare Erfolgsmeldung nach Erledigung mit vergebenen Punkten
 - Verlauf der letzten Erfolge mit Aufgabe, Datum und Punktzahl
 
+### Haushaltshilfen
+
+- Rolle Haushaltshilfe für Personen
+- Eltern/Admins verwalten Stundenlohn und Arbeitszeiten
+- Monatsübersicht mit Arbeitsstunden und Gesamtkosten
+- Haushaltshilfen sehen auf Zuhause ihre Monatsstunden und den bisher erarbeiteten Lohn
+- Arbeitszeit kann direkt von der Haushaltshilfe eingetragen und nachträglich korrigiert werden
+
 ### Benachrichtigungen
 
 - Tägliche Erinnerung an fällige Aufgaben
@@ -170,7 +179,7 @@ Admin- und Geräteeinstellungen können anschließend direkt in der TidyHome-Obe
 Weitere lokale Prüfung:
 
 ```powershell
-.\.venv\Scripts\python.exe -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
+.\.venv\Scripts\python.exe -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
 git diff --check
 ```
 
@@ -188,6 +197,7 @@ tidyhome/
     scheduler.py     # Tägliche Benachrichtigungen
     routes/
       dashboard.py   # Startseite
+      housekeeping.py # Haushaltshilfe-Zeiterfassung
       tasks.py       # Aufgaben
       projects.py    # Ordnungsprojekte
       scores.py      # Punkte und Statistik

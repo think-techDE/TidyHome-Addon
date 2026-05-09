@@ -7,8 +7,9 @@ from ha_client import get_areas
 from render import (_base, _icon, _ring_chart, _room_icon,
                     person_suffix, render, resolve_person, task_row)
 from storage import (filter_tasks_by_role, get_admins, get_person_settings,
-                     get_room_icons, is_vacation_mode_active, list_projects,
-                     list_steps, list_tasks)
+                     get_housekeeping_month_summary, get_room_icons,
+                     is_vacation_mode_active, list_people_by_role,
+                     list_projects, list_steps, list_tasks)
 
 router = APIRouter()
 
@@ -18,6 +19,14 @@ def due_today_or_overdue(tasks: list) -> list:
         [t for t in tasks if t.days_until_due() <= 0],
         key=lambda t: (t.days_until_due(), not getattr(t, "important", False), t.name.lower()),
     )
+
+
+def _fmt_hours(value: float) -> str:
+    return f"{value:.2f}".replace(".", ",")
+
+
+def _fmt_money(value: float) -> str:
+    return f"{value:,.2f} €".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -38,6 +47,7 @@ async def dashboard(request: Request, p: str = ""):
     is_admin = p in admins
     cfg = get_person_settings(p) if p else {}
     is_parent = cfg.get("role") == "parent"
+    is_housekeeper = cfg.get("role") == "housekeeper"
     show_foreign = is_admin or is_parent
 
     # Own tasks (role-filtered = only assigned to current person)
@@ -113,6 +123,48 @@ async def dashboard(request: Request, p: str = ""):
         {plus} Projekt
       </a>
     </div>"""
+
+    housekeeping_section = ""
+    month = date.today().strftime("%Y-%m")
+    if is_housekeeper and p:
+        hk_summary = get_housekeeping_month_summary(p, month)
+        item = hk_summary["people"][0] if hk_summary["people"] else {
+            "hours": 0.0, "cost": 0.0, "hourly_wage": 0.0
+        }
+        housekeeping_section = f"""
+        <div class="card housekeeping-home-card">
+          <div class="admin-section-head">
+            <div>
+              <h3>Arbeitszeit diesen Monat</h3>
+              <p class="muted">{_fmt_hours(item['hours'])} Stunden · {_fmt_money(item['cost'])} erarbeitet</p>
+            </div>
+            <span style="color:var(--primary)">{_icon("clock", 22, "var(--primary)")}</span>
+          </div>
+          <a class="btn btn-primary btn-full" href="{base}housekeeping/log{person_suffix(p)}">
+            {_icon("plus", 14, "white")} Arbeitszeit eintragen
+          </a>
+        </div>"""
+    elif show_foreign:
+        hk_summary = get_housekeeping_month_summary(month=month)
+        helper_count = len(list_people_by_role("housekeeper"))
+        helper_hint = (
+            f"{_fmt_hours(hk_summary['total_hours'])} Stunden · {_fmt_money(hk_summary['total_cost'])} Gesamtkosten diesen Monat"
+            if helper_count else
+            "Noch keine Haushaltshilfe angelegt"
+        )
+        housekeeping_section = f"""
+        <div class="card housekeeping-home-card">
+          <div class="admin-section-head">
+            <div>
+              <h3>Haushaltshilfen</h3>
+              <p class="muted">{helper_hint}</p>
+            </div>
+            <span style="color:var(--primary)">{_icon("clock", 22, "var(--primary)")}</span>
+          </div>
+          <a class="btn btn-ghost btn-full" href="{base}housekeeping{person_suffix(p)}">
+            Arbeitszeiten verwalten
+          </a>
+        </div>"""
 
     # Nächste Aufgaben
     upcoming = due_today_or_overdue(all_tasks)
@@ -221,7 +273,7 @@ async def dashboard(request: Request, p: str = ""):
 
     content = f"""
     <h2 style="font-size:1.25rem;font-weight:800;margin-bottom:0.875rem">{greeting}</h2>
-    {rings_row}{quick_actions}{next_tasks_section}
+    {rings_row}{quick_actions}{housekeeping_section}{next_tasks_section}
     {room_block}"""
 
     return render(content, request, page="home", person=p)

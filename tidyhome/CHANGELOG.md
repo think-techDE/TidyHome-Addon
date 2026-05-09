@@ -1,3 +1,10 @@
+## 1.3.38
+
+- Haushaltshilfen: eigener Bereich für Arbeitszeiten, Stundenlohn und Monatskosten ergänzt
+- Haushaltshilfen: Eltern/Admins können Arbeitszeiten erfassen, korrigieren und löschen
+- Zuhause: Haushaltshilfen sehen Monatsstunden, bisher erarbeiteten Lohn und einen Button zur Zeiterfassung
+- Zuhause: Eltern/Admins erhalten einen Einstieg zur Haushaltshilfe-Verwaltung
+
 ## 1.3.37
 
 - Aufgaben: neue Aufgaben können direkt beim Erstellen ein optionales Vorher-Foto erhalten

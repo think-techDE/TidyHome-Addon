@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-09 · Version 1.3.37
+Stand: 2026-05-09 · Version 1.3.38
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -63,6 +63,8 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Person bleibt beim Navigieren erhalten
 - [x] Admins können zwischen Personenansichten wechseln
 - [x] Überarbeitetes Personenmenü mit klaren Bereichen für Ansicht, Einstellungen und Verwaltung
+- [x] Eltern/Admins sehen auf Zuhause den Einstieg zur Haushaltshilfe-Verwaltung
+- [x] Haushaltshilfen sehen auf Zuhause Monatsstunden und bisher erarbeiteten Lohn
 
 ### Punkte & Motivation
 
@@ -74,6 +76,15 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Persönliche Statistik mit Streak, Wochenpunkten, Gesamtpunkten und Wochenziel
 - [x] Erfolgsmeldung mit Punkten direkt nach dem Erledigen
 - [x] Verlauf der letzten Erfolge mit Aufgabe, Datum und Punktzahl
+
+### Haushaltshilfen
+
+- [x] Haushaltshilfe-Rolle als Basis für Zeiterfassung
+- [x] Stundenlohn pro Haushaltshilfe verwalten
+- [x] Arbeitszeiten pro Einsatz erfassen
+- [x] Arbeitszeiten nachträglich korrigieren und löschen
+- [x] Monatsübersicht mit Stunden und Gesamtkosten
+- [x] Persönliche Eingabemaske für Haushaltshilfen
 
 ### Benachrichtigungen & Erinnerungen
 
@@ -160,5 +171,5 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [idee] Positive Verstärkung nach Erledigung
 - [idee] Abzeichen und Achievements
 - [idee] Persönliche Verlaufsseite
-- [idee] Haushaltshilfe-Zeiterfassung, Stundensatz, Kostenübersicht und CSV-Export
+- [idee] CSV-Export für Haushaltshilfe-Abrechnung
 - [idee] Trash-Card-/Müllkalender-Integration als Aufgaben-Trigger

@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from config import BOOTSTRAP_ADMINS, logger
 from routes.dashboard import router as dashboard_router
+from routes.housekeeping import router as housekeeping_router
 from routes.projects import router as projects_router
 from routes.scores import router as scores_router
 from routes.settings import router as settings_router
@@ -15,7 +16,7 @@ from routes.tasks import router as tasks_router
 from scheduler import scheduler_loop
 from storage import PHOTO_DIR
 
-APP_VERSION = "1.3.37"
+APP_VERSION = "1.3.38"
 
 app = FastAPI(title="TidyHome", version=APP_VERSION)
 
@@ -26,6 +27,7 @@ app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
 app.mount("/photos", StaticFiles(directory=PHOTO_DIR), name="photos")
 
 app.include_router(dashboard_router)
+app.include_router(housekeeping_router)
 app.include_router(tasks_router)
 app.include_router(projects_router)
 app.include_router(scores_router)
