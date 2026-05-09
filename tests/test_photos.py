@@ -77,11 +77,12 @@ class PhotoTests(unittest.TestCase):
         self.assertIn("Kamera öffnen", html)
         self.assertIn("camera-preview", html)
         self.assertIn("photo-file-input", html)
+        self.assertIn('photo-file-button" for=', html)
         self.assertIn('name="photo_camera"', html)
         self.assertIn('name="photo_file"', html)
         self.assertIn('accept="image/*,android/force-camera-workaround"', html)
         self.assertIn('capture="environment"', html)
-        self.assertIn("nativen Kamera-/Dateidialog", html)
+        self.assertIn("Fallbacks erscheinen nur", html)
 
 
 if __name__ == "__main__":

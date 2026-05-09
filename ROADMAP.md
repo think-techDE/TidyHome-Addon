@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-09 · Aktuelle Version: 1.3.27
+Stand: 2026-05-09 · Aktuelle Version: 1.3.28
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -32,6 +32,11 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.28
+
+- Fotoaufnahme zeigt im Normalfall nur noch die Live-Kamera-Aktion
+- Datei- und Native-Fallbacks werden erst sichtbar, wenn die WebView die Live-Kamera nicht bereitstellt oder blockiert
 
 ### v1.3.27
 

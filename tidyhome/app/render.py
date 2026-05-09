@@ -741,7 +741,7 @@ def photos_card(entity_type: str, entity_id: str, action: str,
           <button class="btn btn-ghost btn-sm camera-start" type="button" hidden>
             {_icon("camera", 14)} Kamera öffnen
           </button>
-          <label class="btn btn-outline btn-sm photo-file-button" for="{file_input_id}">
+          <label class="btn btn-outline btn-sm photo-file-button" for="{file_input_id}" hidden>
             {_icon("plus", 14)} Datei auswählen
           </label>
         </div>
@@ -755,7 +755,7 @@ def photos_card(entity_type: str, entity_id: str, action: str,
           </div>
         </div>
         <div class="camera-msg muted"></div>
-        <div class="muted photo-upload-hint">Wenn die WebView keine Live-Kamera bereitstellt, öffnet Kamera öffnen direkt den nativen Kamera-/Dateidialog.</div>
+        <div class="muted photo-upload-hint">Öffnet normalerweise die Live-Kamera. Fallbacks erscheinen nur, wenn die WebView sie blockiert.</div>
       </form>
     </details>"""
 
@@ -1232,8 +1232,10 @@ def render(content: str, request: Request, page: str = "home",
   function setCameraMode(card, liveMode){{
     var nativeButton = card.querySelector('.camera-native-button');
     var liveButton = card.querySelector('.camera-start');
+    var fileButton = card.querySelector('.photo-file-button');
     if (nativeButton) nativeButton.hidden = !!liveMode;
     if (liveButton) liveButton.hidden = !liveMode;
+    if (fileButton) fileButton.hidden = !!liveMode;
   }}
 
   function enhanceCameraControls(){{
@@ -1246,6 +1248,7 @@ def render(content: str, request: Request, page: str = "home",
   async function startCamera(card){{
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {{
       setCameraMode(card, false);
+      setCameraMessage(card, 'Live-Kamera nicht verfügbar. Nutze Kamera öffnen oder Datei auswählen als Fallback.');
       return;
     }}
     try {{

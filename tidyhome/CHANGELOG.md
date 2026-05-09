@@ -1,3 +1,8 @@
+## 1.3.28
+
+- Fotos: im Normalfall wird nur noch die Live-Kamera-Aktion angezeigt
+- Fotos: Datei- und Native-Fallbacks erscheinen erst, wenn die WebView die Live-Kamera nicht bereitstellt oder blockiert
+
 ## 1.3.27
 
 - Fotos: Kamera-Fallback ist jetzt ein echtes Label für das native Kamera-Input und benötigt keinen programmatischen Klick mehr
