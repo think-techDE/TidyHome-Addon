@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-09 · Aktuelle Version: 1.3.28
+Stand: 2026-05-09 · Aktuelle Version: 1.3.29
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -32,6 +32,11 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.29
+
+- Versteckte Foto-Fallback-Buttons werden durch eine explizite `[hidden]`-Regel zuverlässig ausgeblendet
+- Foto-Aktionsleiste zeigt sichtbare Buttons einspaltig und vermeidet doppelte Kamera-Aktionen
 
 ### v1.3.28
 

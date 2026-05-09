@@ -1,3 +1,8 @@
+## 1.3.29
+
+- Fotos: versteckte Fallback-Buttons werden nicht mehr durch Button-CSS sichtbar gemacht
+- Fotos: Foto-Aktionsleiste zeigt im Normalfall nur noch eine Kamera-Aktion
+
 ## 1.3.28
 
 - Fotos: im Normalfall wird nur noch die Live-Kamera-Aktion angezeigt

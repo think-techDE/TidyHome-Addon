@@ -28,6 +28,7 @@
     --icon-color: var(--primary-dark);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           background: var(--bg); color: var(--text);
           padding-bottom: calc(var(--nav-h) + 0.75rem);
@@ -257,7 +258,7 @@
                  display:grid; place-items:center; color:var(--muted); font-size:0.78rem;
                  background:var(--surface-2); }
   .photo-upload { padding:0.85rem 1rem 1rem; display:flex; flex-direction:column; gap:0.55rem; }
-  .photo-actions { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
+  .photo-actions { display:grid; grid-template-columns:1fr; gap:0.5rem; }
   .camera-native-button,
   .photo-file-button { cursor:pointer; justify-content:center; }
   .photo-file-input { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;
@@ -270,9 +271,6 @@
   .camera-actions { display:flex; gap:0.5rem; padding:0.65rem; background:var(--surface); }
   .camera-actions .btn { flex:1; }
   .camera-msg { min-height:1rem; font-size:0.74rem; }
-  @media (max-width:520px) {
-    .photo-actions { grid-template-columns:1fr; }
-  }
   .admin-badge { font-size: 0.7rem; background: var(--primary-soft); color: var(--primary-dark);
                  padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--primary-border); }
   .admin-hero { display:flex; align-items:flex-start; justify-content:space-between;
