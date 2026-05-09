@@ -45,6 +45,10 @@ def _task_return_path(return_to: str = "") -> str:
     return "tasks/history" if return_to == "history" else "tasks"
 
 
+def _save_initial_task_note(task: Task, note: str, author: str = "") -> bool:
+    return bool(add_comment("task", task.id, note, author=author))
+
+
 @router.get("", response_class=HTMLResponse)
 async def tasks_list(request: Request, room: str = None, person: str = None,
                      overdue: str = None, effort: str = None,
@@ -315,6 +319,7 @@ async def task_create(request: Request, name: str = Form(...), room: str = Form(
     create_task(task)
     return_p = str(form.get("return_p") or "")
     creator = resolve_person(request, return_p)
+    _save_initial_task_note(task, str(form.get("initial_note") or ""), author=creator)
     await send_task_assignment_notifications(task, sender=creator)
     return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
 
@@ -631,6 +636,12 @@ async def _task_form(request: Request, title: str, action: str,
                     title="Aufgaben-Fotos", margin_top=True)
         if task else ""
     )
+    initial_note = "" if task else """
+        <div class="form-group">
+          <label>Notiz (optional)</label>
+          <textarea name="initial_note" rows="3"
+                    placeholder="Hinweis oder Absprache direkt mit anlegen"></textarea>
+        </div>"""
 
     content = f"""
     <div class="page-header">
@@ -645,6 +656,7 @@ async def _task_form(request: Request, title: str, action: str,
           <label>Was ist zu erledigen?</label>
           <input name="name" required placeholder="z.B. Staubsaugen" value="{cur_name}">
         </div>
+        {initial_note}
         <div class="grid-2">
           <div class="form-group">
             <label>Raum</label>

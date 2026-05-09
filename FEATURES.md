@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-09 · Version 1.3.33
+Stand: 2026-05-09 · Version 1.3.34
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -26,6 +26,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Neue Aufgaben für andere Personen lösen automatisch eine Smartphone-Benachrichtigung aus
 - [x] Filter nach Raum, Person, Überfälligkeit und Aufwand
 - [x] Kommentare und Notizen direkt an Aufgaben
+- [x] Optionale Notiz direkt beim Erstellen neuer Aufgaben
 - [x] Einklappbare Notizen-Karten mit kompaktem Leerzustand
 - [x] Vorher/Nachher-Fotos direkt an Aufgaben
 - [x] Smartphone-Kameraaufnahme und Datei-Upload für Aufgabenfotos

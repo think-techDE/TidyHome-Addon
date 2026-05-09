@@ -1,3 +1,8 @@
+## 1.3.34
+
+- Aufgaben: neue Aufgaben können direkt beim Erstellen eine erste Notiz speichern
+- Aufgaben: Erstellnotizen werden als normale Aufgaben-Notizen mit Autor abgelegt
+
 ## 1.3.33
 
 - UI: Notizen-Karten sind jetzt wie Foto-Karten einklappbar
