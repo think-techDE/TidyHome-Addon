@@ -8,8 +8,8 @@ from render import (_base, _icon, _ring_chart, _room_icon,
                     person_suffix, render, resolve_person, task_row)
 from storage import (filter_tasks_by_role, get_admins, get_person_settings,
                      get_housekeeping_month_summary, get_room_icons,
-                     is_vacation_mode_active, list_people_by_role,
-                     list_projects, list_steps, list_tasks)
+                     is_vacation_mode_active, list_projects, list_steps,
+                     list_tasks)
 
 router = APIRouter()
 
@@ -57,11 +57,6 @@ async def dashboard(request: Request, p: str = ""):
     is_parent = cfg.get("role") == "parent"
     is_housekeeper = cfg.get("role") == "housekeeper"
     show_foreign = is_admin or is_parent
-    viewer = ha_user or p
-    viewer_cfg = get_person_settings(viewer) if viewer else {}
-    viewer_can_manage_housekeeping = (
-        viewer in admins or viewer_cfg.get("role") == "parent"
-    )
     is_self_housekeeper = bool(is_housekeeper and p and (not ha_user or ha_user == p))
 
     # Own tasks (role-filtered = only assigned to current person)
@@ -140,28 +135,7 @@ async def dashboard(request: Request, p: str = ""):
 
     housekeeping_section = ""
     month = date.today().strftime("%Y-%m")
-    if viewer_can_manage_housekeeping:
-        hk_summary = get_housekeeping_month_summary(month=month)
-        helper_count = len(list_people_by_role("housekeeper"))
-        helper_hint = (
-            f"{_fmt_hours(hk_summary['total_hours'])} Stunden · {_fmt_money(hk_summary['total_cost'])} Gesamtkosten diesen Monat"
-            if helper_count else
-            "Noch keine Haushaltshilfe angelegt"
-        )
-        housekeeping_section = f"""
-        <div class="card housekeeping-home-card">
-          <div class="admin-section-head">
-            <div>
-              <h3>Haushaltshilfen</h3>
-              <p class="muted">{helper_hint}</p>
-            </div>
-            <span style="color:var(--primary)">{_icon("clock", 22, "var(--primary)")}</span>
-          </div>
-          <a class="btn btn-ghost btn-full" href="{base}housekeeping">
-            Arbeitszeiten verwalten
-          </a>
-        </div>"""
-    elif is_self_housekeeper:
+    if is_self_housekeeper:
         hk_summary = get_housekeeping_month_summary(p, month)
         item = hk_summary["people"][0] if hk_summary["people"] else {
             "hours": 0.0, "cost": 0.0, "hourly_wage": 0.0

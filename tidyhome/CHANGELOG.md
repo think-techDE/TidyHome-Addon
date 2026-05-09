@@ -1,3 +1,8 @@
+## 1.3.40
+
+- Zuhause: Haushaltshilfe-Verwaltung für Eltern/Admins entfernt
+- Personenmenü: Haushaltshilfe-Verwaltung bleibt über den eigenen Bereich erreichbar
+
 ## 1.3.39
 
 - Personenmenü: eigener Bereich für Haushaltshilfen mit direktem Einstieg zur Arbeitszeitverwaltung

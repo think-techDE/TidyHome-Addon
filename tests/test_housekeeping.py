@@ -114,7 +114,7 @@ class HousekeepingTests(unittest.TestCase):
         self.assertIn('href="/housekeeping"', html)
         self.assertIn("Arbeitszeiten verwalten", html)
 
-    def test_admin_viewing_housekeeper_sees_management_not_personal_work_card(self):
+    def test_admin_viewing_housekeeper_sees_no_housekeeping_home_card(self):
         save_person("Ben", "parent")
         save_person("Marina", "housekeeper")
         storage.save_admins(["Ben"])
@@ -124,8 +124,8 @@ class HousekeepingTests(unittest.TestCase):
 
         html = response.body.decode("utf-8")
 
-        self.assertIn("Haushaltshilfen", html)
-        self.assertIn("Arbeitszeiten verwalten", html)
+        self.assertNotIn("housekeeping-home-card", html)
+        self.assertNotIn("Gesamtkosten diesen Monat", html)
         self.assertNotIn("Arbeitszeit diesen Monat", html)
 
 
