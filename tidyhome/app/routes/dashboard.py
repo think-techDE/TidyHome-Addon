@@ -29,8 +29,16 @@ def _fmt_money(value: float) -> str:
     return f"{value:,.2f} €".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
+def _ha_user(request: Request) -> str:
+    return (
+        request.headers.get("X-Remote-User-Display-Name") or
+        request.headers.get("X-Remote-User-Name", "")
+    ).strip()
+
+
 @router.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, p: str = ""):
+    ha_user = _ha_user(request)
     p = resolve_person(request, p)
     areas = await get_areas()
     stored_room_icons = get_room_icons()
@@ -49,6 +57,12 @@ async def dashboard(request: Request, p: str = ""):
     is_parent = cfg.get("role") == "parent"
     is_housekeeper = cfg.get("role") == "housekeeper"
     show_foreign = is_admin or is_parent
+    viewer = ha_user or p
+    viewer_cfg = get_person_settings(viewer) if viewer else {}
+    viewer_can_manage_housekeeping = (
+        viewer in admins or viewer_cfg.get("role") == "parent"
+    )
+    is_self_housekeeper = bool(is_housekeeper and p and (not ha_user or ha_user == p))
 
     # Own tasks (role-filtered = only assigned to current person)
     own_tasks_raw = list_tasks()
@@ -126,25 +140,7 @@ async def dashboard(request: Request, p: str = ""):
 
     housekeeping_section = ""
     month = date.today().strftime("%Y-%m")
-    if is_housekeeper and p:
-        hk_summary = get_housekeeping_month_summary(p, month)
-        item = hk_summary["people"][0] if hk_summary["people"] else {
-            "hours": 0.0, "cost": 0.0, "hourly_wage": 0.0
-        }
-        housekeeping_section = f"""
-        <div class="card housekeeping-home-card">
-          <div class="admin-section-head">
-            <div>
-              <h3>Arbeitszeit diesen Monat</h3>
-              <p class="muted">{_fmt_hours(item['hours'])} Stunden · {_fmt_money(item['cost'])} erarbeitet</p>
-            </div>
-            <span style="color:var(--primary)">{_icon("clock", 22, "var(--primary)")}</span>
-          </div>
-          <a class="btn btn-primary btn-full" href="{base}housekeeping/log{person_suffix(p)}">
-            {_icon("plus", 14, "white")} Arbeitszeit eintragen
-          </a>
-        </div>"""
-    elif show_foreign:
+    if viewer_can_manage_housekeeping:
         hk_summary = get_housekeeping_month_summary(month=month)
         helper_count = len(list_people_by_role("housekeeper"))
         helper_hint = (
@@ -161,8 +157,26 @@ async def dashboard(request: Request, p: str = ""):
             </div>
             <span style="color:var(--primary)">{_icon("clock", 22, "var(--primary)")}</span>
           </div>
-          <a class="btn btn-ghost btn-full" href="{base}housekeeping{person_suffix(p)}">
+          <a class="btn btn-ghost btn-full" href="{base}housekeeping">
             Arbeitszeiten verwalten
+          </a>
+        </div>"""
+    elif is_self_housekeeper:
+        hk_summary = get_housekeeping_month_summary(p, month)
+        item = hk_summary["people"][0] if hk_summary["people"] else {
+            "hours": 0.0, "cost": 0.0, "hourly_wage": 0.0
+        }
+        housekeeping_section = f"""
+        <div class="card housekeeping-home-card">
+          <div class="admin-section-head">
+            <div>
+              <h3>Arbeitszeit diesen Monat</h3>
+              <p class="muted">{_fmt_hours(item['hours'])} Stunden · {_fmt_money(item['cost'])} erarbeitet</p>
+            </div>
+            <span style="color:var(--primary)">{_icon("clock", 22, "var(--primary)")}</span>
+          </div>
+          <a class="btn btn-primary btn-full" href="{base}housekeeping/log{person_suffix(p)}">
+            {_icon("plus", 14, "white")} Arbeitszeit eintragen
           </a>
         </div>"""
 

@@ -1,3 +1,9 @@
+## 1.3.39
+
+- Personenmenü: eigener Bereich für Haushaltshilfen mit direktem Einstieg zur Arbeitszeitverwaltung
+- Zuhause: Eltern/Admins sehen keine persönliche Arbeitszeit-Kachel mehr, wenn sie eine Haushaltshilfe-Ansicht öffnen
+- Zuhause: Haushaltshilfen behalten die persönliche Monatsübersicht mit Arbeitszeit und erarbeitetem Lohn
+
 ## 1.3.38
 
 - Haushaltshilfen: eigener Bereich für Arbeitszeiten, Stundenlohn und Monatskosten ergänzt

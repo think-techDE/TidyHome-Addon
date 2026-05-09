@@ -4,12 +4,15 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
 
 APP_DIR = Path(__file__).resolve().parents[1] / "tidyhome" / "app"
 sys.path.insert(0, str(APP_DIR))
 os.environ.setdefault("DATA_DIR", tempfile.mkdtemp(prefix="tidyhome-test-"))
 
+from render import render  # noqa: E402
+from routes.dashboard import dashboard  # noqa: E402
 from routes.housekeeping import housekeeping_dashboard, housekeeping_log  # noqa: E402
 import storage  # noqa: E402
 
@@ -100,6 +103,30 @@ class HousekeepingTests(unittest.TestCase):
         self.assertIn("Arbeitszeit eintragen", html)
         self.assertIn("40,00", html)
         self.assertIn("Erarbeitet", html)
+
+    def test_admin_menu_links_to_housekeeping_area(self):
+        save_person("Ben", "parent")
+        storage.save_admins(["Ben"])
+
+        html = render("", DummyRequest("Ben"), person="Ben").body.decode("utf-8")
+
+        self.assertIn("Haushaltshilfen", html)
+        self.assertIn('href="/housekeeping"', html)
+        self.assertIn("Arbeitszeiten verwalten", html)
+
+    def test_admin_viewing_housekeeper_sees_management_not_personal_work_card(self):
+        save_person("Ben", "parent")
+        save_person("Marina", "housekeeper")
+        storage.save_admins(["Ben"])
+
+        with patch("routes.dashboard.get_areas", AsyncMock(return_value=[])):
+            response = asyncio.run(dashboard(DummyRequest("Ben"), p="Marina"))
+
+        html = response.body.decode("utf-8")
+
+        self.assertIn("Haushaltshilfen", html)
+        self.assertIn("Arbeitszeiten verwalten", html)
+        self.assertNotIn("Arbeitszeit diesen Monat", html)
 
 
 if __name__ == "__main__":

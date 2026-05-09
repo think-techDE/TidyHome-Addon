@@ -1132,6 +1132,8 @@ def render(content: str, request: Request, page: str = "home",
             <div class="hpill-section-label">Einstellungen</div>
             {own_profile}
             {current_profile}
+            <div class="hpill-section-label">Haushaltshilfen</div>
+            <a href="{base}housekeeping" class="hpill-action">{_icon("clock", 16)}<span>Arbeitszeiten verwalten</span></a>
             <div class="hpill-section-label">Verwaltung</div>
             <a href="{base}admin" class="hpill-action">{_icon("settings", 16)}<span>Admin-Bereich</span></a>
           </div>
