@@ -1,3 +1,7 @@
+## 1.3.35
+
+- UI: zusätzlicher `1×`-Badge für einmalige Aufgaben aus Aufgabenlisten entfernt
+
 ## 1.3.34
 
 - Aufgaben: neue Aufgaben können direkt beim Erstellen eine erste Notiz speichern

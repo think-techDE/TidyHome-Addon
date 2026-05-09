@@ -805,17 +805,13 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
 
     important_cls = " important" if task.important else ""
     star = _icon("star", 13, "var(--warning)", 2.5) if task.important else ""
-    onetime_badge = (
-        '<span class="badge" style="background:var(--muted);color:#fff;'
-        'font-size:0.62rem;flex-shrink:0">1×</span>'
-    ) if task.onetime else ""
     effort_badge = (
         f'<span class="badge {effort_badges[task.effort]}" '
         f'style="font-size:0.62rem;flex-shrink:0">{effort_labels[task.effort]}</span>'
     ) if task.effort in effort_labels else ""
     sub_badges = (
-        f'<div class="task-badge-subrow">{effort_badge}{onetime_badge}</div>'
-        if effort_badge or onetime_badge else ""
+        f'<div class="task-badge-subrow">{effort_badge}</div>'
+        if effort_badge else ""
     )
     assigned_txt = ""
     if task.assigned_to and show_assigned:

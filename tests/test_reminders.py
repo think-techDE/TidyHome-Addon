@@ -207,6 +207,19 @@ class ReminderTests(unittest.TestCase):
         self.assertNotIn(f"/tasks/{task.id}/remind", html)
         self.assertNotIn('title="Andere erinnern"', html)
 
+    def test_task_row_hides_onetime_badge(self):
+        task = Task(
+            name="Fenster putzen",
+            room="Wohnzimmer",
+            interval_days=0,
+            assigned_to=["Danny"],
+            onetime=True,
+        )
+
+        html = render.task_row(task, base="/", person="Danny")
+
+        self.assertNotIn("1\u00d7", html)
+
     def test_project_step_row_shows_bell_for_other_assignee(self):
         project = Project(name="Keller sortieren", room="Keller", assigned_to="Danny")
         step = Step(project_id=project.id, name="Kartons sortieren", assigned_to="Petra")

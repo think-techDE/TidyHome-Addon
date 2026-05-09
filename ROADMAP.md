@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-09 · Aktuelle Version: 1.3.34
+Stand: 2026-05-09 · Aktuelle Version: 1.3.35
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -32,6 +32,10 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.35
+
+- Einmalige Aufgaben werden nicht mehr mit einem zusätzlichen `1×`-Badge in Aufgabenlisten markiert
 
 ### v1.3.34
 
