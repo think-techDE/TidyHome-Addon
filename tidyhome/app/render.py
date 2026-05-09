@@ -723,9 +723,12 @@ def photos_card(entity_type: str, entity_id: str, action: str,
             <span>Nachher</span>
           </label>
         </div>
-        <input type="file" name="photo" accept="image/*" capture="environment" required>
+        <label class="btn btn-ghost btn-sm photo-file-button">
+          <input class="photo-file-input" type="file" name="photo" accept="image/*" capture="environment"
+                 required onchange="this.form.submit()">
+          {_icon("camera", 14)} Foto aufnehmen / auswählen
+        </label>
         <div class="muted photo-upload-hint">Öffnet auf Smartphones die Kamera, sonst die Dateiauswahl.</div>
-        <button class="btn btn-ghost btn-sm" type="submit">{_icon("camera", 14)} Foto aufnehmen / auswählen</button>
       </form>
     </details>"""
 

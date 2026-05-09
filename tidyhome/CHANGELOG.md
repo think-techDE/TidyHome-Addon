@@ -1,3 +1,8 @@
+## 1.3.24
+
+- Fotos: sichtbarer Foto-Button öffnet jetzt direkt den nativen Kamera-/Dateidialog
+- Fotos: Upload wird nach der Bildauswahl automatisch abgesendet
+
 ## 1.3.23
 
 - Fotos: Aufnahme auf den nativen Kamera-/Dateidialog umgestellt

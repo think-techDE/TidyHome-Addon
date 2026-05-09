@@ -257,6 +257,9 @@
                  display:grid; place-items:center; color:var(--muted); font-size:0.78rem;
                  background:var(--surface-2); }
   .photo-upload { padding:0.85rem 1rem 1rem; display:flex; flex-direction:column; gap:0.55rem; }
+  .photo-file-button { cursor:pointer; justify-content:center; }
+  .photo-file-input { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;
+                      clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }
   .photo-upload-hint { font-size:0.74rem; }
   .photo-type-picker { display:grid; grid-template-columns:1fr 1fr; gap:0.45rem; }
   .admin-badge { font-size: 0.7rem; background: var(--primary-soft); color: var(--primary-dark);
