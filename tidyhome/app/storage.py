@@ -56,6 +56,20 @@ def list_tasks(room: str = None, assigned_to: str = None, overdue_only: bool = F
     return tasks
 
 
+def list_task_history() -> list[Task]:
+    table = get_tasks_table()
+    tasks = [
+        Task(**row)
+        for row in table.all()
+        if row.get("last_done") or not row.get("active", True)
+    ]
+    tasks.sort(
+        key=lambda t: (t.last_done or t.created_at[:10], t.created_at),
+        reverse=True,
+    )
+    return tasks
+
+
 def get_task(task_id: str) -> Task | None:
     table = get_tasks_table()
     Q = Query()
@@ -104,6 +118,18 @@ def snooze_task(task_id: str, until_date: str) -> Task | None:
     if not task:
         return None
     task.snooze_until = until_date or None
+    return update_task(task)
+
+
+def reactivate_task(task_id: str) -> Task | None:
+    task = get_task(task_id)
+    if not task:
+        return None
+    task.active = True
+    task.last_done = None
+    task.snooze_until = None
+    if task.onetime:
+        task.start_date = date.today().isoformat()
     return update_task(task)
 
 

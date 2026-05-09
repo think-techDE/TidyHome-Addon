@@ -10,19 +10,39 @@ from models import Task
 from reminders import (send_task_assignment_notifications, send_task_reminders,
                        task_reminder_recipients)
 from render import (INTERVALS, _base, _icon, _icon_chooser, _selected,
-                    comments_card, person_suffix, photos_card, render,
-                    resolve_person, task_row)
+                    _task_icon, comments_card, format_date_de, interval_label,
+                    person_suffix, photos_card, render, resolve_person,
+                    task_row)
 from storage import (add_comment, add_photo, create_task, delete_photo, delete_task,
                      edit_task, filter_tasks_by_role,
                      get_admins, get_person_settings, get_task, get_vacation_mode,
-                     is_vacation_mode_active, list_people_by_role, list_tasks,
-                     mark_done, snooze_task)
+                     is_vacation_mode_active, list_people_by_role,
+                     list_task_history, list_tasks, mark_done, reactivate_task,
+                     snooze_task)
 from uploads import selected_photo_upload
 
 router = APIRouter(prefix="/tasks")
 
 _EFFORT_LABELS = {"low": "Wenig", "medium": "Mittel", "high": "Viel"}
 _EFFORT_BADGE  = {"low": "ok", "medium": "today", "high": "overdue"}
+_ONETIME_INTERVAL = "once"
+
+
+def _parse_interval_choice(value: str, legacy_onetime: str = "") -> tuple[int, bool]:
+    value = str(value or _ONETIME_INTERVAL).strip()
+    if value == _ONETIME_INTERVAL:
+        return 0, True
+    try:
+        days = int(value)
+    except ValueError:
+        return 0, True
+    if days <= 0:
+        return 0, True
+    return days, legacy_onetime == "1"
+
+
+def _task_return_path(return_to: str = "") -> str:
+    return "tasks/history" if return_to == "history" else "tasks"
 
 
 @router.get("", response_class=HTMLResponse)
@@ -47,6 +67,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     all_active = not room and not overdue and not effort
     filters = '<div class="filters">'
     filters += f'<a class="filter-btn {"active" if all_active else ""}" href="tasks{("?p="+p) if p else ""}">Alle</a>'
+    filters += f'<a class="filter-btn" href="tasks/history{("?p="+p) if p else ""}">Historie</a>'
     filters += f'<a class="filter-btn {"active" if overdue == "1" else ""}" href="tasks?overdue=1{psuffix}">Überfällig</a>'
     for ef, label in _EFFORT_LABELS.items():
         filters += f'<a class="filter-btn {"active" if effort == ef else ""}" href="tasks?effort={ef}{psuffix}">{label}</a>'
@@ -149,6 +170,92 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     return render(content, request, page="tasks", person=p)
 
 
+def _task_history_row(task: Task, person: str = "") -> str:
+    psuffix = person_suffix(person)
+    qs = f"{psuffix}{'&' if psuffix else '?'}return_to=history"
+    assigned = ", ".join(task.assigned_to) if task.assigned_to else "Nicht zugeordnet"
+    done_label = format_date_de(task.last_done or "")
+    if task.active:
+        status_badge = '<span class="badge ok">Erledigt</span>'
+        action_label = "Erneut öffnen"
+    else:
+        status_badge = '<span class="badge today">Archiviert</span>'
+        action_label = "Wieder aktivieren"
+    interval = "Einmalig" if task.onetime else interval_label(task.interval_days)
+    done_meta = f"Erledigt am {done_label}" if done_label else "Archiviert"
+    return f"""
+    <div class="task-row history-row">
+      {_task_icon(task.name, task.room, icon=task.icon, size=40)}
+      <div class="task-body">
+        <div class="task-header">
+          <span class="task-name">{escape(task.name)}</span>
+          <div class="task-badges">{status_badge}</div>
+        </div>
+        <div class="task-date">
+          <span>{escape(done_meta)}</span>
+          <span>· {escape(task.room)}</span>
+          <span>· {escape(assigned)}</span>
+          <span>· {escape(interval)}</span>
+        </div>
+      </div>
+      <div class="task-actions">
+        <a class="icon-btn" href="tasks/{task.id}/edit{qs}"
+           title="Bearbeiten">{_icon("edit", 16)}</a>
+        <form class="inline" method="post" action="tasks/{task.id}/reactivate">
+          <input type="hidden" name="return_p" value="{escape(person)}">
+          <input type="hidden" name="return_to" value="history">
+          <button class="icon-btn success" title="{action_label}">{_icon("plus", 17)}</button>
+        </form>
+        <a class="icon-btn danger" href="tasks/{task.id}/delete{qs}"
+           onclick="return confirm('Aufgabe endgültig löschen?')" title="Löschen">
+          {_icon("trash", 16)}
+        </a>
+      </div>
+    </div>"""
+
+
+@router.get("/history", response_class=HTMLResponse)
+async def tasks_history(request: Request, p: str = ""):
+    p = resolve_person(request, p)
+    admins = get_admins()
+    tasks = list_task_history()
+    if p:
+        hidden = set(get_person_settings(p).get("hidden_rooms", []))
+        if hidden:
+            tasks = [t for t in tasks if t.room not in hidden]
+    tasks = filter_tasks_by_role(tasks, p, admins)
+    rows = "".join(_task_history_row(t, p) for t in tasks)
+    if not rows:
+        rows = (
+            '<div class="empty">'
+            '<div class="empty-icon">↺</div>'
+            '<div style="font-weight:600">Noch keine erledigten Aufgaben</div>'
+            '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
+            'Sobald Aufgaben erledigt oder archiviert wurden, erscheinen sie hier.</div>'
+            '</div>'
+        )
+
+    psuffix_q = f"?p={p}" if p else ""
+    content = f"""
+    <div class="hero-card page-hero">
+      <div>
+        <div class="hero-eyebrow">Nacharbeiten und reaktivieren</div>
+        <div class="hero-title">Aufgaben-Historie</div>
+      </div>
+      <div class="page-hero-actions">
+        <a class="btn btn-ghost btn-sm" href="tasks{psuffix_q}">
+          {_icon("chevron_l", 14)} Aktive
+        </a>
+      </div>
+    </div>
+    <div class="filters">
+      <a class="filter-btn" href="tasks{psuffix_q}">Aktive Aufgaben</a>
+      <a class="filter-btn active" href="tasks/history{psuffix_q}">Historie</a>
+    </div>
+    <div class="card card-flush">{rows}</div>"""
+    return render(content, request, page="tasks", person=p)
+
+
 @router.get("/new", response_class=HTMLResponse)
 async def task_new_form(request: Request, p: str = ""):
     p = resolve_person(request, p)
@@ -156,45 +263,53 @@ async def task_new_form(request: Request, p: str = ""):
 
 
 @router.get("/{task_id}/edit", response_class=HTMLResponse)
-async def task_edit_form(task_id: str, request: Request, p: str = ""):
+async def task_edit_form(task_id: str, request: Request, p: str = "",
+                         return_to: str = ""):
     p = resolve_person(request, p)
     task = get_task(task_id)
     if not task:
         raise HTTPException(404)
     return await _task_form(request, "Aufgabe bearbeiten", f"tasks/{task_id}/edit",
-                            "Speichern", task=task, person=p)
+                            "Speichern", task=task, person=p,
+                            return_to=return_to)
 
 
 @router.post("/{task_id}/edit")
 async def task_edit(task_id: str, request: Request,
                     name: str = Form(...), room: str = Form(...),
-                    interval_days: int = Form(...), points: int = Form(10),
+                    interval_days: str = Form(_ONETIME_INTERVAL), points: int = Form(10),
                     important: str = Form(""), onetime: str = Form(""),
                     icon: str = Form(""), effort: str = Form(""),
                     start_date: str = Form(""), snooze_until: str = Form("")):
     form = await request.form()
     assigned_to = list(form.getlist("assigned_to"))
-    if not edit_task(task_id, name=name, room=room, interval_days=interval_days,
+    parsed_interval, parsed_onetime = _parse_interval_choice(interval_days, onetime)
+    if not edit_task(task_id, name=name, room=room, interval_days=parsed_interval,
                      assigned_to=assigned_to, points=points,
-                     important=(important == "1"), onetime=(onetime == "1"),
+                     important=(important == "1"), onetime=parsed_onetime,
                      icon=icon, effort=effort,
                      start_date=start_date, snooze_until=snooze_until):
         raise HTTPException(404)
     return_p = str(form.get("return_p") or "")
-    return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
+    return_to = str(form.get("return_to") or "")
+    return RedirectResponse(
+        _base(request) + f"{_task_return_path(return_to)}{person_suffix(return_p)}",
+        status_code=303
+    )
 
 
 @router.post("")
 async def task_create(request: Request, name: str = Form(...), room: str = Form(...),
-                      interval_days: int = Form(...), points: int = Form(10),
+                      interval_days: str = Form(_ONETIME_INTERVAL), points: int = Form(10),
                       important: str = Form(""), onetime: str = Form(""),
                       icon: str = Form(""), effort: str = Form(""),
                       start_date: str = Form("")):
     form = await request.form()
     assigned_to = list(form.getlist("assigned_to"))
-    task = Task(name=name, room=room, interval_days=interval_days,
+    parsed_interval, parsed_onetime = _parse_interval_choice(interval_days, onetime)
+    task = Task(name=name, room=room, interval_days=parsed_interval,
                 assigned_to=assigned_to, points=points,
-                important=(important == "1"), onetime=(onetime == "1"),
+                important=(important == "1"), onetime=parsed_onetime,
                 icon=icon, effort=effort,
                 start_date=start_date or None)
     create_task(task)
@@ -406,24 +521,45 @@ async def task_photo_delete(task_id: str, photo_id: str, request: Request, p: st
     return RedirectResponse(_base(request) + f"tasks/{task_id}/edit{person_suffix(p)}", status_code=303)
 
 
+@router.post("/{task_id}/reactivate")
+async def task_reactivate(task_id: str, request: Request):
+    form = await request.form()
+    if not reactivate_task(task_id):
+        raise HTTPException(404)
+    return_p = str(form.get("return_p") or "")
+    return_to = str(form.get("return_to") or "")
+    sep = "&" if return_p else "?"
+    return RedirectResponse(
+        _base(request)
+        + f"{_task_return_path(return_to)}{person_suffix(return_p)}"
+        + f"{sep}msg={quote('Aufgabe wieder aktiviert')}",
+        status_code=303
+    )
+
+
 @router.get("/{task_id}/delete")
-async def task_delete(task_id: str, request: Request, p: str = ""):
+async def task_delete(task_id: str, request: Request, p: str = "",
+                      return_to: str = ""):
     delete_task(task_id)
     p = resolve_person(request, p) if p else ""
-    return RedirectResponse(_base(request) + f"tasks{person_suffix(p)}", status_code=303)
+    return RedirectResponse(
+        _base(request) + f"{_task_return_path(return_to)}{person_suffix(p)}",
+        status_code=303
+    )
 
 
 async def _task_form(request: Request, title: str, action: str,
-                     submit_label: str, task=None, person: str = "") -> HTMLResponse:
+                     submit_label: str, task=None, person: str = "",
+                     return_to: str = "") -> HTMLResponse:
     areas   = await get_areas()
     persons = await get_persons()
     cur_room       = task.room if task else ""
-    cur_interval   = task.interval_days if task else 7
+    cur_interval   = task.interval_days if task else 0
     cur_persons    = task.assigned_to if task else ([person] if person else [])
     cur_points     = task.points if task else 10
     cur_name       = task.name if task else ""
     cur_important  = task.important if task else False
-    cur_onetime    = task.onetime if task else False
+    cur_onetime    = task.onetime if task else True
     cur_icon       = task.icon if task else ""
     cur_effort     = task.effort if task else ""
     cur_start_date = task.start_date or "" if task else ""
@@ -438,7 +574,13 @@ async def _task_form(request: Request, title: str, action: str,
         f'><span>{pn}</span></label>'
         for pn in persons
     )
-    interval_opts = "".join(
+    cur_interval_choice = _ONETIME_INTERVAL if cur_onetime else str(cur_interval)
+    interval_opts = (
+        f'<option value="{_ONETIME_INTERVAL}"'
+        f'{_selected(_ONETIME_INTERVAL, cur_interval_choice)}>'
+        'Einmalig (nach Erledigung archiviert)</option>'
+    )
+    interval_opts += "".join(
         f'<option value="{d}"{_selected(d, cur_interval)}>{label}</option>'
         for d, label in INTERVALS.items())
 
@@ -460,7 +602,6 @@ async def _task_form(request: Request, title: str, action: str,
     )
 
     important_checked = "checked" if cur_important else ""
-    onetime_checked   = "checked" if cur_onetime   else ""
     from render import _icon as _i
     star_svg = _i("star", 15, "var(--warning)")
 
@@ -478,6 +619,8 @@ async def _task_form(request: Request, title: str, action: str,
         </div>"""
 
     psuffix_q = f"?p={person}" if person else ""
+    back_path = _task_return_path(return_to)
+    back_url = f"{back_path}{psuffix_q}"
     comments = (
         comments_card("task", task.id, f"tasks/{task.id}/comments", person,
                       margin_top=True)
@@ -492,11 +635,12 @@ async def _task_form(request: Request, title: str, action: str,
     content = f"""
     <div class="page-header">
       <h2>{title}</h2>
-      <a class="icon-btn" href="tasks{psuffix_q}" title="Abbrechen">{_i("chevron_l", 20)}</a>
+      <a class="icon-btn" href="{back_url}" title="Abbrechen">{_i("chevron_l", 20)}</a>
     </div>
     <div class="card">
       <form method="post" action="{action}">
         <input type="hidden" name="return_p" value="{person}">
+        <input type="hidden" name="return_to" value="{return_to}">
         <div class="form-group">
           <label>Was ist zu erledigen?</label>
           <input name="name" required placeholder="z.B. Staubsaugen" value="{cur_name}">
@@ -536,18 +680,9 @@ async def _task_form(request: Request, title: str, action: str,
             </span>
           </label>
         </div>
-        <div class="form-group">
-          <label class="option-card">
-            <input type="checkbox" name="onetime" value="1" {onetime_checked}>
-            <span style="display:flex;align-items:center;gap:0.4rem">
-              <span class="badge ok" style="font-size:0.62rem;padding:0.15rem 0.4rem">1×</span>
-              Einmalige Aufgabe (nach Erledigung archiviert)
-            </span>
-          </label>
-        </div>
         {snooze_section}
         <button class="btn btn-primary btn-full" type="submit">{submit_label}</button>
-        <a class="btn btn-ghost btn-full" href="tasks{psuffix_q}"
+        <a class="btn btn-ghost btn-full" href="{back_url}"
            style="margin-top:0.5rem">Abbrechen</a>
       </form>
     </div>

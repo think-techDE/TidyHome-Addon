@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-09 · Version 1.3.31
+Stand: 2026-05-09 · Version 1.3.32
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -12,7 +12,10 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
 - [x] Aufgaben anlegen, bearbeiten, löschen und erledigen
 - [x] Wiederkehrende Intervalle von täglich bis jährlich
+- [x] Einmalige Aufgaben als Standard im Intervall-Dropdown
 - [x] Einmalige Aufgaben mit automatischer Archivierung nach Erledigung
+- [x] Aufgaben-Historie für erledigte und archivierte Aufgaben
+- [x] Erledigte Aufgaben aus der Historie bearbeiten und wieder aktivieren
 - [x] Startdatum: Aufgaben erst ab einem gewählten Datum sichtbar und fällig
 - [x] Fälligkeit einmalig verschieben, ohne das Intervall zu ändern
 - [x] Statusanzeige für geplant, heute, überfällig und ok

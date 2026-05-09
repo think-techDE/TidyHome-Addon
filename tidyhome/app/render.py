@@ -567,6 +567,8 @@ def _ring_chart(value_str: str, pct: int, color: str, label: str, size: int = 70
 
 
 def interval_label(days: int) -> str:
+    if days <= 0:
+        return "Einmalig"
     return INTERVALS.get(days, f"Alle {days} Tage")
 
 

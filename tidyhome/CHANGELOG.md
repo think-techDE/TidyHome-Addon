@@ -1,3 +1,9 @@
+## 1.3.32
+
+- Aufgaben: „Einmalig“ ist jetzt Teil des Intervall-Dropdowns und Standard für neue Aufgaben
+- Aufgaben: Historie für erledigte und archivierte Aufgaben ergänzt
+- Aufgaben: erledigte Aufgaben können aus der Historie bearbeitet und wieder aktiviert werden
+
 ## 1.3.31
 
 - Dashboard: „Nächste Aufgaben“ zeigt nur heutige und überfällige Aufgaben

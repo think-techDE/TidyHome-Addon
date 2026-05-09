@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-09 · Aktuelle Version: 1.3.31
+Stand: 2026-05-09 · Aktuelle Version: 1.3.32
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -32,6 +32,12 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.32
+
+- Einmalige Aufgaben sind jetzt Standard im Intervall-Dropdown
+- Aufgaben-Historie für erledigte und archivierte Aufgaben ergänzt
+- Erledigte Aufgaben können aus der Historie bearbeitet und wieder aktiviert werden
 
 ### v1.3.31
 
