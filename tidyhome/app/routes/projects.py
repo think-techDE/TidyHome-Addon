@@ -12,6 +12,7 @@ from render import (_base, _icon, _icon_chooser, _selected,
 from storage import (add_comment, add_photo, add_step, assign_step, complete_step, create_project,
                      delete_photo, delete_project, delete_step, get_admins, get_person_settings, get_step,
                      get_project, list_projects, list_steps, update_project)
+from uploads import selected_photo_upload
 
 router = APIRouter(prefix="/projects")
 
@@ -405,13 +406,17 @@ async def project_comment_add(project_id: str, request: Request,
 async def project_photo_add(project_id: str, request: Request,
                             photo_type: str = Form("before"),
                             return_p: str = Form(""),
-                            photo: UploadFile = File(...)):
+                            photo: UploadFile | None = File(None),
+                            photo_camera: UploadFile | None = File(None),
+                            photo_file: UploadFile | None = File(None)):
     if not get_project(project_id):
         raise HTTPException(404)
-    data = await photo.read()
+    selected_photo, data = await selected_photo_upload(photo, photo_camera, photo_file)
+    if not selected_photo:
+        raise HTTPException(400, "Kein Foto ausgewählt")
     author = resolve_person(request, return_p)
-    add_photo("project", project_id, photo_type, photo.filename or "",
-              photo.content_type or "", data, author=author)
+    add_photo("project", project_id, photo_type, selected_photo.filename or "",
+              selected_photo.content_type or "", data, author=author)
     return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
 
 
@@ -501,14 +506,18 @@ async def step_add(project_id: str, request: Request,
 async def step_photo_add(project_id: str, step_id: str, request: Request,
                          photo_type: str = Form("before"),
                          return_p: str = Form(""),
-                         photo: UploadFile = File(...)):
+                         photo: UploadFile | None = File(None),
+                         photo_camera: UploadFile | None = File(None),
+                         photo_file: UploadFile | None = File(None)):
     step = get_step(step_id)
     if not step or step.project_id != project_id:
         raise HTTPException(404)
-    data = await photo.read()
+    selected_photo, data = await selected_photo_upload(photo, photo_camera, photo_file)
+    if not selected_photo:
+        raise HTTPException(400, "Kein Foto ausgewählt")
     author = resolve_person(request, return_p)
-    add_photo("step", step_id, photo_type, photo.filename or "",
-              photo.content_type or "", data, author=author)
+    add_photo("step", step_id, photo_type, selected_photo.filename or "",
+              selected_photo.content_type or "", data, author=author)
     return RedirectResponse(_base(request) + f"projects/{project_id}{_p_suffix(return_p)}", status_code=303)
 
 

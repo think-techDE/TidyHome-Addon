@@ -16,6 +16,7 @@ from storage import (add_comment, add_photo, create_task, delete_photo, delete_t
                      get_admins, get_person_settings, get_task, get_vacation_mode,
                      is_vacation_mode_active, list_people_by_role, list_tasks,
                      mark_done, snooze_task)
+from uploads import selected_photo_upload
 
 router = APIRouter(prefix="/tasks")
 
@@ -381,13 +382,17 @@ async def task_comment_add(task_id: str, request: Request,
 async def task_photo_add(task_id: str, request: Request,
                          photo_type: str = Form("before"),
                          return_p: str = Form(""),
-                         photo: UploadFile = File(...)):
+                         photo: UploadFile | None = File(None),
+                         photo_camera: UploadFile | None = File(None),
+                         photo_file: UploadFile | None = File(None)):
     if not get_task(task_id):
         raise HTTPException(404)
-    data = await photo.read()
+    selected_photo, data = await selected_photo_upload(photo, photo_camera, photo_file)
+    if not selected_photo:
+        raise HTTPException(400, "Kein Foto ausgewählt")
     author = resolve_person(request, return_p)
-    add_photo("task", task_id, photo_type, photo.filename or "",
-              photo.content_type or "", data, author=author)
+    add_photo("task", task_id, photo_type, selected_photo.filename or "",
+              selected_photo.content_type or "", data, author=author)
     return RedirectResponse(_base(request) + f"tasks/{task_id}/edit{person_suffix(return_p)}", status_code=303)
 
 

@@ -1,3 +1,9 @@
+## 1.3.27
+
+- Fotos: Kamera-Fallback ist jetzt ein echtes Label für das native Kamera-Input und benötigt keinen programmatischen Klick mehr
+- Fotos: Upload-Routen akzeptieren Live-Kamera-, native Kamera- und Datei-Felder separat
+- Fotos: Datei-Auswahl bleibt ohne Kamera-Erzwingung nutzbar
+
 ## 1.3.26
 
 - Fotos: Kamera-Button nutzt bei WebViews ohne `getUserMedia` automatisch den nativen Kamera-/Dateidialog

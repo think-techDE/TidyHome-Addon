@@ -73,9 +73,12 @@ class PhotoTests(unittest.TestCase):
         html = render.photos_card("task", "task-1", "tasks/task-1/photos", "Ben")
 
         self.assertIn("camera-start", html)
+        self.assertIn("camera-native-button", html)
         self.assertIn("Kamera öffnen", html)
         self.assertIn("camera-preview", html)
         self.assertIn("photo-file-input", html)
+        self.assertIn('name="photo_camera"', html)
+        self.assertIn('name="photo_file"', html)
         self.assertIn('accept="image/*,android/force-camera-workaround"', html)
         self.assertIn('capture="environment"', html)
         self.assertIn("nativen Kamera-/Dateidialog", html)

@@ -258,6 +258,7 @@
                  background:var(--surface-2); }
   .photo-upload { padding:0.85rem 1rem 1rem; display:flex; flex-direction:column; gap:0.55rem; }
   .photo-actions { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
+  .camera-native-button,
   .photo-file-button { cursor:pointer; justify-content:center; }
   .photo-file-input { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;
                       clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }

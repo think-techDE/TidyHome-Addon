@@ -671,6 +671,10 @@ def photos_card(entity_type: str, entity_id: str, action: str,
                 margin_top: bool = False) -> str:
     photos = list_photos(entity_type, entity_id)
     total = len(photos)
+    safe_id = "".join(ch if ch.isalnum() else "-" for ch in f"{entity_type}-{entity_id}")
+    live_input_id = escape(f"photo-live-{safe_id}")
+    camera_input_id = escape(f"photo-camera-{safe_id}")
+    file_input_id = escape(f"photo-file-{safe_id}")
     sections = {"before": "", "after": ""}
     for photo in photos:
         ptype = photo.get("photo_type") if photo.get("photo_type") in sections else "before"
@@ -723,14 +727,21 @@ def photos_card(entity_type: str, entity_id: str, action: str,
             <span>Nachher</span>
           </label>
         </div>
+        <input id="{live_input_id}" class="photo-file-input photo-live-input" type="file"
+               name="photo" accept="image/*">
+        <input id="{camera_input_id}" class="photo-file-input" type="file"
+               name="photo_camera" accept="image/*,android/force-camera-workaround"
+               capture="environment" onchange="this.form.submit()">
+        <input id="{file_input_id}" class="photo-file-input" type="file"
+               name="photo_file" accept="image/*" onchange="this.form.submit()">
         <div class="photo-actions">
-          <button class="btn btn-ghost btn-sm camera-start" type="button">
+          <label class="btn btn-ghost btn-sm camera-native-button" for="{camera_input_id}">
+            {_icon("camera", 14)} Kamera öffnen
+          </label>
+          <button class="btn btn-ghost btn-sm camera-start" type="button" hidden>
             {_icon("camera", 14)} Kamera öffnen
           </button>
-          <label class="btn btn-outline btn-sm photo-file-button">
-            <input class="photo-file-input" type="file" name="photo"
-                   accept="image/*,android/force-camera-workaround"
-                   capture="environment" required onchange="this.form.submit()">
+          <label class="btn btn-outline btn-sm photo-file-button" for="{file_input_id}">
             {_icon("plus", 14)} Datei auswählen
           </label>
         </div>
@@ -744,7 +755,7 @@ def photos_card(entity_type: str, entity_id: str, action: str,
           </div>
         </div>
         <div class="camera-msg muted"></div>
-        <div class="muted photo-upload-hint">Wenn die WebView keine Live-Kamera bereitstellt, öffnet TidyHome den nativen Kamera-/Dateidialog.</div>
+        <div class="muted photo-upload-hint">Wenn die WebView keine Live-Kamera bereitstellt, öffnet Kamera öffnen direkt den nativen Kamera-/Dateidialog.</div>
       </form>
     </details>"""
 
@@ -1195,16 +1206,6 @@ def render(content: str, request: Request, page: str = "home",
     if (msg) msg.textContent = text || '';
   }}
 
-  function openNativeCameraFallback(card){{
-    var input = card.querySelector('.photo-file-input');
-    if (!input) {{
-      setCameraMessage(card, 'Diese WebView stellt keine direkte Kamera bereit.');
-      return;
-    }}
-    setCameraMessage(card, 'Direkte Kamera nicht verfügbar. Öffne Kamera-/Dateidialog...');
-    input.click();
-  }}
-
   async function stopCamera(card){{
     var stream = card._cameraStream;
     if (stream) stream.getTracks().forEach(function(track){{ track.stop(); }});
@@ -1228,9 +1229,23 @@ def render(content: str, request: Request, page: str = "home",
     }});
   }}
 
+  function setCameraMode(card, liveMode){{
+    var nativeButton = card.querySelector('.camera-native-button');
+    var liveButton = card.querySelector('.camera-start');
+    if (nativeButton) nativeButton.hidden = !!liveMode;
+    if (liveButton) liveButton.hidden = !liveMode;
+  }}
+
+  function enhanceCameraControls(){{
+    var liveMode = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    document.querySelectorAll('.photos-card').forEach(function(card){{
+      setCameraMode(card, liveMode);
+    }});
+  }}
+
   async function startCamera(card){{
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {{
-      openNativeCameraFallback(card);
+      setCameraMode(card, false);
       return;
     }}
     try {{
@@ -1246,7 +1261,8 @@ def render(content: str, request: Request, page: str = "home",
       panel.hidden = false;
       setCameraMessage(card, '');
     }} catch (err) {{
-      setCameraMessage(card, 'Kamera wurde von Home Assistant oder vom Browser blockiert. Bitte Datei auswählen nutzen.');
+      setCameraMode(card, false);
+      setCameraMessage(card, 'Live-Kamera wurde blockiert. Kamera öffnen nutzt jetzt den nativen Kamera-/Dateidialog.');
     }}
   }}
 
@@ -1263,7 +1279,7 @@ def render(content: str, request: Request, page: str = "home",
 
   async function uploadBlob(card, blob){{
     var form = card.querySelector('.photo-upload');
-    var input = card.querySelector('.photo-file-input');
+    var input = card.querySelector('.photo-live-input');
     if (!form || !input || !blob) return;
 
     if (window.File && window.DataTransfer) {{
@@ -1316,6 +1332,8 @@ def render(content: str, request: Request, page: str = "home",
     if (shot) takePhoto(card);
     if (stop) stopCamera(card);
   }});
+  document.addEventListener('DOMContentLoaded', enhanceCameraControls);
+  enhanceCameraControls();
 }})();
 </script>
 </body>
