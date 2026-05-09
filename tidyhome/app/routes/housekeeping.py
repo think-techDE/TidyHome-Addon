@@ -201,35 +201,54 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
             </div>
             <span class="badge ok">aktuell {_money(item['hourly_wage'])}/h</span>
           </div>
-          <form class="wage-form" method="post" action="{base}housekeeping/wage">
-            <input type="hidden" name="return_p" value="{escape(actor, quote=True)}">
-            <input type="hidden" name="month" value="{escape(month, quote=True)}">
-            <input type="hidden" name="person" value="{escape(person, quote=True)}">
-            <div class="form-group">
-              <label>Stundenlohn</label>
-              <input name="hourly_wage" inputmode="decimal" value="{item['hourly_wage']:.2f}">
+          <details class="housekeeping-subdetails">
+            <summary class="housekeeping-subsummary">
+              <span>
+                <strong>Stundensatz und Historie</strong>
+                <small>Gültigkeit und vergangene Sätze</small>
+              </span>
+              <span class="details-caret">▾</span>
+            </summary>
+            <div class="housekeeping-subbody">
+              <form class="wage-form" method="post" action="{base}housekeeping/wage">
+                <input type="hidden" name="return_p" value="{escape(actor, quote=True)}">
+                <input type="hidden" name="month" value="{escape(month, quote=True)}">
+                <input type="hidden" name="person" value="{escape(person, quote=True)}">
+                <div class="form-group">
+                  <label>Stundenlohn</label>
+                  <input name="hourly_wage" inputmode="decimal" value="{item['hourly_wage']:.2f}">
+                </div>
+                <div class="form-group">
+                  <label>Gültig ab</label>
+                  <input type="date" name="valid_from" value="{date.today().isoformat()}" required>
+                </div>
+                <div class="form-group">
+                  <label>Gültig bis</label>
+                  <input type="date" name="valid_to">
+                </div>
+                <button class="btn btn-ghost btn-sm" type="submit">Stundensatz hinzufügen</button>
+              </form>
+              {_wage_history(person)}
             </div>
-            <div class="form-group">
-              <label>Gültig ab</label>
-              <input type="date" name="valid_from" value="{date.today().isoformat()}" required>
-            </div>
-            <div class="form-group">
-              <label>Gültig bis</label>
-              <input type="date" name="valid_to">
-            </div>
-            <button class="btn btn-ghost btn-sm" type="submit">Stundensatz hinzufügen</button>
-          </form>
-          {_wage_history(person)}
+          </details>
           <div class="work-entry-list">{_entries_for_person(base, person, actor, month)}</div>
         </section>"""
 
     entry_card = ""
     if helpers:
         entry_card = f"""
-        <div class="card">
-          <h3 style="margin-bottom:0.75rem">Arbeitszeit erfassen</h3>
-          {_entry_form(base, helpers, actor, month)}
-        </div>"""
+        <details class="card housekeeping-foldout">
+          <summary class="housekeeping-foldout-head">
+            <span>
+              <strong>Arbeitszeit erfassen</strong>
+              <small>Neue Arbeitszeit für eine Haushaltshilfe eintragen</small>
+            </span>
+            <span class="details-caret">▾</span>
+          </summary>
+          <div class="housekeeping-foldout-body">
+            {_entry_form(base, helpers, actor, month)}
+          </div>
+        </details>"""
 
     if not helpers:
         helper_cards = """
@@ -297,10 +316,18 @@ async def housekeeping_log(request: Request, month: str = "", p: str = ""):
       <input type="month" name="month" value="{escape(month, quote=True)}">
       <button class="btn btn-ghost btn-sm" type="submit">Anzeigen</button>
     </form>
-    <div class="card">
-      <h3 style="margin-bottom:0.75rem">Arbeitszeit eintragen</h3>
-      {_entry_form(base, [actor], actor, month, force_person=actor)}
-    </div>
+    <details class="card housekeeping-foldout">
+      <summary class="housekeeping-foldout-head">
+        <span>
+          <strong>Arbeitszeit eintragen</strong>
+          <small>Neue Arbeitszeit für diesen Monat erfassen</small>
+        </span>
+        <span class="details-caret">▾</span>
+      </summary>
+      <div class="housekeeping-foldout-body">
+        {_entry_form(base, [actor], actor, month, force_person=actor)}
+      </div>
+    </details>
     <div class="card card-flush">
       <div class="score-activity-head">
         <h3>Erfasste Zeiten</h3>

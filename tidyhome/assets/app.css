@@ -349,6 +349,29 @@
   .housekeeping-summary-grid .today-value { font-size:1.05rem; overflow-wrap:anywhere; }
   .housekeeping-home-card .admin-section-head,
   .housekeeping-person-card .admin-section-head { margin-bottom:0.75rem; }
+  .housekeeping-foldout { padding:0; overflow:hidden; }
+  .housekeeping-foldout > summary,
+  .housekeeping-subdetails > summary { list-style:none; cursor:pointer; }
+  .housekeeping-foldout > summary::-webkit-details-marker,
+  .housekeeping-subdetails > summary::-webkit-details-marker { display:none; }
+  .housekeeping-foldout-head,
+  .housekeeping-subsummary { display:flex; align-items:center; justify-content:space-between;
+                             gap:0.75rem; }
+  .housekeeping-foldout-head { padding:0.95rem 1rem; }
+  .housekeeping-foldout-head span:first-child,
+  .housekeeping-subsummary span:first-child { display:flex; flex-direction:column; gap:0.12rem; min-width:0; }
+  .housekeeping-foldout-head strong,
+  .housekeeping-subsummary strong { font-size:0.95rem; }
+  .housekeeping-foldout-head small,
+  .housekeeping-subsummary small { color:var(--muted); font-size:0.72rem; font-weight:650; }
+  .housekeeping-foldout-body { padding:0 1rem 1rem; }
+  .housekeeping-foldout:not([open]) .housekeeping-foldout-head { border-bottom:none; }
+  .housekeeping-subdetails { border:1px solid var(--sep); border-radius:0.75rem;
+                             background:var(--surface-2); margin-bottom:0.85rem; overflow:hidden; }
+  .housekeeping-subsummary { padding:0.75rem 0.85rem; }
+  .housekeeping-subbody { border-top:1px solid var(--sep); padding:0.85rem; }
+  .details-caret { color:var(--muted); font-weight:900; flex-shrink:0; transition:transform .18s ease; }
+  details[open] > summary .details-caret { transform:rotate(180deg); }
   .month-filter { display:grid; grid-template-columns:minmax(0,1fr) auto auto;
                   gap:0.5rem; align-items:end; margin-bottom:1rem; }
   .month-filter label { grid-column:1 / -1; margin-bottom:-0.25rem; }

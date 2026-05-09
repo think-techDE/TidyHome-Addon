@@ -1,3 +1,8 @@
+## 1.3.42
+
+- Haushaltshilfen: Arbeitszeit-Erfassung als kompakter Ausklappbereich dargestellt
+- Haushaltshilfen: Stundensatz-Formular und Lohnhistorie pro Person einklappbar gemacht
+
 ## 1.3.41
 
 - Haushaltshilfen: Stundensätze werden als nachvollziehbare Historie mit gültig-ab und optionalem gültig-bis Datum gespeichert

@@ -106,7 +106,10 @@ class HousekeepingTests(unittest.TestCase):
 
         self.assertIn("Arbeitszeiten", html)
         self.assertIn("Marina", html)
+        self.assertIn("housekeeping-foldout", html)
+        self.assertIn("housekeeping-subdetails", html)
         self.assertIn("Stundenlohn", html)
+        self.assertIn("Stundensatz und Historie", html)
         self.assertIn("Gültig ab", html)
         self.assertIn("Stundensatz hinzufügen", html)
         self.assertIn("ab 01.01.2026", html)
