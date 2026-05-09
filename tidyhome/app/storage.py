@@ -521,21 +521,84 @@ def _coerce_minutes(value) -> int:
         return 0
 
 
-def get_housekeeper_wage(person: str) -> float:
-    Q = Query()
-    row = get_housekeeper_settings_table().get(Q.person == person)
-    return _coerce_money(row.get("hourly_wage", 0) if row else 0)
+def _valid_date(value: str = "") -> str:
+    value = (value or "").strip()
+    if not value:
+        return ""
+    try:
+        date.fromisoformat(value)
+        return value
+    except ValueError:
+        return ""
 
 
-def save_housekeeper_wage(person: str, hourly_wage) -> dict:
-    Q = Query()
-    data = {"person": person, "hourly_wage": _coerce_money(hourly_wage)}
-    table = get_housekeeper_settings_table()
-    if table.get(Q.person == person):
-        table.update(data, Q.person == person)
-    else:
-        table.insert(data)
+def _normalize_wage_row(row: dict) -> dict:
+    data = dict(row)
+    data.setdefault("id", "")
+    data["hourly_wage"] = _coerce_money(data.get("hourly_wage", 0))
+    data["valid_from"] = _valid_date(data.get("valid_from", ""))
+    data["valid_to"] = _valid_date(data.get("valid_to", ""))
     return data
+
+
+def list_housekeeper_wages(person: str) -> list[dict]:
+    Q = Query()
+    rows = [
+        _normalize_wage_row(row)
+        for row in get_housekeeper_settings_table().search(Q.person == person)
+    ]
+    rows.sort(
+        key=lambda r: (
+            r.get("valid_from") or "0001-01-01",
+            r.get("created_at", ""),
+        ),
+        reverse=True,
+    )
+    return rows
+
+
+def get_housekeeper_wage(person: str, on_date: str = "") -> float:
+    target_date = _valid_date(on_date) or date.today().isoformat()
+    candidates = []
+    for row in list_housekeeper_wages(person):
+        valid_from = row.get("valid_from") or "0001-01-01"
+        valid_to = row.get("valid_to") or "9999-12-31"
+        if valid_from <= target_date <= valid_to:
+            candidates.append(row)
+    if not candidates:
+        return 0.0
+    candidates.sort(
+        key=lambda r: (
+            r.get("valid_from") or "0001-01-01",
+            r.get("created_at", ""),
+        ),
+        reverse=True,
+    )
+    return _coerce_money(candidates[0].get("hourly_wage", 0))
+
+
+def save_housekeeper_wage(person: str, hourly_wage,
+                          valid_from: str = "", valid_to: str = "") -> dict:
+    valid_from = _valid_date(valid_from) or date.today().isoformat()
+    valid_to = _valid_date(valid_to)
+    if valid_to and valid_to < valid_from:
+        valid_to = ""
+    now = datetime.now().isoformat()
+    data = {
+        "id": str(uuid.uuid4()),
+        "person": person,
+        "hourly_wage": _coerce_money(hourly_wage),
+        "valid_from": valid_from,
+        "valid_to": valid_to,
+        "created_at": now,
+    }
+    get_housekeeper_settings_table().insert(data)
+    return data
+
+
+def _entry_cost(entry: dict) -> float:
+    wage = get_housekeeper_wage(entry.get("person", ""), entry.get("date", ""))
+    return round(_entry_hours(entry) * wage, 2)
 
 
 def _entry_hours(entry: dict) -> float:
@@ -628,7 +691,7 @@ def get_housekeeping_month_summary(person: str = "", month: str = "") -> dict:
         entries = list_housekeeping_entries(helper, month)
         hours = round(sum(_entry_hours(e) for e in entries), 2)
         wage = get_housekeeper_wage(helper)
-        cost = round(hours * wage, 2)
+        cost = round(sum(_entry_cost(e) for e in entries), 2)
         total_hours += hours
         total_cost += cost
         people.append({

@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-09 · Aktuelle Version: 1.3.40
+Stand: 2026-05-09 · Aktuelle Version: 1.3.41
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -18,7 +18,7 @@ TidyHome ist aktuell ein nutzbares Home-Assistant-Add-on für:
 - Erinnerungen an andere Personen und Projektschritte
 - tägliche Benachrichtigungen über Home Assistant Notify-Services
 - persönlichen Urlaubsmodus
-- Haushaltshilfe-Zeiterfassung mit Monatsstunden und Kostenübersicht
+- Haushaltshilfe-Zeiterfassung mit Lohnhistorie, Monatsstunden und Kostenübersicht
 - Punkte, Bestenliste, Erfolgshistorie, Streak und Wochenziel
 - mobile Web-UI über Home Assistant Ingress
 
@@ -33,6 +33,12 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.41
+
+- Stundensätze für Haushaltshilfen als Historie mit gültig-ab und optionalem gültig-bis Datum gespeichert
+- Monatskosten werden pro Arbeitseintrag mit dem am Arbeitstag gültigen Stundensatz berechnet
+- Lohnhistorie im Haushaltshilfe-Bereich sichtbar gemacht
 
 ### v1.3.40
 

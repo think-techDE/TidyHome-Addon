@@ -9,7 +9,7 @@ from storage import (add_housekeeping_entry, delete_housekeeping_entry, get_admi
                      get_housekeeper_wage, get_housekeeping_entry,
                      get_housekeeping_month_summary, get_person_settings,
                      housekeeping_entry_hours, list_housekeeping_entries,
-                     list_people_by_role, save_housekeeper_wage,
+                     list_housekeeper_wages, list_people_by_role, save_housekeeper_wage,
                      update_housekeeping_entry)
 
 router = APIRouter(prefix="/housekeeping")
@@ -133,7 +133,7 @@ def _entries_for_person(base: str, person: str, actor: str, month: str) -> str:
     rows = ""
     for entry in entries:
         hours = housekeeping_entry_hours(entry)
-        wage = get_housekeeper_wage(entry.get("person", ""))
+        wage = get_housekeeper_wage(entry.get("person", ""), entry.get("date", ""))
         cost = hours * wage
         note = escape(entry.get("note", ""))
         note_part = f'<span>· {note}</span>' if note else ""
@@ -144,11 +144,36 @@ def _entries_for_person(base: str, person: str, actor: str, month: str) -> str:
               <strong>{format_date_de(entry.get("date", ""))}</strong>
               <small>{escape(entry.get("start_time", ""))} - {escape(entry.get("end_time", ""))}{note_part}</small>
             </span>
-            <span class="work-entry-total">{_hours(hours)} h · {_money(cost)}</span>
+            <span class="work-entry-total">{_hours(hours)} h · {_money(cost)} · {_money(wage)}/h</span>
           </summary>
           {_entry_form(base, [person], actor, month, entry=entry, compact=True)}
         </details>"""
     return rows
+
+
+def _wage_history(person: str) -> str:
+    rows = list_housekeeper_wages(person)
+    if not rows:
+        return '<div class="muted wage-history-empty">Noch kein Stundensatz hinterlegt.</div>'
+    items = ""
+    for row in rows:
+        valid_from = row.get("valid_from") or ""
+        valid_to = row.get("valid_to") or ""
+        if valid_from and valid_to:
+            period = f"{format_date_de(valid_from)} bis {format_date_de(valid_to)}"
+        elif valid_from:
+            period = f"ab {format_date_de(valid_from)}"
+        elif valid_to:
+            period = f"bis {format_date_de(valid_to)}"
+        else:
+            period = "ohne Zeitraum"
+        items += (
+            '<div class="wage-history-row">'
+            f'<strong>{_money(row.get("hourly_wage", 0))}/h</strong>'
+            f'<span>{escape(period)}</span>'
+            '</div>'
+        )
+    return f'<div class="wage-history">{items}</div>'
 
 
 @router.get("", response_class=HTMLResponse)
@@ -174,7 +199,7 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
               <h3>{escape(person)}</h3>
               <p class="muted">{item['entries']} Einträge · {_hours(item['hours'])} h · {_money(item['cost'])}</p>
             </div>
-            <span class="badge ok">{_money(item['hourly_wage'])}/h</span>
+            <span class="badge ok">aktuell {_money(item['hourly_wage'])}/h</span>
           </div>
           <form class="wage-form" method="post" action="{base}housekeeping/wage">
             <input type="hidden" name="return_p" value="{escape(actor, quote=True)}">
@@ -184,8 +209,17 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
               <label>Stundenlohn</label>
               <input name="hourly_wage" inputmode="decimal" value="{item['hourly_wage']:.2f}">
             </div>
-            <button class="btn btn-ghost btn-sm" type="submit">Stundensatz speichern</button>
+            <div class="form-group">
+              <label>Gültig ab</label>
+              <input type="date" name="valid_from" value="{date.today().isoformat()}" required>
+            </div>
+            <div class="form-group">
+              <label>Gültig bis</label>
+              <input type="date" name="valid_to">
+            </div>
+            <button class="btn btn-ghost btn-sm" type="submit">Stundensatz hinzufügen</button>
           </form>
+          {_wage_history(person)}
           <div class="work-entry-list">{_entries_for_person(base, person, actor, month)}</div>
         </section>"""
 
@@ -255,7 +289,7 @@ async def housekeeping_log(request: Request, month: str = "", p: str = ""):
     <div class="housekeeping-summary-grid">
       <div class="today-stat"><div class="today-value">{_hours(item['hours'])}</div><div class="today-label">Stunden</div></div>
       <div class="today-stat"><div class="today-value">{_money(item['cost'])}</div><div class="today-label">Erarbeitet</div></div>
-      <div class="today-stat"><div class="today-value">{_money(item['hourly_wage'])}</div><div class="today-label">pro Stunde</div></div>
+      <div class="today-stat"><div class="today-value">{_money(item['hourly_wage'])}</div><div class="today-label">aktueller Satz</div></div>
     </div>
     <form class="month-filter" method="get" action="{base}housekeeping/log">
       <input type="hidden" name="p" value="{escape(actor, quote=True)}">
@@ -280,11 +314,13 @@ async def housekeeping_log(request: Request, month: str = "", p: str = ""):
 @router.post("/wage")
 async def housekeeping_wage_save(request: Request, person: str = Form(...),
                                  hourly_wage: str = Form("0"),
+                                 valid_from: str = Form(""),
+                                 valid_to: str = Form(""),
                                  month: str = Form(""), return_p: str = Form("")):
     actor = resolve_person(request, return_p)
-    if not _can_manage(actor):
+    if not _can_manage(actor) or not _is_known_housekeeper(person):
         raise HTTPException(403)
-    save_housekeeper_wage(person, hourly_wage)
+    save_housekeeper_wage(person, hourly_wage, valid_from=valid_from, valid_to=valid_to)
     return RedirectResponse(
         _base(request) + f"housekeeping?month={_month_value(month)}{person_suffix(actor, '&')}",
         status_code=303,

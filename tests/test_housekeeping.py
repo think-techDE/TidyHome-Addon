@@ -40,7 +40,7 @@ class HousekeepingTests(unittest.TestCase):
 
     def test_housekeeping_summary_calculates_hours_and_costs(self):
         save_person("Marina", "housekeeper")
-        storage.save_housekeeper_wage("Marina", "15,50")
+        storage.save_housekeeper_wage("Marina", "15,50", valid_from="2026-01-01")
 
         entry = storage.add_housekeeping_entry(
             "Marina",
@@ -59,6 +59,27 @@ class HousekeepingTests(unittest.TestCase):
         self.assertEqual(summary["total_cost"], 46.5)
         self.assertEqual(summary["people"][0]["hourly_wage"], 15.5)
 
+    def test_housekeeping_summary_uses_wage_valid_on_work_date(self):
+        save_person("Marina", "housekeeper")
+        storage.save_housekeeper_wage(
+            "Marina", "15,00", valid_from="2026-01-01", valid_to="2026-05-31"
+        )
+        storage.save_housekeeper_wage("Marina", "20,00", valid_from="2026-06-01")
+        storage.add_housekeeping_entry(
+            "Marina", "2026-05-20", "10:00", "12:00", created_by="Ben"
+        )
+        storage.add_housekeeping_entry(
+            "Marina", "2026-06-20", "10:00", "12:00", created_by="Ben"
+        )
+
+        may = storage.get_housekeeping_month_summary("Marina", "2026-05")
+        june = storage.get_housekeeping_month_summary("Marina", "2026-06")
+
+        self.assertEqual(may["total_cost"], 30.0)
+        self.assertEqual(june["total_cost"], 40.0)
+        self.assertEqual(storage.get_housekeeper_wage("Marina", "2026-05-20"), 15.0)
+        self.assertEqual(storage.get_housekeeper_wage("Marina", "2026-06-20"), 20.0)
+
     def test_housekeeping_entry_can_be_corrected_and_deleted(self):
         save_person("Marina", "housekeeper")
         entry = storage.add_housekeeping_entry(
@@ -76,7 +97,7 @@ class HousekeepingTests(unittest.TestCase):
     def test_parent_dashboard_renders_housekeeper_management(self):
         save_person("Ben", "parent")
         save_person("Marina", "housekeeper")
-        storage.save_housekeeper_wage("Marina", 18)
+        storage.save_housekeeper_wage("Marina", 18, valid_from="2026-01-01")
 
         response = asyncio.run(
             housekeeping_dashboard(DummyRequest("Ben"), month="2026-05")
@@ -86,11 +107,14 @@ class HousekeepingTests(unittest.TestCase):
         self.assertIn("Arbeitszeiten", html)
         self.assertIn("Marina", html)
         self.assertIn("Stundenlohn", html)
+        self.assertIn("Gültig ab", html)
+        self.assertIn("Stundensatz hinzufügen", html)
+        self.assertIn("ab 01.01.2026", html)
         self.assertIn("Arbeitszeit erfassen", html)
 
     def test_housekeeper_log_renders_personal_earnings(self):
         save_person("Marina", "housekeeper")
-        storage.save_housekeeper_wage("Marina", 20)
+        storage.save_housekeeper_wage("Marina", 20, valid_from="2026-01-01")
         storage.add_housekeeping_entry(
             "Marina", "2026-05-09", "10:00", "12:00", created_by="Marina"
         )

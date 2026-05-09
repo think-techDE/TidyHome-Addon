@@ -1,3 +1,9 @@
+## 1.3.41
+
+- Haushaltshilfen: Stundensätze werden als nachvollziehbare Historie mit gültig-ab und optionalem gültig-bis Datum gespeichert
+- Haushaltshilfen: Monatskosten nutzen je Arbeitsdatum den passenden historischen Stundensatz
+- Haushaltshilfen: Lohnhistorie pro Person im Verwaltungsbereich ergänzt
+
 ## 1.3.40
 
 - Zuhause: Haushaltshilfe-Verwaltung für Eltern/Admins entfernt

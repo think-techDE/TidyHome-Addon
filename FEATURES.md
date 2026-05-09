@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-09 · Version 1.3.40
+Stand: 2026-05-09 · Version 1.3.41
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -80,7 +80,8 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 ### Haushaltshilfen
 
 - [x] Haushaltshilfe-Rolle als Basis für Zeiterfassung
-- [x] Stundenlohn pro Haushaltshilfe verwalten
+- [x] Stundenlohn-Historie pro Haushaltshilfe verwalten
+- [x] Stundensätze mit gültig-ab und optionalem gültig-bis Datum berechnen
 - [x] Arbeitszeiten pro Einsatz erfassen
 - [x] Arbeitszeiten nachträglich korrigieren und löschen
 - [x] Monatsübersicht mit Stunden und Gesamtkosten

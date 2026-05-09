@@ -356,9 +356,16 @@
                      background:var(--surface-2); padding:0.85rem; }
   .work-entry-form.compact { border:none; border-top:1px solid var(--sep);
                              border-radius:0; background:transparent; }
-  .wage-form { display:grid; grid-template-columns:minmax(0,1fr) auto;
+  .wage-form { display:grid; grid-template-columns:minmax(8rem,1fr) minmax(8rem,1fr) minmax(8rem,1fr) auto;
                gap:0.55rem; align-items:end; margin-bottom:0.85rem; }
   .wage-form .form-group { margin-bottom:0; }
+  .wage-history { border:1px solid var(--sep); border-radius:0.65rem; overflow:hidden;
+                  margin-bottom:0.85rem; background:var(--surface-2); }
+  .wage-history-row { display:flex; align-items:center; justify-content:space-between;
+                      gap:0.75rem; padding:0.6rem 0.75rem; border-bottom:1px solid var(--sep); }
+  .wage-history-row:last-child { border-bottom:none; }
+  .wage-history-row span { color:var(--muted); font-size:0.74rem; font-weight:650; text-align:right; }
+  .wage-history-empty { margin:0 0 0.85rem; }
   .work-entry-list { border:1px solid var(--border); border-radius:0.75rem;
                      overflow:hidden; background:var(--surface); }
   .work-entry-details { border-bottom:1px solid var(--sep); }
@@ -567,6 +574,8 @@
     .housekeeping-summary-grid { grid-template-columns:1fr; }
     .month-filter { grid-template-columns:1fr; }
     .wage-form { grid-template-columns:1fr; }
+    .wage-history-row { align-items:flex-start; flex-direction:column; gap:0.15rem; }
+    .wage-history-row span { text-align:left; }
     .work-entry-summary { align-items:flex-start; flex-direction:column; }
     .work-entry-total { white-space:normal; }
   }
