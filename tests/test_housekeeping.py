@@ -13,7 +13,10 @@ os.environ.setdefault("DATA_DIR", tempfile.mkdtemp(prefix="tidyhome-test-"))
 
 from render import render  # noqa: E402
 from routes.dashboard import dashboard  # noqa: E402
-from routes.housekeeping import housekeeping_dashboard, housekeeping_log  # noqa: E402
+from routes.housekeeping import (housekeeping_dashboard, housekeeping_entry_create,
+                                 housekeeping_export_csv, housekeeping_export_pdf,
+                                 housekeeping_log, housekeeping_status_save,
+                                 housekeeping_wage_update)  # noqa: E402
 import storage  # noqa: E402
 
 
@@ -80,6 +83,28 @@ class HousekeepingTests(unittest.TestCase):
         self.assertEqual(storage.get_housekeeper_wage("Marina", "2026-05-20"), 15.0)
         self.assertEqual(storage.get_housekeeper_wage("Marina", "2026-06-20"), 20.0)
 
+    def test_housekeeper_wage_history_can_be_corrected(self):
+        save_person("Ben", "parent")
+        save_person("Marina", "housekeeper")
+        wage = storage.save_housekeeper_wage(
+            "Marina", "15,00", valid_from="2026-01-01", valid_to="2026-05-31"
+        )
+
+        response = asyncio.run(housekeeping_wage_update(
+            wage["id"],
+            DummyRequest("Ben"),
+            person="Marina",
+            hourly_wage="16,50",
+            valid_from="2026-02-01",
+            valid_to="2026-06-30",
+            month="2026-05",
+            return_p="Ben",
+        ))
+
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(storage.get_housekeeper_wage("Marina", "2026-02-15"), 16.5)
+        self.assertEqual(storage.list_housekeeper_wages("Marina")[0]["valid_to"], "2026-06-30")
+
     def test_housekeeping_entry_can_be_corrected_and_deleted(self):
         save_person("Marina", "housekeeper")
         entry = storage.add_housekeeping_entry(
@@ -108,6 +133,9 @@ class HousekeepingTests(unittest.TestCase):
         self.assertIn("Marina", html)
         self.assertIn("housekeeping-foldout", html)
         self.assertIn("housekeeping-subdetails", html)
+        self.assertIn("billing-status-form", html)
+        self.assertIn("CSV", html)
+        self.assertIn("PDF", html)
         self.assertIn("Stundenlohn", html)
         self.assertIn("Stundensatz und Historie", html)
         self.assertIn("Gültig ab", html)
@@ -130,6 +158,56 @@ class HousekeepingTests(unittest.TestCase):
         self.assertIn("Arbeitszeit eintragen", html)
         self.assertIn("40,00", html)
         self.assertIn("Erarbeitet", html)
+
+    def test_billing_status_and_exports(self):
+        save_person("Ben", "parent")
+        save_person("Marina", "housekeeper")
+        storage.save_housekeeper_wage("Marina", 20, valid_from="2026-01-01")
+        storage.add_housekeeping_entry(
+            "Marina", "2026-05-09", "10:00", "12:00", created_by="Marina"
+        )
+
+        status_response = asyncio.run(housekeeping_status_save(
+            DummyRequest("Ben"),
+            person="Marina",
+            month="2026-05",
+            status="reviewed",
+            return_p="Ben",
+        ))
+        csv_response = asyncio.run(housekeeping_export_csv(
+            DummyRequest("Ben"), person="Marina", month="2026-05"
+        ))
+        pdf_response = asyncio.run(housekeeping_export_pdf(
+            DummyRequest("Ben"), person="Marina", month="2026-05"
+        ))
+
+        self.assertEqual(status_response.status_code, 303)
+        self.assertEqual(storage.get_housekeeping_billing("Marina", "2026-05")["status"], "reviewed")
+        self.assertIn("Marina;2026-05", csv_response.body.decode("utf-8"))
+        self.assertEqual(pdf_response.media_type, "application/pdf")
+        self.assertTrue(pdf_response.body.startswith(b"%PDF-1.4"))
+
+    def test_paid_month_is_read_only_for_housekeeper(self):
+        save_person("Marina", "housekeeper")
+        storage.save_housekeeper_wage("Marina", 20, valid_from="2026-01-01")
+        storage.set_housekeeping_billing_status("Marina", "2026-05", "paid", updated_by="Ben")
+
+        response = asyncio.run(
+            housekeeping_log(DummyRequest("Marina"), month="2026-05")
+        )
+        html = response.body.decode("utf-8")
+
+        self.assertIn("nur noch lesend", html)
+        self.assertNotIn("Arbeitszeit speichern", html)
+        with self.assertRaises(Exception):
+            asyncio.run(housekeeping_entry_create(
+                DummyRequest("Marina"),
+                person="Marina",
+                work_date="2026-05-10",
+                start_time="10:00",
+                end_time="11:00",
+                return_p="Marina",
+            ))
 
     def test_admin_menu_links_to_housekeeping_area(self):
         save_person("Ben", "parent")

@@ -1,3 +1,12 @@
+## 1.3.43
+
+- Haushaltshilfen: Monatsabrechnung mit Status offen, geprüft und bezahlt ergänzt
+- Haushaltshilfen: CSV- und PDF-Export pro Person und Monat umgesetzt
+- Haushaltshilfen: Stundensatz-Historie nachträglich korrigierbar gemacht
+- Haushaltshilfen: Schnellbuttons für Heute, Start jetzt, Ende jetzt und Pausenvorlagen ergänzt
+- Haushaltshilfen: bezahlte Monate sind für Haushaltshilfen nur noch lesend sichtbar
+- Haushaltshilfen: Warnhinweise bei fehlendem oder nicht passendem Stundensatz ergänzt
+
 ## 1.3.42
 
 - Haushaltshilfen: Arbeitszeit-Erfassung als kompakter Ausklappbereich dargestellt

@@ -122,6 +122,8 @@
   .today   { background: var(--warning-bg); color: var(--warning); }
   .soon    { background: var(--soon-bg);    color: var(--soon); }
   .ok      { background: var(--success-bg); color: var(--success); }
+  .warn    { background: var(--warning-bg); color: var(--warning); }
+  .neutral { background: var(--surface-2); color: var(--muted); border:1px solid var(--border); }
   .btn { display: inline-flex; align-items: center; justify-content: center;
           min-height: 2.25rem; padding: 0.48rem 0.9rem; border-radius: 0.55rem; border: 1px solid transparent;
           cursor: pointer; font-size: 0.84rem; font-weight: 600;
@@ -347,6 +349,24 @@
   .housekeeping-summary-grid { display:grid; grid-template-columns:1fr 1fr 1fr;
                                gap:0.55rem; margin-bottom:1rem; }
   .housekeeping-summary-grid .today-value { font-size:1.05rem; overflow-wrap:anywhere; }
+  .housekeeping-person-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
+                              gap:0.55rem; margin-bottom:1rem; }
+  .housekeeping-month-card { border:1px solid var(--border); border-radius:0.75rem;
+                             background:var(--card); padding:0.85rem; }
+  .housekeeping-month-card-head,
+  .housekeeping-month-values,
+  .billing-tools,
+  .billing-export-actions,
+  .housekeeping-card-badges { display:flex; align-items:center; justify-content:space-between; gap:0.5rem; }
+  .housekeeping-month-values { margin-top:0.45rem; font-weight:850; }
+  .billing-tools { align-items:flex-end; margin-bottom:0.85rem; flex-wrap:wrap; }
+  .billing-status-form { display:flex; gap:0.5rem; align-items:center; flex:1 1 18rem; }
+  .billing-status-form select { min-width:7.5rem; }
+  .billing-export-actions { justify-content:flex-start; flex-wrap:wrap; }
+  .housekeeping-warning { border:1px solid var(--warning); border-radius:0.65rem;
+                          background:var(--warning-bg); color:var(--warning);
+                          padding:0.65rem 0.75rem; margin-bottom:0.85rem;
+                          font-size:0.78rem; font-weight:750; }
   .housekeeping-home-card .admin-section-head,
   .housekeeping-person-card .admin-section-head { margin-bottom:0.75rem; }
   .housekeeping-foldout { padding:0; overflow:hidden; }
@@ -384,11 +404,15 @@
   .wage-form .form-group { margin-bottom:0; }
   .wage-history { border:1px solid var(--sep); border-radius:0.65rem; overflow:hidden;
                   margin-bottom:0.85rem; background:var(--surface-2); }
-  .wage-history-row { display:flex; align-items:center; justify-content:space-between;
-                      gap:0.75rem; padding:0.6rem 0.75rem; border-bottom:1px solid var(--sep); }
+  .wage-history-row { display:block; padding:0.6rem 0.75rem; border-bottom:1px solid var(--sep); }
+  .wage-history-row > summary { list-style:none; cursor:pointer; display:flex;
+                                align-items:center; justify-content:space-between; gap:0.75rem; width:100%; }
+  .wage-history-row > summary::-webkit-details-marker { display:none; }
   .wage-history-row:last-child { border-bottom:none; }
   .wage-history-row span { color:var(--muted); font-size:0.74rem; font-weight:650; text-align:right; }
+  .wage-edit-form { margin-top:0.65rem; width:100%; }
   .wage-history-empty { margin:0 0 0.85rem; }
+  .quick-time-actions { display:flex; flex-wrap:wrap; gap:0.45rem; margin-bottom:0.75rem; }
   .work-entry-list { border:1px solid var(--border); border-radius:0.75rem;
                      overflow:hidden; background:var(--surface); }
   .work-entry-details { border-bottom:1px solid var(--sep); }
@@ -396,6 +420,8 @@
   .work-entry-summary { list-style:none; cursor:pointer; display:flex;
                         align-items:center; justify-content:space-between; gap:0.75rem;
                         padding:0.8rem 0.9rem; }
+  .work-entry-readonly { cursor:default; border-bottom:1px solid var(--sep); }
+  .work-entry-readonly:last-child { border-bottom:none; }
   .work-entry-summary::-webkit-details-marker { display:none; }
   .work-entry-summary span:first-child { min-width:0; display:flex; flex-direction:column; gap:0.12rem; }
   .work-entry-summary small { color:var(--muted); font-size:0.72rem; font-weight:600; }
@@ -595,9 +621,17 @@
     .settings-actions .btn { flex:1; }
     .task-assignee-grid .option-card { flex:1 1 calc(50% - 0.45rem); }
     .housekeeping-summary-grid { grid-template-columns:1fr; }
+    .housekeeping-person-grid { grid-template-columns:1fr; }
+    .housekeeping-month-card-head,
+    .housekeeping-month-values,
+    .billing-tools,
+    .billing-status-form { align-items:flex-start; flex-direction:column; }
+    .billing-status-form,
+    .billing-status-form select,
+    .billing-status-form .btn { width:100%; }
     .month-filter { grid-template-columns:1fr; }
     .wage-form { grid-template-columns:1fr; }
-    .wage-history-row { align-items:flex-start; flex-direction:column; gap:0.15rem; }
+    .wage-history-row > summary { align-items:flex-start; flex-direction:column; gap:0.15rem; }
     .wage-history-row span { text-align:left; }
     .work-entry-summary { align-items:flex-start; flex-direction:column; }
     .work-entry-total { white-space:normal; }

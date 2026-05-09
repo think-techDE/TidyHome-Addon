@@ -506,6 +506,10 @@ def get_housekeeping_entries_table():
     return _db.table("housekeeping_entries")
 
 
+def get_housekeeping_billing_table():
+    return _db.table("housekeeping_billing")
+
+
 def _coerce_money(value) -> float:
     try:
         clean = str(value or "0").replace(",", ".").strip()
@@ -543,10 +547,14 @@ def _normalize_wage_row(row: dict) -> dict:
 
 def list_housekeeper_wages(person: str) -> list[dict]:
     Q = Query()
-    rows = [
-        _normalize_wage_row(row)
-        for row in get_housekeeper_settings_table().search(Q.person == person)
-    ]
+    table = get_housekeeper_settings_table()
+    rows = []
+    for row in table.search(Q.person == person):
+        data = _normalize_wage_row(row)
+        if not data.get("id"):
+            data["id"] = str(uuid.uuid4())
+            table.update({"id": data["id"]}, doc_ids=[row.doc_id])
+        rows.append(data)
     rows.sort(
         key=lambda r: (
             r.get("valid_from") or "0001-01-01",
@@ -557,7 +565,34 @@ def list_housekeeper_wages(person: str) -> list[dict]:
     return rows
 
 
-def get_housekeeper_wage(person: str, on_date: str = "") -> float:
+def get_housekeeper_wage_record(wage_id: str) -> dict | None:
+    Q = Query()
+    row = get_housekeeper_settings_table().get(Q.id == wage_id)
+    return _normalize_wage_row(row) if row else None
+
+
+def update_housekeeper_wage(wage_id: str, person: str, hourly_wage,
+                            valid_from: str = "", valid_to: str = "") -> dict | None:
+    row = get_housekeeper_wage_record(wage_id)
+    if not row or row.get("person") != person:
+        return None
+    valid_from = _valid_date(valid_from)
+    valid_to = _valid_date(valid_to)
+    if valid_to and valid_from and valid_to < valid_from:
+        valid_to = ""
+    updated = dict(row)
+    updated.update({
+        "hourly_wage": _coerce_money(hourly_wage),
+        "valid_from": valid_from,
+        "valid_to": valid_to,
+        "updated_at": datetime.now().isoformat(),
+    })
+    Q = Query()
+    get_housekeeper_settings_table().update(updated, Q.id == wage_id)
+    return updated
+
+
+def _housekeeper_wage_record_for_date(person: str, on_date: str = "") -> dict | None:
     target_date = _valid_date(on_date) or date.today().isoformat()
     candidates = []
     for row in list_housekeeper_wages(person):
@@ -566,7 +601,7 @@ def get_housekeeper_wage(person: str, on_date: str = "") -> float:
         if valid_from <= target_date <= valid_to:
             candidates.append(row)
     if not candidates:
-        return 0.0
+        return None
     candidates.sort(
         key=lambda r: (
             r.get("valid_from") or "0001-01-01",
@@ -574,7 +609,14 @@ def get_housekeeper_wage(person: str, on_date: str = "") -> float:
         ),
         reverse=True,
     )
-    return _coerce_money(candidates[0].get("hourly_wage", 0))
+    return candidates[0]
+
+
+def get_housekeeper_wage(person: str, on_date: str = "") -> float:
+    row = _housekeeper_wage_record_for_date(person, on_date)
+    if not row:
+        return 0.0
+    return _coerce_money(row.get("hourly_wage", 0))
 
 
 def save_housekeeper_wage(person: str, hourly_wage,
@@ -599,6 +641,66 @@ def save_housekeeper_wage(person: str, hourly_wage,
 def _entry_cost(entry: dict) -> float:
     wage = get_housekeeper_wage(entry.get("person", ""), entry.get("date", ""))
     return round(_entry_hours(entry) * wage, 2)
+
+
+def housekeeping_entry_wage(entry: dict) -> float:
+    return get_housekeeper_wage(entry.get("person", ""), entry.get("date", ""))
+
+
+def housekeeping_entry_cost(entry: dict) -> float:
+    return _entry_cost(entry)
+
+
+def housekeeping_entry_has_wage(entry: dict) -> bool:
+    return _housekeeper_wage_record_for_date(
+        entry.get("person", ""), entry.get("date", "")
+    ) is not None
+
+
+def _billing_key(person: str, month: str) -> str:
+    return f"{person}|{month}"
+
+
+def get_housekeeping_billing(person: str, month: str) -> dict:
+    month = month or date.today().strftime("%Y-%m")
+    Q = Query()
+    row = get_housekeeping_billing_table().get(Q.key == _billing_key(person, month))
+    if row:
+        return dict(row)
+    return {
+        "key": _billing_key(person, month),
+        "person": person,
+        "month": month,
+        "status": "open",
+        "updated_at": "",
+        "updated_by": "",
+    }
+
+
+def set_housekeeping_billing_status(person: str, month: str, status: str,
+                                    updated_by: str = "") -> dict:
+    month = month or date.today().strftime("%Y-%m")
+    if status not in {"open", "reviewed", "paid"}:
+        status = "open"
+    row = {
+        "key": _billing_key(person, month),
+        "person": person,
+        "month": month,
+        "status": status,
+        "updated_at": datetime.now().isoformat(),
+        "updated_by": updated_by or "",
+    }
+    Q = Query()
+    table = get_housekeeping_billing_table()
+    if table.get(Q.key == row["key"]):
+        table.update(row, Q.key == row["key"])
+    else:
+        table.insert(row)
+    return row
+
+
+def is_housekeeping_month_paid(person: str, month: str) -> bool:
+    return get_housekeeping_billing(person, month).get("status") == "paid"
 
 
 def _entry_hours(entry: dict) -> float:
@@ -692,6 +794,11 @@ def get_housekeeping_month_summary(person: str = "", month: str = "") -> dict:
         hours = round(sum(_entry_hours(e) for e in entries), 2)
         wage = get_housekeeper_wage(helper)
         cost = round(sum(_entry_cost(e) for e in entries), 2)
+        missing_wage_entries = [
+            e for e in entries
+            if not housekeeping_entry_has_wage(e)
+        ]
+        billing = get_housekeeping_billing(helper, month)
         total_hours += hours
         total_cost += cost
         people.append({
@@ -700,12 +807,20 @@ def get_housekeeping_month_summary(person: str = "", month: str = "") -> dict:
             "hourly_wage": wage,
             "cost": cost,
             "entries": len(entries),
+            "missing_wage_entries": len(missing_wage_entries),
+            "missing_wage_dates": sorted({
+                e.get("date", "") for e in missing_wage_entries if e.get("date")
+            }),
+            "has_wage_history": bool(list_housekeeper_wages(helper)),
+            "status": billing.get("status", "open"),
+            "billing": billing,
         })
     return {
         "month": month,
         "people": people,
         "total_hours": round(total_hours, 2),
         "total_cost": round(total_cost, 2),
+        "missing_wage_entries": sum(p["missing_wage_entries"] for p in people),
     }
 
 

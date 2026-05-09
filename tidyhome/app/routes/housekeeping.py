@@ -1,16 +1,22 @@
+import csv
 from datetime import date
 from html import escape
+from io import StringIO
 
 from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from render import _base, _icon, format_date_de, person_suffix, render, resolve_person
 from storage import (add_housekeeping_entry, delete_housekeeping_entry, get_admins,
+                     get_housekeeping_billing,
                      get_housekeeper_wage, get_housekeeping_entry,
                      get_housekeeping_month_summary, get_person_settings,
-                     housekeeping_entry_hours, list_housekeeping_entries,
-                     list_housekeeper_wages, list_people_by_role, save_housekeeper_wage,
-                     update_housekeeping_entry)
+                     housekeeping_entry_cost, housekeeping_entry_has_wage,
+                     housekeeping_entry_hours, housekeeping_entry_wage,
+                     is_housekeeping_month_paid, list_housekeeping_entries,
+                     list_housekeeper_wages, list_people_by_role,
+                     save_housekeeper_wage, set_housekeeping_billing_status,
+                     update_housekeeper_wage, update_housekeeping_entry)
 
 router = APIRouter(prefix="/housekeeping")
 
@@ -31,6 +37,27 @@ def _hours(value: float) -> str:
     return f"{value:.2f}".replace(".", ",")
 
 
+def _decimal(value: float) -> str:
+    return f"{value:.2f}".replace(".", ",")
+
+
+def _status_label(status: str) -> str:
+    return {
+        "open": "Offen",
+        "reviewed": "Geprüft",
+        "paid": "Bezahlt",
+    }.get(status, "Offen")
+
+
+def _status_badge(status: str) -> str:
+    cls = "ok" if status == "paid" else "warn" if status == "reviewed" else "neutral"
+    return f'<span class="badge {cls}">{_status_label(status)}</span>'
+
+
+def _month_from_date(value: str = "") -> str:
+    return value[:7] if value and len(value) >= 7 else _current_month()
+
+
 def _can_manage(person: str) -> bool:
     if not person:
         return False
@@ -43,6 +70,14 @@ def _is_housekeeper(person: str) -> bool:
 
 def _is_known_housekeeper(person: str) -> bool:
     return person in set(list_people_by_role("housekeeper"))
+
+
+def _month_locked_for(actor: str, person: str, month: str) -> bool:
+    return (
+        bool(actor and person and actor == person)
+        and not _can_manage(actor)
+        and is_housekeeping_month_paid(person, month)
+    )
 
 
 def _month_nav(base: str, month: str, person: str) -> str:
@@ -97,6 +132,14 @@ def _entry_form(base: str, helpers: list[str], actor: str, month: str,
       <input type="hidden" name="return_p" value="{escape(actor, quote=True)}">
       <input type="hidden" name="month" value="{escape(month, quote=True)}">
       {person_field}
+      <div class="quick-time-actions">
+        <button class="btn btn-ghost btn-sm" type="button" data-hk-quick="today">Heute</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-hk-quick="start">Start jetzt</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-hk-quick="end">Ende jetzt</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-hk-break="0">0 Min.</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-hk-break="15">15 Min.</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-hk-break="30">30 Min.</button>
+      </div>
       <div class="grid-2">
         <div class="form-group">
           <label>Datum</label>
@@ -126,7 +169,8 @@ def _entry_form(base: str, helpers: list[str], actor: str, month: str,
     </form>"""
 
 
-def _entries_for_person(base: str, person: str, actor: str, month: str) -> str:
+def _entries_for_person(base: str, person: str, actor: str, month: str,
+                        read_only: bool = False) -> str:
     entries = list_housekeeping_entries(person, month)
     if not entries:
         return '<div class="empty" style="padding:1rem">Noch keine Arbeitszeiten in diesem Monat.</div>'
@@ -137,21 +181,27 @@ def _entries_for_person(base: str, person: str, actor: str, month: str) -> str:
         cost = hours * wage
         note = escape(entry.get("note", ""))
         note_part = f'<span>· {note}</span>' if note else ""
-        rows += f"""
-        <details class="work-entry-details">
-          <summary class="work-entry-summary">
+        wage_part = f"· {_money(wage)}/h" if housekeeping_entry_has_wage(entry) else "· kein Satz"
+        summary = f"""
             <span>
               <strong>{format_date_de(entry.get("date", ""))}</strong>
               <small>{escape(entry.get("start_time", ""))} - {escape(entry.get("end_time", ""))}{note_part}</small>
             </span>
-            <span class="work-entry-total">{_hours(hours)} h · {_money(cost)} · {_money(wage)}/h</span>
+            <span class="work-entry-total">{_hours(hours)} h · {_money(cost)} {wage_part}</span>"""
+        if read_only:
+            rows += f'<div class="work-entry-summary work-entry-readonly">{summary}</div>'
+            continue
+        rows += f"""
+        <details class="work-entry-details">
+          <summary class="work-entry-summary">
+            {summary}
           </summary>
           {_entry_form(base, [person], actor, month, entry=entry, compact=True)}
         </details>"""
     return rows
 
 
-def _wage_history(person: str) -> str:
+def _wage_history(base: str, person: str, actor: str, month: str) -> str:
     rows = list_housekeeper_wages(person)
     if not rows:
         return '<div class="muted wage-history-empty">Noch kein Stundensatz hinterlegt.</div>'
@@ -167,13 +217,231 @@ def _wage_history(person: str) -> str:
             period = f"bis {format_date_de(valid_to)}"
         else:
             period = "ohne Zeitraum"
+        wage_id = escape(row.get("id", ""), quote=True)
+        valid_from = escape(valid_from, quote=True)
+        valid_to = escape(valid_to, quote=True)
         items += (
-            '<div class="wage-history-row">'
+            '<details class="wage-history-row">'
+            '<summary>'
             f'<strong>{_money(row.get("hourly_wage", 0))}/h</strong>'
             f'<span>{escape(period)}</span>'
+            '</summary>'
+            f'<form class="wage-edit-form" method="post" action="{base}housekeeping/wage/{wage_id}">'
+            f'<input type="hidden" name="return_p" value="{escape(actor, quote=True)}">'
+            f'<input type="hidden" name="month" value="{escape(month, quote=True)}">'
+            f'<input type="hidden" name="person" value="{escape(person, quote=True)}">'
+            '<div class="grid-2">'
+            '<div class="form-group"><label>Stundenlohn</label>'
+            f'<input name="hourly_wage" inputmode="decimal" value="{row.get("hourly_wage", 0):.2f}"></div>'
+            '<div class="form-group"><label>Gültig ab</label>'
+            f'<input type="date" name="valid_from" value="{valid_from}"></div>'
+            '<div class="form-group"><label>Gültig bis</label>'
+            f'<input type="date" name="valid_to" value="{valid_to}"></div>'
             '</div>'
+            '<button class="btn btn-ghost btn-sm" type="submit">Stundensatz korrigieren</button>'
+            '</form>'
+            '</details>'
         )
     return f'<div class="wage-history">{items}</div>'
+
+
+def _housekeeping_warning(item: dict) -> str:
+    warnings = []
+    if not item.get("has_wage_history"):
+        warnings.append("Kein Stundensatz hinterlegt.")
+    if item.get("missing_wage_entries"):
+        dates = ", ".join(format_date_de(d) for d in item.get("missing_wage_dates", [])[:3])
+        suffix = f" ({dates})" if dates else ""
+        warnings.append(f"{item['missing_wage_entries']} Einträge ohne gültigen Satz{suffix}.")
+    if not warnings:
+        return ""
+    return '<div class="housekeeping-warning">' + " ".join(escape(w) for w in warnings) + "</div>"
+
+
+def _billing_status_form(base: str, person: str, month: str, actor: str,
+                         status: str) -> str:
+    options = "".join(
+        f'<option value="{key}"{" selected" if key == status else ""}>{label}</option>'
+        for key, label in [("open", "Offen"), ("reviewed", "Geprüft"), ("paid", "Bezahlt")]
+    )
+    return f"""
+    <form class="billing-status-form" method="post" action="{base}housekeeping/status">
+      <input type="hidden" name="return_p" value="{escape(actor, quote=True)}">
+      <input type="hidden" name="month" value="{escape(month, quote=True)}">
+      <input type="hidden" name="person" value="{escape(person, quote=True)}">
+      <select name="status">{options}</select>
+      <button class="btn btn-ghost btn-sm" type="submit">Status speichern</button>
+    </form>"""
+
+
+def _export_actions(base: str, person: str, month: str) -> str:
+    person_q = escape(person, quote=True)
+    month_q = escape(month, quote=True)
+    return f"""
+    <div class="billing-export-actions">
+      <a class="btn btn-ghost btn-sm" href="{base}housekeeping/export.csv?person={person_q}&month={month_q}">CSV</a>
+      <a class="btn btn-ghost btn-sm" href="{base}housekeeping/export.pdf?person={person_q}&month={month_q}">PDF</a>
+    </div>"""
+
+
+def _monthly_cards(summary: dict, base: str, month: str) -> str:
+    cards = ""
+    for item in summary["people"]:
+        person = item["person"]
+        cards += f"""
+        <div class="housekeeping-month-card">
+          <div class="housekeeping-month-card-head">
+            <strong>{escape(person)}</strong>
+            {_status_badge(item.get("status", "open"))}
+          </div>
+          <div class="housekeeping-month-values">
+            <span>{_hours(item['hours'])} h</span>
+            <span>{_money(item['cost'])}</span>
+          </div>
+          {_housekeeping_warning(item)}
+          {_export_actions(base, person, month)}
+        </div>"""
+    return f'<div class="housekeeping-person-grid">{cards}</div>' if cards else ""
+
+
+def _quick_time_script() -> str:
+    return """
+    <script>
+    (function(){
+      function pad(value){ return String(value).padStart(2, '0'); }
+      function localDate(now){ return now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()); }
+      function localTime(now){ return pad(now.getHours()) + ':' + pad(now.getMinutes()); }
+      document.addEventListener('click', function(event){
+        var quick = event.target.closest('[data-hk-quick]');
+        var pause = event.target.closest('[data-hk-break]');
+        if (!quick && !pause) return;
+        var form = event.target.closest('form');
+        if (!form) return;
+        if (quick) {
+          var now = new Date();
+          var action = quick.getAttribute('data-hk-quick');
+          if (action === 'today') {
+            var dateInput = form.querySelector('input[name="work_date"]');
+            if (dateInput) dateInput.value = localDate(now);
+          }
+          if (action === 'start') {
+            var startInput = form.querySelector('input[name="start_time"]');
+            if (startInput) startInput.value = localTime(now);
+          }
+          if (action === 'end') {
+            var endInput = form.querySelector('input[name="end_time"]');
+            if (endInput) endInput.value = localTime(now);
+          }
+        }
+        if (pause) {
+          var breakInput = form.querySelector('input[name="break_minutes"]');
+          if (breakInput) breakInput.value = pause.getAttribute('data-hk-break') || '0';
+        }
+      });
+    })();
+    </script>"""
+
+
+def _housekeeping_export_rows(person: str, month: str) -> list[dict]:
+    entries = sorted(
+        list_housekeeping_entries(person, month),
+        key=lambda e: (e.get("date", ""), e.get("start_time", "")),
+    )
+    rows = []
+    for entry in entries:
+        hours = housekeeping_entry_hours(entry)
+        wage = housekeeping_entry_wage(entry)
+        cost = housekeeping_entry_cost(entry)
+        rows.append({
+            "date": entry.get("date", ""),
+            "start": entry.get("start_time", ""),
+            "end": entry.get("end_time", ""),
+            "break": entry.get("break_minutes", 0),
+            "hours": hours,
+            "wage": wage,
+            "cost": cost,
+            "note": entry.get("note", ""),
+            "has_wage": housekeeping_entry_has_wage(entry),
+        })
+    return rows
+
+
+def _pdf_escape(text: str) -> str:
+    return str(text).replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
+def _simple_pdf(lines: list[str]) -> bytes:
+    per_page = 45
+    pages = [lines[i:i + per_page] for i in range(0, len(lines), per_page)] or [[]]
+    objects: dict[int, bytes] = {
+        1: b"<< /Type /Catalog /Pages 2 0 R >>",
+        3: b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    }
+    kids = []
+    for index, page_lines in enumerate(pages):
+        page_obj = 4 + index * 2
+        content_obj = page_obj + 1
+        kids.append(f"{page_obj} 0 R")
+        commands = ["BT", "/F1 10 Tf", "14 TL", "50 800 Td"]
+        for line_index, line in enumerate(page_lines):
+            prefix = "" if line_index == 0 else "T* "
+            commands.append(f"{prefix}({_pdf_escape(line)}) Tj")
+        commands.append("ET")
+        stream = "\n".join(commands).encode("latin-1", "replace")
+        objects[page_obj] = (
+            f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
+            f"/Resources << /Font << /F1 3 0 R >> >> /Contents {content_obj} 0 R >>"
+        ).encode("latin-1")
+        objects[content_obj] = (
+            f"<< /Length {len(stream)} >>\nstream\n".encode("latin-1") +
+            stream +
+            b"\nendstream"
+        )
+    objects[2] = f"<< /Type /Pages /Kids [{' '.join(kids)}] /Count {len(kids)} >>".encode("latin-1")
+
+    output = bytearray(b"%PDF-1.4\n")
+    offsets = {0: 0}
+    for obj_id in sorted(objects):
+        offsets[obj_id] = len(output)
+        output.extend(f"{obj_id} 0 obj\n".encode("latin-1"))
+        output.extend(objects[obj_id])
+        output.extend(b"\nendobj\n")
+    xref_pos = len(output)
+    max_id = max(objects)
+    output.extend(f"xref\n0 {max_id + 1}\n".encode("latin-1"))
+    output.extend(b"0000000000 65535 f \n")
+    for obj_id in range(1, max_id + 1):
+        output.extend(f"{offsets.get(obj_id, 0):010d} 00000 n \n".encode("latin-1"))
+    output.extend(
+        f"trailer\n<< /Size {max_id + 1} /Root 1 0 R >>\nstartxref\n{xref_pos}\n%%EOF\n"
+        .encode("latin-1")
+    )
+    return bytes(output)
+
+
+def _invoice_lines(person: str, month: str) -> list[str]:
+    summary = get_housekeeping_month_summary(person, month)
+    item = summary["people"][0] if summary["people"] else {"hours": 0, "cost": 0}
+    billing = get_housekeeping_billing(person, month)
+    lines = [
+        "TidyHome Haushaltshilfe-Abrechnung",
+        f"Person: {person}",
+        f"Monat: {month}",
+        f"Status: {_status_label(billing.get('status', 'open'))}",
+        f"Stunden: {_decimal(item['hours'])}",
+        f"Gesamt: {_money(item['cost'])}",
+        "",
+        "Datum       Start  Ende   Pause  Stunden  Satz       Kosten    Notiz",
+    ]
+    for row in _housekeeping_export_rows(person, month):
+        lines.append(
+            f"{row['date']}  {row['start']:>5}  {row['end']:>5}  "
+            f"{str(row['break']).rjust(5)}  {_decimal(row['hours']).rjust(7)}  "
+            f"{_money(row['wage']).rjust(9)}  {_money(row['cost']).rjust(9)}  {row['note']}"
+        )
+    if item.get("missing_wage_entries"):
+        lines.extend(["", "Hinweis: Es gibt Einträge ohne gültigen Stundensatz."])
+    return lines
 
 
 @router.get("", response_class=HTMLResponse)
@@ -199,7 +467,15 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
               <h3>{escape(person)}</h3>
               <p class="muted">{item['entries']} Einträge · {_hours(item['hours'])} h · {_money(item['cost'])}</p>
             </div>
-            <span class="badge ok">aktuell {_money(item['hourly_wage'])}/h</span>
+            <div class="housekeeping-card-badges">
+              {_status_badge(item.get("status", "open"))}
+              <span class="badge ok">aktuell {_money(item['hourly_wage'])}/h</span>
+            </div>
+          </div>
+          {_housekeeping_warning(item)}
+          <div class="billing-tools">
+            {_billing_status_form(base, person, month, actor, item.get("status", "open"))}
+            {_export_actions(base, person, month)}
           </div>
           <details class="housekeeping-subdetails">
             <summary class="housekeeping-subsummary">
@@ -228,7 +504,7 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
                 </div>
                 <button class="btn btn-ghost btn-sm" type="submit">Stundensatz hinzufügen</button>
               </form>
-              {_wage_history(person)}
+              {_wage_history(base, person, actor, month)}
             </div>
           </details>
           <div class="work-entry-list">{_entries_for_person(base, person, actor, month)}</div>
@@ -276,9 +552,54 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
       <div class="today-stat"><div class="today-value">{len(helpers)}</div><div class="today-label">Haushaltshilfen</div></div>
     </div>
     {_month_nav(base, month, actor)}
+    {_monthly_cards(summary, base, month)}
     {entry_card}
-    <div class="admin-stack">{helper_cards}</div>"""
+    <div class="admin-stack">{helper_cards}</div>
+    {_quick_time_script()}"""
     return render(content, request, page="home", person=actor)
+
+
+@router.get("/export.csv")
+async def housekeeping_export_csv(request: Request, person: str, month: str,
+                                  p: str = ""):
+    actor = resolve_person(request, p)
+    if not _can_manage(actor) or not _is_known_housekeeper(person):
+        raise HTTPException(403)
+    month = _month_value(month)
+    output = StringIO()
+    writer = csv.writer(output, delimiter=";")
+    writer.writerow([
+        "Person", "Monat", "Status", "Datum", "Start", "Ende", "Pause Minuten",
+        "Stunden", "Stundensatz", "Kosten", "Stundensatz vorhanden", "Notiz",
+    ])
+    status = _status_label(get_housekeeping_billing(person, month).get("status", "open"))
+    for row in _housekeeping_export_rows(person, month):
+        writer.writerow([
+            person, month, status, row["date"], row["start"], row["end"], row["break"],
+            _decimal(row["hours"]), _decimal(row["wage"]), _decimal(row["cost"]),
+            "ja" if row["has_wage"] else "nein", row["note"],
+        ])
+    filename = f"tidyhome-{person}-{month}.csv".replace(" ", "_")
+    return Response(
+        output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/export.pdf")
+async def housekeeping_export_pdf(request: Request, person: str, month: str,
+                                  p: str = ""):
+    actor = resolve_person(request, p)
+    if not _can_manage(actor) or not _is_known_housekeeper(person):
+        raise HTTPException(403)
+    month = _month_value(month)
+    filename = f"tidyhome-{person}-{month}.pdf".replace(" ", "_")
+    return Response(
+        _simple_pdf(_invoice_lines(person, month)),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/log", response_class=HTMLResponse)
@@ -292,8 +613,28 @@ async def housekeeping_log(request: Request, month: str = "", p: str = ""):
     item = summary["people"][0] if summary["people"] else {
         "hours": 0, "cost": 0, "hourly_wage": 0, "entries": 0
     }
-    entries = _entries_for_person(base, actor, actor, month)
+    billing = get_housekeeping_billing(actor, month)
+    read_only = billing.get("status") == "paid" and not _can_manage(actor)
+    entries = _entries_for_person(base, actor, actor, month, read_only=read_only)
     psuffix = person_suffix(actor)
+    entry_form = (
+        '<div class="housekeeping-warning">Dieser Monat ist als bezahlt markiert. '
+        'Arbeitszeiten sind nur noch lesend sichtbar.</div>'
+        if read_only else
+        f"""
+    <details class="card housekeeping-foldout">
+      <summary class="housekeeping-foldout-head">
+        <span>
+          <strong>Arbeitszeit eintragen</strong>
+          <small>Neue Arbeitszeit für diesen Monat erfassen</small>
+        </span>
+        <span class="details-caret">▾</span>
+      </summary>
+      <div class="housekeeping-foldout-body">
+        {_entry_form(base, [actor], actor, month, force_person=actor)}
+      </div>
+    </details>"""
+    )
     content = f"""
     <div class="hero-card page-hero">
       <div>
@@ -302,6 +643,7 @@ async def housekeeping_log(request: Request, month: str = "", p: str = ""):
         <div class="muted">Erfasster Stand für {escape(month)}</div>
       </div>
       <div class="page-hero-actions">
+        {_status_badge(billing.get("status", "open"))}
         <a class="btn btn-ghost btn-sm" href="{base}{psuffix}">Zuhause</a>
       </div>
     </div>
@@ -316,26 +658,53 @@ async def housekeeping_log(request: Request, month: str = "", p: str = ""):
       <input type="month" name="month" value="{escape(month, quote=True)}">
       <button class="btn btn-ghost btn-sm" type="submit">Anzeigen</button>
     </form>
-    <details class="card housekeeping-foldout">
-      <summary class="housekeeping-foldout-head">
-        <span>
-          <strong>Arbeitszeit eintragen</strong>
-          <small>Neue Arbeitszeit für diesen Monat erfassen</small>
-        </span>
-        <span class="details-caret">▾</span>
-      </summary>
-      <div class="housekeeping-foldout-body">
-        {_entry_form(base, [actor], actor, month, force_person=actor)}
-      </div>
-    </details>
+    {entry_form}
     <div class="card card-flush">
       <div class="score-activity-head">
         <h3>Erfasste Zeiten</h3>
         <div class="muted">Du kannst deine Einträge nachträglich korrigieren.</div>
       </div>
       {entries}
-    </div>"""
+    </div>
+    {_quick_time_script()}"""
     return render(content, request, page="home", person=actor)
+
+
+@router.post("/status")
+async def housekeeping_status_save(request: Request, person: str = Form(...),
+                                   month: str = Form(""),
+                                   status: str = Form("open"),
+                                   return_p: str = Form("")):
+    actor = resolve_person(request, return_p)
+    if not _can_manage(actor) or not _is_known_housekeeper(person):
+        raise HTTPException(403)
+    set_housekeeping_billing_status(person, _month_value(month), status, updated_by=actor)
+    return RedirectResponse(
+        _base(request) + f"housekeeping?month={_month_value(month)}{person_suffix(actor, '&')}",
+        status_code=303,
+    )
+
+
+@router.post("/wage/{wage_id}")
+async def housekeeping_wage_update(wage_id: str, request: Request,
+                                   person: str = Form(...),
+                                   hourly_wage: str = Form("0"),
+                                   valid_from: str = Form(""),
+                                   valid_to: str = Form(""),
+                                   month: str = Form(""),
+                                   return_p: str = Form("")):
+    actor = resolve_person(request, return_p)
+    if not _can_manage(actor) or not _is_known_housekeeper(person):
+        raise HTTPException(403)
+    updated = update_housekeeper_wage(
+        wage_id, person, hourly_wage, valid_from=valid_from, valid_to=valid_to
+    )
+    if not updated:
+        raise HTTPException(404)
+    return RedirectResponse(
+        _base(request) + f"housekeeping?month={_month_value(month)}{person_suffix(actor, '&')}",
+        status_code=303,
+    )
 
 
 @router.post("/wage")
@@ -368,6 +737,8 @@ async def housekeeping_entry_create(request: Request, person: str = Form(""),
         raise HTTPException(403)
     if _can_manage(actor) and not _is_known_housekeeper(target):
         raise HTTPException(403)
+    if _month_locked_for(actor, target, _month_from_date(work_date)):
+        raise HTTPException(403)
     add_housekeeping_entry(target, work_date, start_time, end_time,
                            break_minutes=break_minutes, note=note, created_by=actor)
     path = "housekeeping" if _can_manage(actor) and person else "housekeeping/log"
@@ -393,6 +764,10 @@ async def housekeeping_entry_update(entry_id: str, request: Request,
         raise HTTPException(403)
     if _can_manage(actor) and not _is_known_housekeeper(target):
         raise HTTPException(403)
+    if _month_locked_for(actor, entry.get("person", ""), _month_from_date(entry.get("date", ""))):
+        raise HTTPException(403)
+    if _month_locked_for(actor, target, _month_from_date(work_date)):
+        raise HTTPException(403)
     update_housekeeping_entry(entry_id, target, work_date, start_time, end_time,
                               break_minutes=break_minutes, note=note)
     path = "housekeeping" if _can_manage(actor) and actor != target else "housekeeping/log"
@@ -408,6 +783,8 @@ async def housekeeping_entry_delete(entry_id: str, request: Request,
     actor = resolve_person(request, return_p)
     entry = get_housekeeping_entry(entry_id)
     if not entry or not (_can_manage(actor) or actor == entry.get("person")):
+        raise HTTPException(403)
+    if _month_locked_for(actor, entry.get("person", ""), _month_from_date(entry.get("date", ""))):
         raise HTTPException(403)
     delete_housekeeping_entry(entry_id)
     path = "housekeeping" if _can_manage(actor) and actor != entry.get("person") else "housekeeping/log"
