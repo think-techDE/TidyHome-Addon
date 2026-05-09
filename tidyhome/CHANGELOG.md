@@ -1,3 +1,8 @@
+## 1.3.31
+
+- Dashboard: „Nächste Aufgaben“ zeigt nur heutige und überfällige Aufgaben
+- Aufgaben: neue Aufgaben für andere Personen senden automatisch eine Benachrichtigung an deren konfigurierte Notify-Services
+
 ## 1.3.30
 
 - Fotos: Datei-Upload ist wieder dauerhaft als eigener Button sichtbar

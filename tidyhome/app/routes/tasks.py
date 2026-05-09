@@ -7,7 +7,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
 from models import Task
-from reminders import send_task_reminders, task_reminder_recipients
+from reminders import (send_task_assignment_notifications, send_task_reminders,
+                       task_reminder_recipients)
 from render import (INTERVALS, _base, _icon, _icon_chooser, _selected,
                     comments_card, person_suffix, photos_card, render,
                     resolve_person, task_row)
@@ -198,6 +199,8 @@ async def task_create(request: Request, name: str = Form(...), room: str = Form(
                 start_date=start_date or None)
     create_task(task)
     return_p = str(form.get("return_p") or "")
+    creator = resolve_person(request, return_p)
+    await send_task_assignment_notifications(task, sender=creator)
     return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
 
 

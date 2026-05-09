@@ -13,6 +13,10 @@ def task_reminder_recipients(task: Task, sender: str = "") -> list[str]:
     return recipients
 
 
+def task_assignment_recipients(task: Task, sender: str = "") -> list[str]:
+    return task_reminder_recipients(task, sender)
+
+
 def _notify_services(person: str) -> list[str]:
     cfg = get_person_settings(person)
     return [s.strip() for s in (cfg.get("services") or []) if s.strip()]
@@ -52,6 +56,26 @@ async def send_task_reminders(task: Task, recipients: list[str], message: str,
     sent_any = False
     for person in recipients:
         sent_any = await send_task_reminder(task, person, message, sender=sender) or sent_any
+    return sent_any
+
+
+async def send_task_assignment_notification(task: Task, target_person: str,
+                                            sender: str = "") -> bool:
+    actor = sender or "TidyHome"
+    title = "TidyHome: Neue Aufgabe"
+    body = (
+        f"{actor} hat dir eine Aufgabe zugewiesen.\n\n"
+        f"Aufgabe: {task.name}\n"
+        f"Raum: {task.room}\n"
+        f"Fällig: {task.next_due().isoformat()}"
+    )
+    return await _send_to_person(target_person, title, body)
+
+
+async def send_task_assignment_notifications(task: Task, sender: str = "") -> bool:
+    sent_any = False
+    for person in task_assignment_recipients(task, sender):
+        sent_any = await send_task_assignment_notification(task, person, sender=sender) or sent_any
     return sent_any
 
 

@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-09 · Version 1.3.30
+Stand: 2026-05-09 · Version 1.3.31
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -19,6 +19,8 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Raum, Punkte, Aufwand und Wichtig-Flag pro Aufgabe
 - [x] Mehrfachzuweisung an mehrere Personen
 - [x] Neue Aufgaben werden standardmäßig der angemeldeten Person zugeordnet
+- [x] Dashboard zeigt nur heutige und überfällige Aufgaben unter „Nächste Aufgaben“
+- [x] Neue Aufgaben für andere Personen lösen automatisch eine Smartphone-Benachrichtigung aus
 - [x] Filter nach Raum, Person, Überfälligkeit und Aufwand
 - [x] Kommentare und Notizen direkt an Aufgaben
 - [x] Vorher/Nachher-Fotos direkt an Aufgaben

@@ -12,6 +12,14 @@ from storage import (filter_tasks_by_role, get_admins, get_person_settings,
 
 router = APIRouter()
 
+
+def due_today_or_overdue(tasks: list) -> list:
+    return sorted(
+        [t for t in tasks if t.days_until_due() <= 0],
+        key=lambda t: (t.days_until_due(), not getattr(t, "important", False), t.name.lower()),
+    )
+
+
 @router.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, p: str = ""):
     p = resolve_person(request, p)
@@ -107,7 +115,7 @@ async def dashboard(request: Request, p: str = ""):
     </div>"""
 
     # Nächste Aufgaben
-    upcoming = sorted(all_tasks, key=lambda t: t.days_until_due())[:5]
+    upcoming = due_today_or_overdue(all_tasks)
     chev     = _icon("chevron_r", 16, "var(--muted)")
 
     if upcoming:
@@ -130,7 +138,7 @@ async def dashboard(request: Request, p: str = ""):
         <div class="card" style="text-align:center;padding:1.5rem;margin-bottom:1rem">
           <div style="font-size:1.8rem;margin-bottom:0.5rem">🎉</div>
           <div style="font-weight:600;font-size:0.9rem">Alles erledigt!</div>
-          <div class="muted" style="margin-top:0.25rem">Keine offenen Aufgaben.</div>
+          <div class="muted" style="margin-top:0.25rem">Keine heutigen oder überfälligen Aufgaben.</div>
         </div>"""
 
     # Räume ermitteln

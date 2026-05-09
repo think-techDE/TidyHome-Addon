@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.30-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.31-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -14,12 +14,14 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 ## Highlights
 
 - Aufgaben mit Raum, Intervall, Personenzuordnung, Punkten, Aufwand und Wichtig-Flag
+- Dashboard zeigt unter „Nächste Aufgaben“ nur heutige und überfällige Aufgaben
 - Mehrfachzuweisung an mehrere Personen
 - Einmalige und wiederkehrende Aufgaben
 - Ordnungsprojekte mit Teilschritten, Fortschritt, Punkten und Hinweisen auf offene Schritte bei anderen Personen
 - Notizen zu Aufgaben und Projekten
 - Vorher/Nachher-Fotos für Aufgaben, Projekte und einzelne Projektschritte
 - Erinnerungen an zugewiesene Personen und Projekt-Schritte, inklusive Notiz-Fallback
+- Automatische Benachrichtigung, wenn eine Aufgabe für eine andere Person erstellt wird
 - Aufgaben-, Raum- und Projekt-Icons mit OpenMoji-Auswahl und automatischer Erkennung
 - Bestenliste, Erfolgshistorie und persönliche Statistik mit Streak, Wochenpunkten und Wochenziel
 - Tägliche Push-Benachrichtigungen pro Person und Gerät
@@ -68,6 +70,7 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Aufgaben anlegen, bearbeiten, löschen und abhaken
 - Notizen direkt an Aufgaben hinterlegen
 - Erinnerungen an zugewiesene Personen senden, mit Notiz-Fallback
+- Automatische Benachrichtigung bei neu zugewiesenen Aufgaben
 - Intervalle von täglich bis jährlich
 - Einmalige Aufgaben, die nach Erledigung automatisch archiviert werden
 - Startdatum und einmaliges Verschieben der Fälligkeit

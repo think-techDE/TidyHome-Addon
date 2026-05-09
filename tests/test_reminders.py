@@ -3,6 +3,7 @@ import os
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
@@ -39,6 +40,45 @@ class ReminderTests(unittest.TestCase):
         )
 
         self.assertEqual(reminders.task_reminder_recipients(task, "Danny"), [])
+
+    def test_task_assignment_recipients_exclude_creator(self):
+        task = Task(
+            name="Biomuell",
+            room="Kueche",
+            interval_days=7,
+            assigned_to=["Danny", "Marina", "Marina"],
+        )
+
+        self.assertEqual(
+            reminders.task_assignment_recipients(task, "Danny"),
+            ["Marina"],
+        )
+
+    def test_task_assignment_notification_uses_person_services(self):
+        task = Task(
+            name="Biomuell",
+            room="Kueche",
+            interval_days=7,
+            assigned_to=["Marina"],
+            start_date=date.today().isoformat(),
+        )
+
+        with (
+            patch.object(reminders, "is_vacation_mode_active", return_value=False),
+            patch.object(reminders, "_notify_services", return_value=["notify.mobile_marina"]),
+            patch.object(reminders, "send_notification", new=AsyncMock(return_value=True)) as send,
+        ):
+            sent = asyncio.run(
+                reminders.send_task_assignment_notification(task, "Marina", sender="Danny")
+            )
+
+        self.assertTrue(sent)
+        send.assert_awaited_once()
+        args = send.await_args.args
+        self.assertEqual(args[0], "notify.mobile_marina")
+        self.assertEqual(args[1], "TidyHome: Neue Aufgabe")
+        self.assertIn("Danny hat dir eine Aufgabe zugewiesen", args[2])
+        self.assertIn("Aufgabe: Biomuell", args[2])
 
     def test_task_reminder_sends_notification_and_writes_success_note(self):
         task = Task(
