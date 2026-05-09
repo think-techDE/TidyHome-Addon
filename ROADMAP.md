@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-09 · Aktuelle Version: 1.3.43
+Stand: 2026-05-10 · Aktuelle Version: 1.3.43
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -215,92 +215,117 @@ Die Codebasis ist inzwischen modularisiert:
 
 ---
 
-## Nächster Fokus
+## Empfohlene nächste Ausbaustufen
 
-### 1. Einkaufsliste
+### 1. Einkaufsliste & Besorgungen
 
-Ziel: Gemeinsame Liste für Besorgungen ohne Intervall-Logik.
+Ziel: Besorgungen von Aufgaben trennen, damit Aufgaben sauber bei Haushalt und Projekten bleiben.
 
-- eigener Bereich in der Bottom-Navigation oder unter Aufgaben
-- Einträge hinzufügen, abhaken, löschen
-- optional Person, Menge und Notiz
-- keine Punkte, keine Fälligkeit, kein Intervall
-- später optional Kategorien wie Supermarkt, Drogerie, Baumarkt
+- eigener Bereich für Einkaufsliste ohne Intervall, Fälligkeit oder Punkte
+- Einträge hinzufügen, abhaken, wieder öffnen und löschen
+- Menge, Notiz und optionale Kategorie
+- Kategorien wie Supermarkt, Drogerie, Baumarkt, Garten, Apotheke
+- wiederkehrende Einkaufsartikel als Vorschläge
+- optional später gemeinsame Listen pro Raum oder Projekt
 
-Warum jetzt: Die App hat inzwischen stabile Personen-, Notiz- und Listenmuster. Eine Einkaufsliste kann diese Muster nutzen, ohne die Aufgabenlogik weiter aufzublähen.
+Warum zuerst: Die App wird dadurch im Alltag häufiger geöffnet, ohne die bestehende Aufgabenlogik komplizierter zu machen.
 
-### 2. Aufgaben-Pausen
+### 2. Wochenplanung & Aufgaben-Pausen
 
-Ziel: Einzelne Aufgaben temporär einfrieren, unabhängig vom persönlichen Urlaubsmodus.
+Ziel: Fälligkeiten besser steuerbar machen, ohne Aufgaben dauerhaft zu verändern.
 
-- Pause direkt an einer Aufgabe setzen
-- optionales Enddatum
-- pausierte Aufgaben sichtbar lassen
-- Badge "Pausiert"
-- nicht als fällig zählen
-- tägliche Benachrichtigung ignoriert pausierte Aufgaben
+- Kalenderstreifen für heute, morgen und die nächsten Tage
+- Tages- und Wochenfilter in Zuhause und Aufgaben
+- einzelne Aufgaben pausieren
+- optionales Pausen-Enddatum
+- pausierte Aufgaben sichtbar lassen, aber nicht als fällig zählen
+- tägliche Benachrichtigungen ignorieren pausierte Aufgaben
 
-Abgrenzung: Urlaubsmodus pausiert die Person. Aufgaben-Pause pausiert genau eine Aufgabe.
+Abgrenzung: Urlaubsmodus pausiert eine Person. Aufgaben-Pausen pausieren einzelne Aufgaben.
 
-### 3. Wochenübersicht
+### 3. Aufgaben-Vorlagen
 
-Ziel: Besser sehen, was in den nächsten Tagen ansteht.
+Ziel: Wiederkehrende Aufgabenpakete schneller anlegen.
 
-- kompakter Kalenderstreifen in Aufgaben oder Zuhause
-- Tage mit Anzahl fälliger Aufgaben
-- Wechsel zwischen heute, morgen und Woche
-- keine vollständige Kalender-App
+- Vorlagen für Sets wie Frühjahrsputz, Gästezimmer, Urlaubsvorbereitung oder Auto
+- mehrere Aufgaben aus einer Vorlage erzeugen
+- Standardwerte für Raum, Punkte, Aufwand, Person und Intervall
+- Vorlagen bearbeiten und erneut verwenden
+- später Vorlagen aus abgeschlossenen Projekten ableiten
 
-### 4. Home-Assistant-Entities
+Warum sinnvoll: Nach Fotos, Notizen und Rollen ist das Aufgabenformular mächtig geworden. Vorlagen reduzieren Eingabeaufwand und Fehler.
 
-Ziel: TidyHome stärker automatisierbar machen.
+### 4. Motivation & persönliche Entwicklung
 
-- Sensor für offene Aufgaben
-- Sensor für heutige Aufgaben
-- Sensor für überfällige Aufgaben
-- optional pro Person
-- später Automationen auf Basis dieser Sensoren
+Ziel: Erfolge sichtbarer machen, ohne Druck aufzubauen.
 
-### 5. Export & Backup
+- Abzeichen für persönliche Meilensteine
+- persönliche Verlaufsseite mit Wochen-, Monats- und Langzeitentwicklung
+- Familienziele und Kinderziele
+- Belohnungsziele mit frei definierbarem Zielwert
+- sanftere Sprache und bessere Gruppierung bei überfälligen Aufgaben
+- Energielevel-Modus nach Aufwand und Tagesform
 
-Ziel: Daten leichter sichern und auswerten.
+Wichtig: Motivation sollte optional bleiben. Die App darf nicht strafend wirken, wenn Aufgaben liegen bleiben.
+
+### 5. Haushaltshilfen: Abrechnung 2.0
+
+Ziel: Die aktuelle Zeiterfassung revisionssicherer und alltagstauglicher machen.
+
+- freie Von/Bis-Zeitraumfilter zusätzlich zur Monatsansicht
+- Zahlungsdatum und Zahlungsnotiz bei bezahlten Monaten
+- Korrekturverlauf für Arbeitszeiten und Stundensätze
+- Warnungen für fehlende Zeiten, ungewöhnlich lange Einsätze und fehlende Pausen
+- Sammelabrechnung für alle Haushaltshilfen eines Monats
+- optionaler Foto- oder Beleganhang an Arbeitseinträgen
+
+Warum nicht zuerst: Die Basis ist jetzt nutzbar. Weitere Abrechnungstiefe ist wichtig, aber weniger breit wirksam als Einkaufsliste und Wochenplanung.
+
+### 6. Home Assistant Automation
+
+Ziel: TidyHome stärker in Home Assistant einbinden.
+
+- Sensoren für offene, heutige und überfällige Aufgaben
+- optionale Sensoren pro Person
+- Kalender-Integration für fällige Aufgaben
+- Todo-Integration für Einkaufsliste oder Aufgaben
+- REST-API für Automationen, z. B. Aufgabe aus Sensorereignis anlegen
+- Müllkalender-/Trash-Card-Integration als Aufgaben-Trigger
+
+### 7. Daten, Export & Wartung
+
+Ziel: Betrieb und Wiederherstellung robuster machen.
 
 - JSON-Export der gesamten TinyDB
-- CSV-Export für Aufgaben, Projekte, Punkte
-- Import zunächst nicht priorisieren
+- CSV-Export für Aufgaben, Projekte und Punkte
+- Import-/Wiederherstellungsfunktion
+- Admin-Diagnose für verwaiste Personen, Räume, Fotos und alte Referenzen
+- optionale Foto-Bereinigung für gelöschte oder archivierte Einträge
+- Mehrsprachigkeit Deutsch/Englisch
 
 ---
 
-## Spätere Ausbaustufen
+## Spätere Ideen
 
 ### Foto-Ausbau
 
+- Galerieansicht pro Aufgabe, Projekt und Person
 - optionaler Bildvergleich für Vorher/Nachher
-
-### Aufgaben-Vorlagen
-
-- häufige Sets speichern, z. B. Frühjahrsputz
-- mehrere Aufgaben auf einmal erzeugen
-- Standardräume, Intervalle und Punkte übernehmen
+- bessere mobile Vorschau und Bildkomprimierung
 
 ### Kategorien & Abhängigkeiten
 
 - Tags zusätzlich zu Räumen
 - Aufgaben verknüpfen, z. B. erst lüften, dann putzen
 - optionale Sortierung nach Abhängigkeiten
-
-### Haushaltshilfe-Verwaltung
-
-- CSV-Export für Abrechnung
-- Zeitraumfilter über freie Von/Bis-Daten zusätzlich zum Monatsfilter
-- optionaler Freigabe-Status für geprüfte Abrechnungszeiträume
+- Blocker-Hinweis, wenn eine Vorgängeraufgabe offen ist
 
 ### Barrierefreiheit & Neurodiversität
 
 - Fokus-Modus mit 1 bis 3 Aufgaben pro Tag
-- sanftere Sprache bei überfälligen Aufgaben
-- Energielevel-Modus nach Aufwand
-- positive Rückmeldungen nach Erledigung
+- reduzierte Ansicht ohne Punkte und Wettbewerb
+- große Touch-Ziele für sehr kleine Displays
+- klarere Texte für Kinder und Haushaltshilfen
 
 ---
 

@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-09 · Version 1.3.43
+Stand: 2026-05-10 · Version 1.3.43
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -155,29 +155,55 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
 ## Geplante Features
 
-### Nächste sinnvolle Schritte
+### Priorität 1: Alltag schneller machen
 
-- [ ] Einkaufsliste als eigener Bereich ohne Intervall
+- [ ] Einkaufsliste als eigener Bereich ohne Intervall, Fälligkeit oder Punkte
+- [ ] Mengen, Notizen und Kategorien für Einkaufsliste, z. B. Supermarkt, Drogerie, Baumarkt
+- [ ] Wiederkehrende Einkaufsartikel als Vorschläge, ohne sie automatisch als Aufgabe zu behandeln
 - [ ] Aufgaben-Pausen: einzelne Aufgaben temporär einfrieren
-- [ ] Kalenderstreifen mit Wochenübersicht
-- [ ] HA-Sensoren/Entities für Aufgabenstatus
-- [ ] Daten-Export als CSV/JSON-Backup
+- [ ] Wochenübersicht mit Kalenderstreifen für heute, morgen und die nächsten Tage
+- [ ] Tagesfokus mit bewusst kleiner Aufgabenliste für Personen, die nur das Nötigste sehen wollen
 
-### Später
+### Priorität 2: Aufgaben besser planen
 
-- [ ] Aufgaben-Vorlagen für wiederkehrende Sets
+- [ ] Aufgaben-Vorlagen für wiederkehrende Sets, z. B. Frühjahrsputz oder Gästezimmer vorbereiten
+- [ ] Mehrere Aufgaben aus einer Vorlage auf einmal erzeugen
 - [ ] Tags oder Kategorien zusätzlich zu Räumen
-- [ ] Aufgabenabhängigkeiten, z. B. Vorgänger/Nachfolger
-- [ ] REST-API zum Anlegen von Aufgaben per Home-Assistant-Automation
+- [ ] Aufgabenabhängigkeiten, z. B. erst aufräumen, dann saugen
+- [ ] optionales Enddatum für Aufgabenserien
+- [ ] Aufgaben duplizieren, um ähnliche Aufgaben schneller anzulegen
+
+### Priorität 3: Motivation sichtbarer machen
+
+- [ ] Abzeichen und Achievements für persönliche Meilensteine
+- [ ] Persönliche Verlaufsseite mit Wochen-, Monats- und Langzeitentwicklung
+- [ ] Familienziele, z. B. gemeinsame Wochenpunkte oder erledigte Aufgaben
+- [ ] Belohnungsziele für Kinder mit frei definierbaren Zielwerten
+- [ ] sanftere Sprache und bessere Gruppierung für überfällige Aufgaben
+- [ ] Energielevel-Modus nach Aufwand und Tagesform
+
+### Priorität 4: Haushaltshilfen abrunden
+
+- [ ] Zeitraumfilter mit freiem Von/Bis zusätzlich zur Monatsauswahl
+- [ ] Zahlungsnotizen und Zahlungsdatum für bezahlte Abrechnungen
+- [ ] Korrekturverlauf für Arbeitszeiten und Stundensätze
+- [ ] Plausibilitätsprüfung für fehlende Zeiten, ungewöhnlich lange Einsätze und fehlende Pausen
+- [ ] optionaler Export aller Haushaltshilfen eines Monats als Sammelabrechnung
+
+### Priorität 5: Home Assistant stärker nutzen
+
+- [ ] HA-Sensoren für heutige, offene und überfällige Aufgaben
+- [ ] optionale Sensoren pro Person
+- [ ] Home-Assistant-Kalender-Integration für fällige Aufgaben
+- [ ] Home-Assistant-Todo-Integration für Einkaufsliste oder Aufgaben
+- [ ] REST-API zum Anlegen von Aufgaben per Automation
+- [ ] Müllkalender-/Trash-Card-Integration als Aufgaben-Trigger
+
+### Priorität 6: Daten & Betrieb
+
+- [ ] JSON-Export der gesamten TinyDB als Backup
+- [ ] CSV-Export für Aufgaben, Projekte und Punkte
+- [ ] Import-/Wiederherstellungsfunktion für TidyHome-Daten
+- [ ] Admin-Ansicht für Datenprüfung, z. B. verwaiste Personen, Räume oder Fotos
+- [ ] optionale automatische Foto-Bereinigung für gelöschte oder archivierte Einträge
 - [ ] Mehrsprachigkeit Deutsch/Englisch
-
-### Ideen
-
-- [idee] Fokus-Modus mit nur wenigen Aufgaben pro Tag
-- [idee] Sanfte Sprache für überfällige Aufgaben
-- [idee] Energielevel-Modus nach Aufwand und Tagesform
-- [idee] Positive Verstärkung nach Erledigung
-- [idee] Abzeichen und Achievements
-- [idee] Persönliche Verlaufsseite
-- [idee] CSV-Export für Haushaltshilfe-Abrechnung
-- [idee] Trash-Card-/Müllkalender-Integration als Aufgaben-Trigger
