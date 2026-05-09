@@ -625,6 +625,7 @@ def _comment_time(raw: str) -> str:
 def comments_card(entity_type: str, entity_id: str, action: str,
                   person: str = "", margin_top: bool = False) -> str:
     comments = list_comments(entity_type, entity_id)
+    total = len(comments)
     if comments:
         rows = ""
         for c in comments:
@@ -643,7 +644,7 @@ def comments_card(entity_type: str, entity_id: str, action: str,
             </div>"""
     else:
         rows = (
-            '<div class="empty">'
+            '<div class="comments-empty">'
             '<div style="font-weight:600">Noch keine Notizen</div>'
             '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
             'Halte Hinweise oder Absprachen direkt hier fest.</div>'
@@ -651,13 +652,19 @@ def comments_card(entity_type: str, entity_id: str, action: str,
         )
 
     margin = "margin-top:1rem;" if margin_top else "margin-bottom:1rem;"
+    open_attr = " open" if total else ""
+    count_label = f"{total} Notiz{'en' if total != 1 else ''}" if total else "Keine Notizen"
     return f"""
-    <div class="card card-flush" style="{margin}">
-      <div style="padding:1rem 1.25rem 0.5rem">
-        <h3 style="margin-bottom:0.35rem">Notizen</h3>
-      </div>
+    <details class="card comments-card" style="{margin}"{open_attr}>
+      <summary class="comments-head">
+        <div>
+          <h3>Notizen</h3>
+          <div class="muted">{count_label} · Hinweise und Absprachen</div>
+        </div>
+        <span class="comment-summary-icon">{_icon("edit", 15)}</span>
+      </summary>
       {rows}
-      <form method="post" action="{action}" style="padding:1rem 1.25rem">
+      <form class="comment-form" method="post" action="{action}">
         <input type="hidden" name="return_p" value="{person}">
         <div class="form-group">
           <label>Neue Notiz</label>
@@ -665,7 +672,7 @@ def comments_card(entity_type: str, entity_id: str, action: str,
         </div>
         <button class="btn btn-primary btn-sm" type="submit">Notiz speichern</button>
       </form>
-    </div>"""
+    </details>"""
 
 
 def photos_card(entity_type: str, entity_id: str, action: str,

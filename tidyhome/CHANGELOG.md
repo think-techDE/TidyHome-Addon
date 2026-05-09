@@ -1,3 +1,8 @@
+## 1.3.33
+
+- UI: Notizen-Karten sind jetzt wie Foto-Karten einklappbar
+- UI: leerer Notizen-Zustand ist kompakter und nimmt weniger Höhe ein
+
 ## 1.3.32
 
 - Aufgaben: „Einmalig“ ist jetzt Teil des Intervall-Dropdowns und Standard für neue Aufgaben

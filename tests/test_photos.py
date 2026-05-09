@@ -85,6 +85,30 @@ class PhotoTests(unittest.TestCase):
         self.assertIn('capture="environment"', html)
         self.assertIn("Datei auswählen lädt ein vorhandenes Foto hoch", html)
 
+    def test_comments_card_is_collapsible_and_compact_when_empty(self):
+        html = render.comments_card("task", "task-1", "tasks/task-1/comments", "Ben")
+
+        self.assertIn('<details class="card comments-card"', html)
+        self.assertIn('<summary class="comments-head">', html)
+        self.assertIn("comments-empty", html)
+        self.assertNotIn('class="empty"', html)
+        self.assertNotIn(
+            '<details class="card comments-card" style="margin-bottom:1rem;" open>',
+            html,
+        )
+
+    def test_comments_card_opens_when_comments_exist(self):
+        storage.add_comment("task", "task-1", "Bitte morgen zuerst erledigen", author="Ben")
+
+        html = render.comments_card("task", "task-1", "tasks/task-1/comments", "Ben")
+
+        self.assertIn(
+            '<details class="card comments-card" style="margin-bottom:1rem;" open>',
+            html,
+        )
+        self.assertIn("1 Notiz", html)
+        self.assertIn("Bitte morgen zuerst erledigen", html)
+
 
 if __name__ == "__main__":
     unittest.main()
