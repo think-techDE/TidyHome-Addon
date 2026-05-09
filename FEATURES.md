@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-09 · Version 1.3.35
+Stand: 2026-05-09 · Version 1.3.36
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -20,6 +20,8 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Fälligkeit einmalig verschieben, ohne das Intervall zu ändern
 - [x] Statusanzeige für geplant, heute, überfällig und ok
 - [x] Raum, Punkte, Aufwand und Wichtig-Flag pro Aufgabe
+- [x] Wichtig-Flag direkt im oberen Bereich des Aufgabenformulars
+- [x] Aufgabenformular in Abschnitte für Aufgabe, Planung, Zuständigkeit und Darstellung gegliedert
 - [x] Mehrfachzuweisung an mehrere Personen
 - [x] Neue Aufgaben werden standardmäßig der angemeldeten Person zugeordnet
 - [x] Dashboard zeigt nur heutige und überfällige Aufgaben unter „Nächste Aufgaben“
@@ -93,6 +95,8 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Räume pro Person individuell ausblendbar
 - [x] Persönliche Einstellungen auf `/settings`
 - [x] Admin-Bereich für Personen, Rollen, Räume und Geräte
+- [x] Einstellungen mit kompakten Abschnitten für Benachrichtigung, Motivation, Urlaub und Räume
+- [x] Admin-Übersicht mit Sprungmarken für Rechte, Räume, Benachrichtigungen und Profile
 - [x] Persönlicher Urlaubsmodus in den Einstellungen
 - [x] Urlaubsmodus pausiert fällige Aufgaben und tägliche Benachrichtigungen
 

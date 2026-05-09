@@ -642,60 +642,82 @@ async def _task_form(request: Request, title: str, action: str,
           <textarea name="initial_note" rows="3"
                     placeholder="Hinweis oder Absprache direkt mit anlegen"></textarea>
         </div>"""
+    priority_option = f"""
+        <label class="option-card task-priority-card">
+          <input type="checkbox" name="important" value="1" {important_checked}>
+          <span class="task-priority-main">
+            <span class="task-priority-title">
+              {star_svg} Als wichtig markieren
+            </span>
+            <span class="task-priority-hint">
+              Wichtige Aufgaben werden in Listen hervorgehoben und weiter oben einsortiert.
+            </span>
+          </span>
+        </label>"""
 
     content = f"""
     <div class="page-header">
       <h2>{title}</h2>
       <a class="icon-btn" href="{back_url}" title="Abbrechen">{_i("chevron_l", 20)}</a>
     </div>
-    <div class="card">
+    <div class="card task-form-card">
       <form method="post" action="{action}">
         <input type="hidden" name="return_p" value="{person}">
         <input type="hidden" name="return_to" value="{return_to}">
-        <div class="form-group">
-          <label>Was ist zu erledigen?</label>
-          <input name="name" required placeholder="z.B. Staubsaugen" value="{cur_name}">
-        </div>
-        {initial_note}
-        <div class="grid-2">
+        <div class="task-form-section">
+          <div class="task-form-section-title">Aufgabe</div>
           <div class="form-group">
-            <label>Raum</label>
-            <select name="room">{room_opts}</select>
+            <label>Was ist zu erledigen?</label>
+            <input name="name" required placeholder="z.B. Staubsaugen" value="{escape(cur_name)}">
+          </div>
+          {priority_option}
+          {initial_note}
+        </div>
+
+        <div class="task-form-section">
+          <div class="task-form-section-title">Planung</div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Raum</label>
+              <select name="room">{room_opts}</select>
+            </div>
+            <div class="form-group">
+              <label>Intervall</label>
+              <select name="interval_days">{interval_opts}</select>
+            </div>
+            <div class="form-group">
+              <label>Punkte</label>
+              <input name="points" type="number" value="{cur_points}" min="1" max="100">
+            </div>
+            <div class="form-group">
+              <label>Startdatum (optional)</label>
+              <input type="date" name="start_date" value="{cur_start_date}">
+            </div>
           </div>
           <div class="form-group">
-            <label>Intervall</label>
-            <select name="interval_days">{interval_opts}</select>
+            <label>Aufwand</label>
+            <div class="effort-picker">{effort_btns}</div>
           </div>
+          {snooze_section}
+        </div>
+
+        <div class="task-form-section">
+          <div class="task-form-section-title">Zuständigkeit</div>
           <div class="form-group">
-            <label>Punkte</label>
-            <input name="points" type="number" value="{cur_points}" min="1" max="100">
-          </div>
-          <div class="form-group">
-            <label>Startdatum (optional)</label>
-            <input type="date" name="start_date" value="{cur_start_date}">
+            <label>Zugewiesen an</label>
+            <div class="task-assignee-grid">{person_boxes}</div>
           </div>
         </div>
-        <div class="form-group">
-          <label>Aufwand</label>
-          <div class="effort-picker">{effort_btns}</div>
+
+        <div class="task-form-section">
+          <div class="task-form-section-title">Darstellung</div>
+          {_icon_chooser(cur_icon)}
         </div>
-        <div class="form-group">
-          <label>Zugewiesen an</label>
-          <div style="display:flex;flex-wrap:wrap;gap:0.45rem">{person_boxes}</div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary btn-full" type="submit">{submit_label}</button>
+          <a class="btn btn-ghost btn-full" href="{back_url}">Abbrechen</a>
         </div>
-        {_icon_chooser(cur_icon)}
-        <div class="form-group">
-          <label class="option-card">
-            <input type="checkbox" name="important" value="1" {important_checked}>
-            <span style="display:flex;align-items:center;gap:0.4rem">
-              {star_svg} Als wichtig markieren
-            </span>
-          </label>
-        </div>
-        {snooze_section}
-        <button class="btn btn-primary btn-full" type="submit">{submit_label}</button>
-        <a class="btn btn-ghost btn-full" href="{back_url}"
-           style="margin-top:0.5rem">Abbrechen</a>
       </form>
     </div>
     {photos}

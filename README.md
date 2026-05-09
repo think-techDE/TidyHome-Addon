@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.35-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.36-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -18,6 +18,7 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 - Mehrfachzuweisung an mehrere Personen
 - Einmalige Aufgaben als Standard sowie wiederkehrende Aufgaben
 - Aufgaben-Historie zum Bearbeiten und Wieder-Aktivieren erledigter Aufgaben
+- Übersichtlicheres Aufgabenformular mit Wichtig-Markierung direkt im oberen Bereich
 - Ordnungsprojekte mit Teilschritten, Fortschritt, Punkten und Hinweisen auf offene Schritte bei anderen Personen
 - Notizen zu Aufgaben und Projekten, auch direkt beim Erstellen neuer Aufgaben
 - Einklappbare Notizen-Karten mit kompaktem Leerzustand
@@ -29,6 +30,7 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 - Tägliche Push-Benachrichtigungen pro Person und Gerät
 - Persönlicher Urlaubsmodus zum Pausieren fälliger Aufgaben und Benachrichtigungen
 - Rollen für Elternteil, Kind, Haushaltshilfe und Mitglied
+- Aufgeräumte Einstellungen und Admin-Übersicht für Rechte, Räume, Geräte und Profile
 - Automatische Personen- und Raumintegration aus Home Assistant
 - Responsive Web-UI über Home Assistant Ingress
 
@@ -57,6 +59,7 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Dashboard als Heute-Ansicht mit Status, nächsten Aufgaben und Raumüberblick
 - Aufgabenlisten mit klaren Fälligkeits-Badges und schnellen Icon-Aktionen
 - Mobile Aufgabenzeilen mit getrenntem Inhalts- und Aktionsbereich
+- Formulare in klaren Abschnitten, damit wichtige Optionen schneller erreichbar sind
 - Projektkarten mit sichtbarem Fortschritt und Hinweisen auf offene Schritte
 - Erweiterte OpenMoji-Iconauswahl für Aufgaben, Räume und Projekte
 - Bottom-Navigation mit lokalen OpenMoji-Icons

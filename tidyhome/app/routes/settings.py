@@ -1,4 +1,6 @@
 from datetime import date
+from html import escape
+from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -27,6 +29,9 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
     weekly_goal = cfg.get("weekly_goal", 0) or 0
     role = cfg.get("role", "member")
     can_see_children = cfg.get("can_see_children", False)
+    pn_html = escape(pn)
+    pn_attr = escape(pn, quote=True)
+    pn_url = quote(pn, safe="")
     vacation = get_vacation_mode(pn)
     vacation_active = is_vacation_mode_active(pn)
     vacation_checked = "checked" if vacation.get("enabled") else ""
@@ -46,21 +51,25 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
         if vacation_expired else ""
     )
     svc_info = (
-        f'<div class="muted" style="margin-bottom:0.75rem">Geräte: {", ".join(services)}</div>'
+        f'<div class="settings-help">Geräte: {", ".join(escape(s) for s in services)}</div>'
         if services else
-        '<div class="muted" style="margin-bottom:0.75rem">Keine Geräte (Admin konfiguriert diese)</div>'
+        '<div class="settings-help">Keine Geräte hinterlegt. Das konfiguriert der Admin-Bereich.</div>'
     )
     admin_b = f' <span class="admin-badge">Admin</span>' if pn in admins else ""
+    role_label = ROLES.get(role, role)
+    device_count = len(services)
+    open_attr = "" if show_admin_fields else " open"
 
     room_boxes = ""
     for r in areas:
+        r_html = escape(r)
+        r_attr = escape(r, quote=True)
         room_boxes += f"""
-        <label style="display:flex;align-items:center;gap:0.5rem;
-                       padding:0.3rem 0;cursor:pointer;font-size:0.84rem">
-          <input type="checkbox" name="hidden_rooms" value="{r}"
+        <label class="settings-check">
+          <input type="checkbox" name="hidden_rooms" value="{r_attr}"
                  {'checked' if r in hidden_rooms else ''}
-                 style="width:1rem;height:1rem;accent-color:var(--primary)">
-          {r}
+          >
+          <span>{r_html}</span>
         </label>"""
 
     admin_fields = ""
@@ -70,71 +79,90 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
             for k, v in ROLES.items()
         )
         admin_fields = f"""
-        <div class="grid-2" style="margin-top:0.5rem">
-          <div class="form-group">
-            <label>Rolle</label>
-            <select name="role">{role_opts}</select>
-          </div>
-          <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:0.75rem">
-            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;
-                          text-transform:none;font-size:0.84rem;letter-spacing:0;font-weight:500;margin:0">
-              <input type="checkbox" name="can_see_children" value="1"
-                     {'checked' if can_see_children else ''}
-                     style="width:1rem;height:1rem;accent-color:var(--primary)">
-              Kinder sehen
-            </label>
+        <div class="settings-block">
+          <div class="settings-block-title">Rolle und Sicht</div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Rolle</label>
+              <select name="role">{role_opts}</select>
+            </div>
+            <div class="form-group settings-check-field">
+              <label class="settings-check">
+                <input type="checkbox" name="can_see_children" value="1"
+                       {'checked' if can_see_children else ''}>
+                <span>Kinder sehen</span>
+              </label>
+            </div>
           </div>
         </div>"""
 
     return f"""
-    <div class="card" style="margin-bottom:0.75rem">
-      <form method="post" action="{base}{action}">
-        <input type="hidden" name="person" value="{pn}">
-        <div style="font-weight:700;margin-bottom:0.5rem">{pn}{admin_b}{vacation_state}</div>
-        {svc_info}
-        <div class="grid-2">
+    <details class="card person-settings-card"{open_attr}>
+      <summary class="person-settings-summary">
+        <span class="person-settings-main">
+          <span class="person-settings-title">{pn_html}{admin_b}{vacation_state}</span>
+          <span class="person-settings-meta">{escape(role_label)} · {device_count} Gerät(e)</span>
+        </span>
+        <span class="person-settings-toggle">Bearbeiten</span>
+      </summary>
+      <form class="person-settings-form" method="post" action="{base}{action}">
+        <input type="hidden" name="person" value="{pn_attr}">
+
+        <div class="settings-block">
+          <div class="settings-block-title">Benachrichtigung</div>
+          {svc_info}
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Benachrichtigungszeit</label>
+              <input name="notify_time" type="time" value="{escape(time_val, quote=True)}">
+            </div>
+            <div class="form-group settings-check-field">
+              <label class="settings-check">
+                <input type="checkbox" name="enabled" value="1" {checked}>
+                <span>Aktiv</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-block">
+          <div class="settings-block-title">Motivation</div>
           <div class="form-group">
-            <label>Benachrichtigungszeit</label>
-            <input name="notify_time" type="time" value="{time_val}">
-          </div>
-          <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:0.1rem">
-            <label style="display:flex;align-items:center;gap:0.5rem;
-                          cursor:pointer;text-transform:none;font-size:0.85rem;letter-spacing:0;margin:0">
-              <input type="checkbox" name="enabled" value="1" {checked} style="width:auto">
-              Aktiv
-            </label>
+            <label>Wochenziel (Aufgaben)</label>
+            <input name="weekly_goal" type="number" min="0" max="99" value="{weekly_goal}"
+                   placeholder="0 = kein Ziel">
           </div>
         </div>
-        <div class="form-group">
-          <label>Wochenziel (Aufgaben)</label>
-          <input name="weekly_goal" type="number" min="0" max="99" value="{weekly_goal}"
-                 placeholder="0 = kein Ziel">
-        </div>
-        <div class="grid-2">
-          <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:0.75rem">
-            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;
-                          text-transform:none;font-size:0.84rem;letter-spacing:0;font-weight:500;margin:0">
-              <input type="checkbox" name="vacation_enabled" value="1" {vacation_checked}
-                     style="width:1rem;height:1rem;accent-color:var(--primary)">
-              Urlaubsmodus
-            </label>
-          </div>
-          <div class="form-group">
-            <label>Urlaub bis einschließlich</label>
-            <input type="date" name="vacation_until" value="{vacation_until}">
+
+        <div class="settings-block">
+          <div class="settings-block-title">Urlaub</div>
+          <div class="grid-2">
+            <div class="form-group settings-check-field">
+              <label class="settings-check">
+                <input type="checkbox" name="vacation_enabled" value="1" {vacation_checked}>
+                <span>Urlaubsmodus</span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label>Urlaub bis einschließlich</label>
+              <input type="date" name="vacation_until" value="{escape(vacation_until, quote=True)}">
+            </div>
           </div>
         </div>
+
         {admin_fields}
-        <div class="form-group">
-          <label>Räume ausblenden</label>
-          <div style="display:flex;flex-wrap:wrap;gap:0 1.5rem">{room_boxes}</div>
+
+        <div class="settings-block">
+          <div class="settings-block-title">Räume ausblenden</div>
+          <div class="settings-room-list">{room_boxes}</div>
         </div>
-        <div style="display:flex;gap:0.5rem">
+
+        <div class="settings-actions">
           <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
-          <a class="btn btn-ghost btn-sm" href="{base}notify-now/{pn}{person_suffix(pn)}">Testen</a>
+          <a class="btn btn-ghost btn-sm" href="{base}notify-now/{pn_url}{person_suffix(pn)}">Testen</a>
         </div>
       </form>
-    </div>"""
+    </details>"""
 
 
 @router.get("/settings", response_class=HTMLResponse)
@@ -148,8 +176,7 @@ async def settings_form(request: Request, p: str = ""):
     is_admin = ha_user in admins
 
     admin_link = (
-        f'<a href="{base}admin" class="btn btn-primary btn-sm" '
-        f'style="margin-bottom:1rem">Admin-Bereich öffnen</a>'
+        f'<a href="{base}admin" class="btn btn-primary btn-sm">Admin-Bereich öffnen</a>'
         if is_admin else ""
     )
 
@@ -158,27 +185,34 @@ async def settings_form(request: Request, p: str = ""):
             # Admin ohne ?p= → Personenpicker anzeigen
             persons = await get_persons()
             pills = "".join(
-                f'<a href="{base}settings?p={pn}" class="btn btn-ghost btn-sm" '
-                f'style="font-size:0.9rem;padding:0.5rem 1.1rem">{pn}</a>'
+                f'<a href="{base}settings?p={quote(pn, safe="")}" class="settings-person-tile">'
+                f'<span>{escape(pn)}</span><small>Einstellungen öffnen</small></a>'
                 for pn in persons
             )
             own_controls = (
-                f'<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem">'
+                f'<div class="settings-actions" style="margin-bottom:0.75rem">'
                 f'<a href="{base}" class="btn btn-primary btn-sm">Zurück zu mir</a>'
                 f'<a href="{base}settings{person_suffix(ha_user)}" class="btn btn-ghost btn-sm">Mein Profil</a>'
                 f'</div>'
                 if ha_user else ""
             )
             content = f"""
-            <h2>Einstellungen</h2>
-            {admin_link}
-            <h3 style="margin-bottom:0.5rem">Person wechseln</h3>
-            <div class="card">
-              <p class="muted" style="margin-bottom:1rem">
-                Als Admin kannst du die Ansicht für jede Person öffnen.
-              </p>
+            <div class="hero-card page-hero">
+              <div>
+                <div class="hero-eyebrow">Profile und Ansicht</div>
+                <div class="hero-title">Einstellungen</div>
+              </div>
+              <div class="page-hero-actions">{admin_link}</div>
+            </div>
+            <div class="card settings-picker-card">
+              <div class="settings-picker-head">
+                <div>
+                  <h3>Person wechseln</h3>
+                  <p class="muted">Als Admin kannst du Profile gezielt öffnen.</p>
+                </div>
+              </div>
               {own_controls}
-              <div style="display:flex;flex-wrap:wrap;gap:0.5rem">{pills}</div>
+              <div class="settings-person-grid">{pills}</div>
             </div>"""
             return render(content, request, page="settings", person=ha_user)
         else:
@@ -193,8 +227,8 @@ async def settings_form(request: Request, p: str = ""):
         # Fallback: kein HA-Header und kein p (lokale Entwicklung)
         persons = await get_persons()
         pills = "".join(
-            f'<a href="{base}settings?p={pn}" class="btn btn-ghost btn-sm" '
-            f'style="font-size:0.9rem;padding:0.5rem 1.1rem">{pn}</a>'
+            f'<a href="{base}settings?p={quote(pn, safe="")}" class="btn btn-ghost btn-sm" '
+            f'style="font-size:0.9rem;padding:0.5rem 1.1rem">{escape(pn)}</a>'
             for pn in persons
         )
         content = f"""
@@ -205,7 +239,15 @@ async def settings_form(request: Request, p: str = ""):
         return render(content, request, page="settings", person="")
 
     card = _person_settings_card(p, areas, admins, base=base, action="settings")
-    content = f"<h2>Einstellungen</h2>{admin_link}{card}"
+    content = f"""
+    <div class="hero-card page-hero">
+      <div>
+        <div class="hero-eyebrow">Profil und Benachrichtigung</div>
+        <div class="hero-title">Einstellungen</div>
+      </div>
+      <div class="page-hero-actions">{admin_link}</div>
+    </div>
+    {card}"""
     return render(content, request, page="settings", person=p)
 
 
@@ -269,7 +311,7 @@ async def admin_form(request: Request, saved: str = ""):
         </div>""" if saved == "1" else ""
 
     admin_section = f"""
-    <section class="card admin-section">
+    <section id="admin-rights" class="card admin-section">
       <div class="admin-section-head">
         <div>
           <h3>Admin-Rechte</h3>
@@ -286,7 +328,7 @@ async def admin_form(request: Request, saved: str = ""):
     # ── Geräte-Verwaltung ─────────────────────────────────────────────────
     if not admins:
         device_section = """
-        <section class="card admin-section" style="background:var(--warning-bg);border:1px solid var(--warning)">
+        <section id="admin-devices" class="card admin-section" style="background:var(--warning-bg);border:1px solid var(--warning)">
           <p style="color:var(--warning);margin:0;font-size:0.85rem">
             Noch keine Admins festgelegt. Wähle oben mindestens eine Person aus.
           </p>
@@ -346,7 +388,7 @@ async def admin_form(request: Request, saved: str = ""):
               </form>
             </details>"""
         device_section = f"""
-        <section class="card admin-section">
+        <section id="admin-devices" class="card admin-section">
           <div class="admin-section-head">
             <div>
               <h3>Benachrichtigungen</h3>
@@ -432,7 +474,7 @@ function filterRoomIcons(input){
 </script>"""
 
     room_icons_section = f"""
-    <section class="card admin-section">
+    <section id="admin-room-icons" class="card admin-section">
       <h3 style="margin-bottom:0.25rem">Raum-Icons</h3>
       <p class="muted" style="margin-bottom:1rem;font-size:0.8rem">
         Klicke ein Symbol an – 🔮 nutzt automatisch den Raumnamen.
@@ -451,6 +493,22 @@ function filterRoomIcons(input){
                                show_admin_fields=True)
         for pn in persons
     )
+    admin_count = len([pn for pn in persons if pn in admins])
+    admin_overview = f"""
+    <div class="admin-overview">
+      <a class="admin-overview-card" href="#admin-rights">
+        <strong>{admin_count}</strong><span>Admins</span>
+      </a>
+      <a class="admin-overview-card" href="#admin-room-icons">
+        <strong>{len(areas)}</strong><span>Räume</span>
+      </a>
+      <a class="admin-overview-card" href="#admin-devices">
+        <strong>{len(persons)}</strong><span>Benachrichtigungen</span>
+      </a>
+      <a class="admin-overview-card" href="#admin-people">
+        <strong>{len(persons)}</strong><span>Profile</span>
+      </a>
+    </div>"""
 
     content = f"""
     <div class="admin-hero">
@@ -460,11 +518,12 @@ function filterRoomIcons(input){
       </div>
       <span class="admin-badge">{len(persons)} Personen</span>
     </div>
+    {admin_overview}
     <div class="admin-stack">
       {admin_section}
       {room_icons_section}
       {device_section}
-      <section class="admin-section">
+      <section id="admin-people" class="admin-section">
         <div class="admin-section-head">
           <div>
             <h3>Personeneinstellungen</h3>

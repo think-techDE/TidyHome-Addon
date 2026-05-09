@@ -1,3 +1,10 @@
+## 1.3.36
+
+- UI: Aufgabenformular in klare Abschnitte gegliedert
+- UI: `Als wichtig markieren` steht jetzt direkt oben im Aufgabenformular
+- UI: Einstellungen mit kompakten Blöcken für Benachrichtigung, Motivation, Urlaub und Räume überarbeitet
+- UI: Admin-Bereich mit Übersichtskarten und Sprungmarken für Rechte, Raum-Icons, Benachrichtigungen und Profile aufgeräumt
+
 ## 1.3.35
 
 - UI: zusätzlicher `1×`-Badge für einmalige Aufgaben aus Aufgabenlisten entfernt
