@@ -20,6 +20,8 @@ Technik:
 - `tidyhome/app/models.py`: Pydantic-Modelle für Aufgaben, Projekte, Schritte
 - `tidyhome/app/storage.py`: TinyDB-Zugriff und Geschäftslogik
 - `tidyhome/app/render.py`: HTML-Layout, Navigation, Icons, gemeinsame Render-Helfer
+- `tidyhome/app/i18n.py`: Sprachwahl und Token-Auflösung
+- `tidyhome/app/translations/`: i18n-Quelltexte und Sprachkataloge
 - `tidyhome/app/routes/dashboard.py`: Startseite und Raumansichten
 - `tidyhome/app/routes/tasks.py`: Aufgabenlisten und Aufgabenformulare
 - `tidyhome/app/routes/projects.py`: Projektlisten, Detailansicht und Projektformulare

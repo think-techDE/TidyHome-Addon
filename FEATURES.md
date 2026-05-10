@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-10 · Version 1.3.48
+Stand: 2026-05-10 · Version 1.3.49
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -167,6 +167,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] CSV-Export für Aufgaben, Projekte und Punkte
 - [x] Admin-Diagnose für verwaiste Personen, Räume, Projektschritte und Fotos
 - [x] Zentrale i18n-Schicht für die bestehende serverseitig gerenderte UI
+- [x] Übersetzungskataloge nach Quellen und Sprachen in eigenen Modulen getrennt
 
 ---
 

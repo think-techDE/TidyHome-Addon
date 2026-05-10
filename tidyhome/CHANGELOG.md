@@ -1,3 +1,9 @@
+## 1.3.49
+
+- Technik: i18n-Datei verschlankt und Übersetzungsquellen in eigene Module ausgelagert
+- Technik: Sprachkataloge für Englisch, Französisch und Spanisch separat strukturiert
+- Tests: bestehende Unit-Tests nach der Modulaufteilung erneut validiert
+
 ## 1.3.48
 
 - UI: Scores, Haushaltshilfen, Projektformulare, Aufgabenformularbereiche und Admin-Kernflächen weiter auf i18n-Schlüssel umgestellt

@@ -1,0 +1,12 @@
+from .en import TRANSLATIONS as EN_TRANSLATIONS
+from .es import TRANSLATIONS as ES_TRANSLATIONS
+from .fr import TRANSLATIONS as FR_TRANSLATIONS
+from .sources import MESSAGE_SOURCES
+
+TRANSLATIONS = {
+    "en": EN_TRANSLATIONS,
+    "fr": FR_TRANSLATIONS,
+    "es": ES_TRANSLATIONS,
+}
+
+__all__ = ["MESSAGE_SOURCES", "TRANSLATIONS"]
