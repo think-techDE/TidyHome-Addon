@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-10 · Version 1.3.50
+Stand: 2026-05-10 · Version 1.3.51
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -142,6 +142,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] SVG-Aktionsbuttons, Filter-Chips und Empty States
 - [x] Gemeinsame Render-Helfer für Aufgabenzeilen, Projektzeilen und Projektschritte
 - [x] Icon-Daten und Icon-Renderer aus dem Haupt-Renderer in ein eigenes UI-Modul ausgelagert
+- [x] Foto- und Notizkarten aus dem Haupt-Renderer in ein eigenes UI-Modul ausgelagert
 - [x] Mehrsprachige UI in Deutsch, Englisch, Französisch und Spanisch
 - [x] `Accept-Language` wird inklusive Qualitätswerten für automatische Sprache ausgewertet
 

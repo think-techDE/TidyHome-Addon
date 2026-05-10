@@ -1,3 +1,9 @@
+## 1.3.51
+
+- Technik: Foto- und Notizkarten aus `render.py` in `ui_cards.py` ausgelagert
+- Technik: bestehende `render.comments_card`- und `render.photos_card`-Zugriffe kompatibel gehalten
+- Tests: Foto-/Notiztests und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.50
 
 - Technik: Icon-Daten und Icon-Renderer aus `render.py` in `ui_icons.py` ausgelagert

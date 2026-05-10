@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-10 · Aktuelle Version: 1.3.50
+Stand: 2026-05-10 · Aktuelle Version: 1.3.51
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -31,6 +31,7 @@ Die Codebasis ist inzwischen modularisiert:
 - `main.py` enthält App-Setup, Router und Healthcheck
 - `routes/` enthält Dashboard, Aufgaben, Projekte, Punkte und Einstellungen
 - `render.py` enthält Layout, Navigation und gemeinsame Render-Helfer
+- `ui_cards.py` enthält Foto- und Notizkarten
 - `ui_icons.py` enthält OpenMoji-/SVG-Icon-Daten und Icon-Renderer
 - `translations/` enthält i18n-Quelltexte und Sprachkataloge
 - `storage.py` bündelt TinyDB-Zugriff und Geschäftslogik
@@ -39,6 +40,12 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.51
+
+- Foto- und Notizkarten aus `render.py` in `ui_cards.py` ausgelagert
+- Bestehende `render.comments_card`- und `render.photos_card`-Zugriffe kompatibel gehalten
+- Foto-/Notiztests und vollständige Unit-Test-Suite erneut validiert
 
 ### v1.3.50
 
