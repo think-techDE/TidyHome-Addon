@@ -1,3 +1,9 @@
+## 1.3.45
+
+- UI: mehrsprachige Oberfläche für Deutsch, Englisch, Französisch und Spanisch ergänzt
+- Einstellungen: Sprache pro Person auswählbar oder automatisch über Browser-/Home-Assistant-Sprache
+- Technik: zentrale i18n-Schicht für die serverseitig gerenderte Oberfläche ergänzt
+
 ## 1.3.44
 
 - Aufgaben: einzelne Aufgaben können mit optionalem Enddatum und Grund pausiert werden

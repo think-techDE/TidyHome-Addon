@@ -1,5 +1,6 @@
 from tinydb import TinyDB, Query
 from models import Comment, Project, Step, Task
+from i18n import normalize_language
 from datetime import date, datetime, timedelta
 import os
 import uuid
@@ -579,10 +580,16 @@ ROLES = {
 def get_person_settings(person: str) -> dict:
     Q = Query()
     row = get_settings_table().get(Q.person == person)
-    return row or {"person": person, "services": [], "notify_time": "08:00",
-                   "enabled": False, "hidden_rooms": [], "weekly_goal": 0,
-                   "role": "member", "can_see_children": False,
-                   "vacation_enabled": False, "vacation_until": ""}
+    defaults = {"person": person, "services": [], "notify_time": "08:00",
+                "enabled": False, "hidden_rooms": [], "weekly_goal": 0,
+                "role": "member", "can_see_children": False,
+                "vacation_enabled": False, "vacation_until": "",
+                "language": "auto"}
+    if not row:
+        return defaults
+    merged = {**defaults, **row}
+    merged["language"] = normalize_language(merged.get("language") or "auto")
+    return merged
 
 
 def save_person_settings(person: str, services: list[str], notify_time: str,
@@ -590,14 +597,16 @@ def save_person_settings(person: str, services: list[str], notify_time: str,
                          weekly_goal: int = 0, role: str = "member",
                          can_see_children: bool = False,
                          vacation_enabled: bool = False,
-                         vacation_until: str = "") -> dict:
+                         vacation_until: str = "",
+                         language: str = "auto") -> dict:
     Q = Query()
     data = {"person": person, "services": services,
             "notify_time": notify_time, "enabled": enabled,
             "hidden_rooms": hidden_rooms or [], "weekly_goal": weekly_goal,
             "role": role, "can_see_children": can_see_children,
             "vacation_enabled": vacation_enabled,
-            "vacation_until": vacation_until or ""}
+            "vacation_until": vacation_until or "",
+            "language": normalize_language(language or "auto")}
     if get_settings_table().get(Q.person == person):
         get_settings_table().update(data, Q.person == person)
     else:

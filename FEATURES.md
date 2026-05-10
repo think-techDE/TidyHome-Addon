@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-10 · Version 1.3.44
+Stand: 2026-05-10 · Version 1.3.45
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -69,6 +69,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Überarbeitetes Personenmenü mit klaren Bereichen für Ansicht, Einstellungen und Verwaltung
 - [x] Eltern/Admins sehen auf Zuhause den Einstieg zur Haushaltshilfe-Verwaltung
 - [x] Haushaltshilfen sehen auf Zuhause Monatsstunden und bisher erarbeiteten Lohn
+- [x] Sprache pro Person wählbar oder automatisch aus Browser-/Home-Assistant-Sprache
 
 ### Punkte & Motivation
 
@@ -137,6 +138,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Icon-Auswahl mit manueller Auswahl und automatischer Erkennung
 - [x] SVG-Aktionsbuttons, Filter-Chips und Empty States
 - [x] Gemeinsame Render-Helfer für Aufgabenzeilen, Projektzeilen und Projektschritte
+- [x] Mehrsprachige UI in Deutsch, Englisch, Französisch und Spanisch
 
 ### Home Assistant Integration
 
@@ -160,6 +162,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] JSON-Backup der TinyDB
 - [x] CSV-Export für Aufgaben, Projekte und Punkte
 - [x] Admin-Diagnose für verwaiste Personen, Räume, Projektschritte und Fotos
+- [x] Zentrale i18n-Schicht für die bestehende serverseitig gerenderte UI
 
 ---
 
@@ -209,4 +212,4 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [ ] Import-/Wiederherstellungsfunktion für TidyHome-Daten
 - [ ] Admin-Aktionen zum Bereinigen verwaister Fotos oder alter Referenzen
 - [ ] optionale automatische Foto-Bereinigung für gelöschte oder archivierte Einträge
-- [ ] Mehrsprachigkeit Deutsch/Englisch
+- [ ] weitere UI-Sprachen und feinere Übersetzung einzelner Admin-Spezialtexte

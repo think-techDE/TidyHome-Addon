@@ -86,6 +86,9 @@ class UiFormTests(unittest.TestCase):
 
         self.assertIn("person-settings-card", html)
         self.assertIn('settings-block-title">Benachrichtigung', html)
+        self.assertIn('settings-block-title">Anzeige', html)
+        self.assertIn('name="language"', html)
+        self.assertIn('value="auto" selected', html)
         self.assertIn('settings-block-title">Motivation', html)
         self.assertIn('settings-block-title">Rolle und Sicht', html)
 

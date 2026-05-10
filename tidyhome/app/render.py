@@ -4,8 +4,9 @@ from html import escape
 
 from fastapi import Request
 from fastapi.responses import HTMLResponse
+from i18n import resolve_language, translate_html
 from storage import (get_admins, get_vacation_mode, is_vacation_mode_active,
-                     count_photos, list_comments, list_photos)
+                     count_photos, get_person_settings, list_comments, list_photos)
 
 INTERVALS = {
     1: "Täglich", 2: "Alle 2 Tage", 7: "Wöchentlich", 14: "Alle 2 Wochen",
@@ -1081,6 +1082,14 @@ def render(content: str, request: Request, page: str = "home",
     ha_user = _ha_user(request)
     is_admin = ha_user in admins
     display_person = person or ha_user
+    lang_setting = (
+        get_person_settings(display_person).get("language", "auto")
+        if display_person else "auto"
+    )
+    ui_language = resolve_language(
+        lang_setting,
+        request.headers.get("accept-language", ""),
+    )
     vacation_banner = ""
     flash = ""
     msg = request.query_params.get("msg", "").strip()
@@ -1170,7 +1179,7 @@ def render(content: str, request: Request, page: str = "home",
         )
 
     html = f"""<!DOCTYPE html>
-<html lang="de">
+<html lang="{ui_language}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1388,4 +1397,4 @@ def render(content: str, request: Request, page: str = "home",
 </body>
 </html>"""
 
-    return HTMLResponse(html)
+    return HTMLResponse(translate_html(html, ui_language))

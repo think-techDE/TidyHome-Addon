@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from ha_client import get_areas, get_notify_services, get_persons
+from i18n import language_options, normalize_language
 from render import (_base, _ha_user, _icon, _ICON_LABELS, ROOM_ICON_CHOICES, ROOM_ICON_LABELS,
                     _auto_room_icon_config, _room_icon, format_date_de,
                     person_suffix, render)
@@ -54,6 +55,8 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
     weekly_goal = cfg.get("weekly_goal", 0) or 0
     role = cfg.get("role", "member")
     can_see_children = cfg.get("can_see_children", False)
+    language = normalize_language(cfg.get("language", "auto") or "auto")
+    lang_opts = language_options(language)
     pn_html = escape(pn)
     pn_attr = escape(pn, quote=True)
     pn_url = quote(pn, safe="")
@@ -147,6 +150,14 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
                 <span>Aktiv</span>
               </label>
             </div>
+          </div>
+        </div>
+
+        <div class="settings-block">
+          <div class="settings-block-title">Anzeige</div>
+          <div class="form-group">
+            <label>Sprache</label>
+            <select name="language">{lang_opts}</select>
           </div>
         </div>
 
@@ -288,6 +299,7 @@ async def settings_save(request: Request):
     except ValueError:
         weekly_goal = 0
     cfg = get_person_settings(person)
+    language = normalize_language(form.get("language", cfg.get("language", "auto")) or "auto")
     role = form.get("role", cfg.get("role", "member"))
     if role not in ROLES:
         role = "member"
@@ -303,7 +315,8 @@ async def settings_save(request: Request):
                          hidden_rooms=hidden_rooms, weekly_goal=weekly_goal,
                          role=role, can_see_children=can_see_children,
                          vacation_enabled=vacation_enabled,
-                         vacation_until=vacation_until)
+                         vacation_until=vacation_until,
+                         language=language)
     return RedirectResponse(_base(request) + f"settings{person_suffix(person)}", status_code=303)
 
 
@@ -700,7 +713,8 @@ async def admin_save_devices(request: Request):
                          role=cfg.get("role", "member"),
                          can_see_children=cfg.get("can_see_children", False),
                          vacation_enabled=cfg.get("vacation_enabled", False),
-                         vacation_until=cfg.get("vacation_until", ""))
+                         vacation_until=cfg.get("vacation_until", ""),
+                         language=cfg.get("language", "auto"))
     return RedirectResponse(_base(request) + "admin?saved=1", status_code=303)
 
 

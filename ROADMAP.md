@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-10 · Aktuelle Version: 1.3.44
+Stand: 2026-05-10 · Aktuelle Version: 1.3.45
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -22,6 +22,7 @@ TidyHome ist aktuell ein nutzbares Home-Assistant-Add-on für:
 - persönlichen Urlaubsmodus
 - Haushaltshilfe-Zeiterfassung mit Lohnhistorie, Monatsabrechnung, Status und Export
 - Punkte, Bestenliste, Achievements, persönliche Verlaufsauswertung, Streak und Wochenziel
+- mehrsprachige UI in Deutsch, Englisch, Französisch und Spanisch
 - JSON-Backup, CSV-Exporte und Admin-Diagnose
 - mobile Web-UI über Home Assistant Ingress
 
@@ -36,6 +37,13 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.45
+
+- Mehrsprachige UI für Deutsch, Englisch, Französisch und Spanisch ergänzt
+- Sprache pro Person in den Einstellungen auswählbar
+- Automatische Spracherkennung über Browser-/Home-Assistant-Sprache ergänzt
+- Server-Rendering läuft durch eine zentrale i18n-Schicht
 
 ### v1.3.44
 
@@ -298,7 +306,7 @@ Ziel: Betrieb und Wiederherstellung robuster machen.
 - Backup-Vergleich vor Wiederherstellung
 - Admin-Aktionen zur Bereinigung verwaister Fotos und alter Referenzen
 - optionale Foto-Bereinigung für gelöschte oder archivierte Einträge
-- Mehrsprachigkeit Deutsch/Englisch
+- weitere UI-Sprachen und feinere Übersetzung einzelner Spezialtexte
 
 ---
 
