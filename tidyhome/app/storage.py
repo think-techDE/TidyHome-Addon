@@ -6,6 +6,10 @@ import os
 import uuid
 
 from storage_runtime import DATA_DIR, DB_PATH, MAX_PHOTO_BYTES, PHOTO_DIR, _db
+from storage_app import (_get_app_table, _get_app_value, _save_app_value,
+                         get_admins, get_room_icons, get_vacation_mode,
+                         is_vacation_mode_active, save_admins, save_room_icons,
+                         save_vacation_mode)
 
 
 def get_tasks_table():
@@ -893,75 +897,3 @@ def get_person_score_history(person: str, weeks: int = 8, months: int = 6) -> di
 
 def list_person_settings() -> list[dict]:
     return get_settings_table().all()
-
-
-# ── App-weite Einstellungen (Admins) ───────────────────────────────────────
-
-def _get_app_table():
-    return _db.table("app_settings")
-
-
-def _get_app_value(key: str, default=None):
-    Q = Query()
-    row = _get_app_table().get(Q.key == key)
-    return row.get("value") if row else default
-
-
-def _save_app_value(key: str, value) -> None:
-    Q = Query()
-    data = {"key": key, "value": value}
-    if _get_app_table().get(Q.key == key):
-        _get_app_table().update(data, Q.key == key)
-    else:
-        _get_app_table().insert(data)
-
-
-def get_admins() -> set[str]:
-    return set(_get_app_value("admins", []))
-
-
-def save_admins(persons: list[str]) -> None:
-    _save_app_value("admins", sorted(persons))
-
-
-def get_room_icons() -> dict[str, str]:
-    """Returns {room_name: icon_key} for rooms with custom icon assignment."""
-    return dict(_get_app_value("room_icons", {}))
-
-
-def save_room_icons(icons: dict[str, str]) -> None:
-    _save_app_value("room_icons", icons)
-
-
-def get_vacation_mode(person: str = "") -> dict:
-    if person:
-        cfg = get_person_settings(person)
-        return {
-            "enabled": bool(cfg.get("vacation_enabled")),
-            "until": cfg.get("vacation_until") or "",
-        }
-    cfg = _get_app_value("vacation_mode", {}) or {}
-    return {
-        "enabled": bool(cfg.get("enabled")),
-        "until": cfg.get("until") or "",
-    }
-
-
-def save_vacation_mode(enabled: bool, until: str = "") -> None:
-    _save_app_value("vacation_mode", {
-        "enabled": bool(enabled),
-        "until": until or "",
-    })
-
-
-def is_vacation_mode_active(person: str = "") -> bool:
-    cfg = get_vacation_mode(person)
-    if not cfg.get("enabled"):
-        return False
-    until = cfg.get("until") or ""
-    if not until:
-        return True
-    try:
-        return date.fromisoformat(until) >= date.today()
-    except ValueError:
-        return False

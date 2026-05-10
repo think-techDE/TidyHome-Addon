@@ -1,3 +1,9 @@
+## 1.3.59
+
+- Technik: App-weite Einstellungen aus `storage.py` in `storage_app.py` ausgelagert
+- Technik: Admins, Raum-Icons und Urlaubsmodus bleiben über `storage.py` kompatibel importierbar
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.58
 
 - Technik: Haushaltshilfe-Storage aus `storage.py` in `storage_housekeeping.py` ausgelagert
