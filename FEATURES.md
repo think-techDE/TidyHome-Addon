@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-10 · Version 1.3.45
+Stand: 2026-05-10 · Version 1.3.46
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -66,6 +66,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Bottom-Navigation mit lokalen OpenMoji-Icons
 - [x] Person bleibt beim Navigieren erhalten
 - [x] Admins können zwischen Personenansichten wechseln
+- [x] Admins behalten beim Betrachten anderer Personen ihre eigene UI-Sprache
 - [x] Überarbeitetes Personenmenü mit klaren Bereichen für Ansicht, Einstellungen und Verwaltung
 - [x] Eltern/Admins sehen auf Zuhause den Einstieg zur Haushaltshilfe-Verwaltung
 - [x] Haushaltshilfen sehen auf Zuhause Monatsstunden und bisher erarbeiteten Lohn
@@ -139,6 +140,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] SVG-Aktionsbuttons, Filter-Chips und Empty States
 - [x] Gemeinsame Render-Helfer für Aufgabenzeilen, Projektzeilen und Projektschritte
 - [x] Mehrsprachige UI in Deutsch, Englisch, Französisch und Spanisch
+- [x] `Accept-Language` wird inklusive Qualitätswerten für automatische Sprache ausgewertet
 
 ### Home Assistant Integration
 

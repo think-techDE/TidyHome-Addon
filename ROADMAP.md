@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-10 · Aktuelle Version: 1.3.45
+Stand: 2026-05-10 · Aktuelle Version: 1.3.46
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -37,6 +37,13 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.46
+
+- Automatische Sprachwahl wertet `Accept-Language` inklusive `q`-Werten aus
+- Admins behalten beim Betrachten anderer Personen ihre eigene UI-Sprache
+- HTML-Antworten liefern nun `Content-Language`
+- Tests für automatische Sprachwahl und Admin-Personenwechsel ergänzt
 
 ### v1.3.45
 

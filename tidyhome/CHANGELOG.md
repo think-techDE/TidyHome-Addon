@@ -1,3 +1,9 @@
+## 1.3.46
+
+- UI: Admins behalten beim Betrachten anderer Personen ihre eigene Spracheinstellung
+- UI: automatische Sprachwahl wertet Browser-/Home-Assistant-Sprachen inklusive Priorität aus
+- Technik: HTML-Antworten setzen `Content-Language`
+
 ## 1.3.45
 
 - UI: mehrsprachige Oberfläche für Deutsch, Englisch, Französisch und Spanisch ergänzt

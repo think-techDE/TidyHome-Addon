@@ -23,8 +23,24 @@ def normalize_language(value: str = "") -> str:
 
 
 def language_from_accept_header(header: str = "") -> str:
-    for part in (header or "").split(","):
-        token = part.split(";", 1)[0].strip()
+    candidates: list[tuple[float, int, str]] = []
+    for index, part in enumerate((header or "").split(",")):
+        pieces = [piece.strip() for piece in part.split(";") if piece.strip()]
+        if not pieces:
+            continue
+        q = 1.0
+        for param in pieces[1:]:
+            if not param.startswith("q="):
+                continue
+            try:
+                q = float(param[2:])
+            except ValueError:
+                q = 0.0
+        candidates.append((q, index, pieces[0]))
+
+    for q, _, token in sorted(candidates, key=lambda item: (-item[0], item[1])):
+        if q <= 0:
+            continue
         lang = normalize_language(token)
         if lang in TARGET_LANGUAGES:
             return lang

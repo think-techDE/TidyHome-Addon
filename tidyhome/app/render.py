@@ -1082,9 +1082,10 @@ def render(content: str, request: Request, page: str = "home",
     ha_user = _ha_user(request)
     is_admin = ha_user in admins
     display_person = person or ha_user
+    language_person = ha_user or display_person
     lang_setting = (
-        get_person_settings(display_person).get("language", "auto")
-        if display_person else "auto"
+        get_person_settings(language_person).get("language", "auto")
+        if language_person else "auto"
     )
     ui_language = resolve_language(
         lang_setting,
@@ -1397,4 +1398,7 @@ def render(content: str, request: Request, page: str = "home",
 </body>
 </html>"""
 
-    return HTMLResponse(translate_html(html, ui_language))
+    return HTMLResponse(
+        translate_html(html, ui_language),
+        headers={"Content-Language": ui_language},
+    )
