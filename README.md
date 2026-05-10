@@ -13,17 +13,25 @@ Der Fokus liegt auf Übersicht statt Druck: Was ist heute wichtig? Was ist über
 
 ## Eindruck
 
-Die folgenden Bildbeispiele zeigen die aktuelle Designrichtung: kompakte Karten, klare Zuständigkeiten, mobile Bedienung und genug visuelle Rückmeldung, damit Erledigungen sichtbar werden.
+Die folgenden Bildbeispiele sind aus einer lokalen TidyHome-Preview mit den echten App-Styles, Logo- und OpenMoji-Assets gerendert. Sie zeigen die aktuelle Designrichtung: kompakte Karten, klare Zuständigkeiten, mobile Bedienung und genug visuelle Rückmeldung, damit Erledigungen sichtbar werden.
 
-![TidyHome Dashboard](docs/images/readme-dashboard.svg)
+![TidyHome Dashboard](docs/images/readme-dashboard.png)
 
-| Mobile Aufgaben | Projekte mit Fotos |
-|---|---|
-| ![Mobile Aufgabenansicht](docs/images/readme-mobile-tasks.svg) | ![Projekt mit Vorher-Nachher-Fotos](docs/images/readme-project-photos.svg) |
+### Mobile Aufgaben
 
-| Haushaltshilfen & Admin | Rollen, Sprache & Sichtbarkeit |
-|---|---|
-| ![Haushaltshilfen und Admin](docs/images/readme-admin-housekeeping.svg) | ![Einstellungen mit Sprache und Rollen](docs/images/readme-settings-language.svg) |
+<img src="docs/images/readme-mobile-tasks.png" alt="Mobile Aufgabenansicht" width="430">
+
+### Projekte mit Fotos
+
+![Projekt mit Vorher-Nachher-Fotos](docs/images/readme-project-photos.png)
+
+### Haushaltshilfen & Admin
+
+![Haushaltshilfen und Admin](docs/images/readme-admin-housekeeping.png)
+
+### Rollen, Sprache & Sichtbarkeit
+
+![Einstellungen mit Sprache und Rollen](docs/images/readme-settings-language.png)
 
 ---
 

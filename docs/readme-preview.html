@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TidyHome README Preview</title>
+  <link rel="stylesheet" href="../tidyhome/assets/app.css">
+  <style>
+    body {
+      padding: 32px;
+      background: #f4f0f2;
+    }
+    .shot {
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 24px;
+      overflow: hidden;
+      margin: 0 0 32px;
+      box-shadow: 0 22px 70px rgba(36, 24, 31, 0.18);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .shot-wide { width: 980px; }
+    .shot-mobile { width: 430px; border-radius: 34px; }
+    .shot-page {
+      width: 860px;
+      padding: 28px;
+    }
+    .shot header {
+      position: static;
+    }
+    .shot main {
+      max-width: 720px;
+      padding: 1rem;
+      margin: 0 auto;
+    }
+    .shot-mobile main {
+      max-width: 430px;
+      padding: 1rem;
+    }
+    .shot .bottom-nav {
+      position: static;
+      height: var(--nav-h);
+      margin-top: 1rem;
+    }
+    .shot-icon {
+      width: 2.85rem;
+      height: 2.85rem;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      background: var(--icon-bg);
+    }
+    .shot-icon img {
+      width: 1.8rem;
+      height: 1.8rem;
+      display: block;
+    }
+    .shot-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+    .shot-action {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-weight: 850;
+      font-size: 1rem;
+    }
+    .shot-action.ok { color: var(--success); background: transparent; }
+    .shot-action.danger { color: var(--danger); }
+    .shot-room-row {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      padding: 0.95rem 1rem;
+      background: var(--card);
+      border-bottom: 1px solid var(--sep);
+    }
+    .shot-room-row:last-child { border-bottom: 0; }
+    .shot-room-row strong { flex: 1; }
+    .shot-form-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .photo-preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    .fake-photo {
+      min-height: 126px;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, var(--surface-2), var(--surface));
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 0.4rem;
+    }
+    .fake-photo.before {
+      background:
+        linear-gradient(135deg, rgba(36,24,31,0.25), rgba(36,24,31,0.04)),
+        var(--surface-2);
+    }
+    .fake-photo.after {
+      background:
+        linear-gradient(135deg, rgba(47,143,91,0.24), rgba(47,143,91,0.04)),
+        var(--success-bg);
+    }
+    .fake-photo strong { font-size: 0.86rem; }
+    .fake-photo span { color: var(--muted); font-size: 0.72rem; }
+    .readme-admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .readme-hero-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .readme-stat-line {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.7rem;
+    }
+  </style>
+</head>
+<body>
+  <section id="shot-dashboard" class="shot shot-wide">
+    <header>
+      <div class="h-left">
+        <img src="../tidyhome/assets/logo.svg" style="width:28px;height:28px;border-radius:7px" alt="">
+        <span class="h-title">TidyHome</span>
+      </div>
+      <span class="h-pill h-pill-person">Ben ▾</span>
+    </header>
+    <main>
+      <div class="hero-card">
+        <div class="readme-hero-row">
+          <div>
+            <div class="hero-eyebrow">Heute im Blick</div>
+            <div class="hero-title">Hallo Ben!</div>
+          </div>
+          <span class="badge ok">100% Zustand</span>
+        </div>
+        <div class="today-grid">
+          <div class="today-stat"><div class="today-value">1/2</div><div class="today-label">Erledigt</div></div>
+          <div class="today-stat"><div class="today-value">0</div><div class="today-label">Überfällig</div></div>
+          <div class="today-stat"><div class="today-value green">12</div><div class="today-label">Punkte</div></div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:1rem">
+        <a class="btn btn-primary btn-full">+ Aufgabe</a>
+        <a class="btn btn-outline btn-full">+ Projekt</a>
+      </div>
+      <div class="section-title"><h2>Nächste Aufgaben</h2><a class="filter-btn active">Alle</a></div>
+      <div class="card list-card card-flush">
+        <div class="task-row">
+          <span class="shot-icon"><img src="../tidyhome/assets/icons/1F5D1-FE0F.svg" alt=""></span>
+          <div class="task-body">
+            <div class="task-header">
+              <div><div class="task-name">Biomüll <span class="task-name-meta">· Morgen</span></div></div>
+              <div class="task-badges"><span class="badge ok">Geplant</span></div>
+            </div>
+          </div>
+          <div class="shot-actions"><span class="shot-action ok">✓</span><span class="shot-action">◷</span><span class="shot-action">✎</span><span class="shot-action danger">⌫</span></div>
+        </div>
+        <div class="task-row">
+          <span class="shot-icon"><img src="../tidyhome/assets/icons/1F697.svg" alt=""></span>
+          <div class="task-body">
+            <div class="task-header">
+              <div><div class="task-name">Auto saugen <span class="task-name-meta">· In 29 Tagen</span></div></div>
+              <div class="task-badges"><span class="badge ok">Geplant</span><span class="badge warn">Mittel</span></div>
+            </div>
+          </div>
+          <div class="shot-actions"><span class="shot-action ok">✓</span><span class="shot-action">◷</span><span class="shot-action">✎</span><span class="shot-action danger">⌫</span></div>
+        </div>
+      </div>
+      <div class="section-title"><h2>Räume</h2></div>
+      <div class="card list-card card-flush">
+        <div class="shot-room-row"><span class="shot-icon"><img src="../tidyhome/assets/icons/1F3E0.svg" alt=""></span><strong>All House</strong><span class="muted">2 Aufg.</span></div>
+        <div class="shot-room-row"><span class="shot-icon"><img src="../tidyhome/assets/icons/1F373.svg" alt=""></span><strong>Küche</strong><span class="muted">1 Aufg.</span></div>
+      </div>
+    </main>
+  </section>
+
+  <section id="shot-mobile" class="shot shot-mobile">
+    <header>
+      <div class="h-left">
+        <img src="../tidyhome/assets/logo.svg" style="width:28px;height:28px;border-radius:7px" alt="">
+        <span class="h-title">TidyHome</span>
+      </div>
+      <span class="h-pill h-pill-person">Ben ▾</span>
+    </header>
+    <main>
+      <div class="page-hero hero-card">
+        <div>
+          <div class="hero-eyebrow">Heute</div>
+          <div class="hero-title">Aufgaben</div>
+        </div>
+      </div>
+      <div class="filters">
+        <a class="filter-btn active">Heute</a><a class="filter-btn">Woche</a><a class="filter-btn">Vorlagen</a><a class="filter-btn">Historie</a>
+      </div>
+      <div class="week-strip" style="grid-template-columns:repeat(5,minmax(4rem,1fr))">
+        <a class="week-day"><span>Mo</span><strong>4</strong><small>0</small></a>
+        <a class="week-day"><span>Di</span><strong>5</strong><small>1</small></a>
+        <a class="week-day active"><span>Mi</span><strong>6</strong><small>2</small></a>
+        <a class="week-day"><span>Do</span><strong>7</strong><small>0</small></a>
+        <a class="week-day"><span>Fr</span><strong>8</strong><small>1</small></a>
+      </div>
+      <div class="card list-card card-flush">
+        <div class="task-row">
+          <span class="shot-icon"><img src="../tidyhome/assets/icons/1F5D1-FE0F.svg" alt=""></span>
+          <div class="task-body">
+            <div class="task-header">
+              <div><div class="task-name">Biomüll <span class="task-name-meta">· Heute</span></div></div>
+              <div class="task-badges"><span class="badge ok">Geplant</span></div>
+            </div>
+          </div>
+          <div class="shot-actions"><span class="shot-action ok">✓</span><span class="shot-action">◷</span><span class="shot-action">✎</span><span class="shot-action danger">⌫</span></div>
+        </div>
+        <div class="task-row">
+          <span class="shot-icon"><img src="../tidyhome/assets/icons/1F697.svg" alt=""></span>
+          <div class="task-body">
+            <div class="task-header">
+              <div><div class="task-name">Auto saugen <span class="task-name-meta">· In 29 Tagen</span></div></div>
+              <div class="task-badges"><span class="badge ok">Geplant</span><span class="badge warn">Mittel</span></div>
+            </div>
+          </div>
+          <div class="shot-actions"><span class="shot-action ok">✓</span><span class="shot-action">◷</span><span class="shot-action">✎</span><span class="shot-action danger">⌫</span></div>
+        </div>
+      </div>
+    </main>
+    <nav class="bottom-nav">
+      <a class="nav-item active"><img class="nav-openmoji" src="../tidyhome/assets/icons/1F3E0.svg" alt=""><span>Zuhause</span></a>
+      <a class="nav-item"><img class="nav-openmoji" src="../tidyhome/assets/icons/1F9F9.svg" alt=""><span>Aufgaben</span></a>
+      <a class="nav-item"><img class="nav-openmoji" src="../tidyhome/assets/icons/1F4E6.svg" alt=""><span>Projekte</span></a>
+      <a class="nav-item"><img class="nav-openmoji" src="../tidyhome/assets/icons/1F4A1.svg" alt=""><span>Punkte</span></a>
+      <a class="nav-item"><img class="nav-openmoji" src="../tidyhome/assets/icons/1F527.svg" alt=""><span>Ich</span></a>
+    </nav>
+  </section>
+
+  <section id="shot-project" class="shot shot-page">
+    <div class="hero-card page-hero">
+      <div>
+        <div class="hero-eyebrow">Technik-Keller · Ben</div>
+        <div class="hero-title">Keller aufräumen</div>
+      </div>
+      <a class="btn btn-ghost">Bearbeiten</a>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.7rem">
+        <strong>1 von 3 Schritten</strong><span class="muted">33%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:33%"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h2>Schritte</h2>
+        <div class="score-activity-row"><div class="score-activity-icon">✓</div><div class="score-activity-main"><div class="score-activity-title">Kartons sortieren</div><div class="score-activity-meta">erledigt · 5 Punkte</div></div></div>
+        <div class="score-activity-row"><div class="score-activity-icon">□</div><div class="score-activity-main"><div class="score-activity-title">Regal beschriften</div><div class="score-activity-meta">Ben · 3 Punkte</div></div></div>
+        <div class="score-activity-row"><div class="score-activity-icon">□</div><div class="score-activity-main"><div class="score-activity-title">Elektrobox prüfen</div><div class="score-activity-meta">Marina · 2 Punkte</div></div></div>
+      </div>
+      <details class="card photos-card" open>
+        <summary>
+          <div class="photos-head">
+            <span>
+              <h3>Projekt-Fotos</h3>
+              <small class="muted">Vorher / Nachher</small>
+            </span>
+            <span class="badge neutral">2</span>
+          </div>
+        </summary>
+        <div class="photo-upload">
+          <div class="photo-preview-grid">
+            <div class="fake-photo before"><strong>Vorher</strong><span>unsortiert</span></div>
+            <div class="fake-photo after"><strong>Nachher</strong><span>fertig</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-top:0.8rem"><a class="btn btn-ghost">Kamera öffnen</a><a class="btn btn-outline">Datei auswählen</a></div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section id="shot-admin" class="shot shot-page">
+    <div class="hero-card page-hero">
+      <div>
+        <div class="hero-eyebrow">Verwaltung</div>
+        <div class="hero-title">Haushaltshilfen</div>
+      </div>
+      <span class="badge ok">Mai 2026</span>
+    </div>
+    <div class="readme-stat-line">
+      <div class="today-stat"><div class="today-value">12,5</div><div class="today-label">Stunden</div></div>
+      <div class="today-stat"><div class="today-value">225,00 €</div><div class="today-label">Kosten</div></div>
+      <div class="today-stat"><div class="today-value green">bezahlt</div><div class="today-label">Status</div></div>
+    </div>
+    <div class="readme-admin-grid" style="margin-top:1rem">
+      <details class="card housekeeping-foldout" open>
+        <summary class="housekeeping-foldout-head"><span><strong>Arbeitszeit erfassen</strong><small>Marina</small></span><span class="badge neutral">offen</span></summary>
+        <div class="housekeeping-foldout-body">
+          <div class="shot-form-split">
+            <div class="form-group"><label>Datum</label><input value="09.05.2026"></div>
+            <div class="form-group"><label>Pause (Min.)</label><input value="30"></div>
+          </div>
+          <a class="btn btn-primary btn-full">Arbeitszeit speichern</a>
+        </div>
+      </details>
+      <details class="card housekeeping-subdetails" open>
+        <summary class="housekeeping-subsummary"><span><strong>Stundensatz und Historie</strong><small>nachvollziehbar je Datum</small></span><span class="badge ok">aktiv</span></summary>
+        <div class="housekeeping-foldout-body">
+          <div class="housekeeping-month-card"><div class="housekeeping-month-card-head"><strong>18,00 €</strong><span class="muted">ab 01.01.2026</span></div></div>
+          <div class="housekeeping-month-card"><div class="housekeeping-month-card-head"><strong>16,50 €</strong><span class="muted">bis 31.12.2025</span></div></div>
+          <div style="display:flex;gap:0.6rem"><a class="btn btn-ghost">CSV</a><a class="btn btn-ghost">PDF</a><a class="btn btn-outline">Diagnose</a></div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section id="shot-settings" class="shot shot-page">
+    <div class="hero-card page-hero">
+      <div>
+        <div class="hero-eyebrow">Profil und Benachrichtigung</div>
+        <div class="hero-title">Einstellungen</div>
+      </div>
+      <span class="badge neutral">Ben</span>
+    </div>
+    <details class="card person-settings-card" open>
+      <summary class="person-settings-summary">
+        <span class="person-settings-main"><span class="person-settings-title">Ben <span class="admin-badge">Admin</span></span><span class="person-settings-meta">Elternteil · 1 Gerät</span></span>
+        <span class="person-settings-toggle">Bearbeiten</span>
+      </summary>
+      <div class="person-settings-form">
+        <div class="settings-block">
+          <div class="settings-block-title">Benachrichtigung</div>
+          <div class="grid-2">
+            <div class="form-group"><label>Benachrichtigungszeit</label><input value="08:00"></div>
+            <label class="settings-check" style="margin-top:1.4rem"><input type="checkbox" checked><span>Aktiv</span></label>
+          </div>
+        </div>
+        <div class="settings-block">
+          <div class="settings-block-title">Anzeige</div>
+          <div class="form-group"><label>Sprache</label><select><option>Automatisch</option><option>English</option><option>Français</option><option>Español</option></select></div>
+        </div>
+        <div class="settings-block">
+          <div class="settings-block-title">Rolle und Sicht</div>
+          <div class="grid-2">
+            <div class="form-group"><label>Rolle</label><select><option>Elternteil</option></select></div>
+            <label class="settings-check" style="margin-top:1.4rem"><input type="checkbox" checked><span>Kinder sehen</span></label>
+          </div>
+        </div>
+      </div>
+    </details>
+  </section>
+</body>
+</html>
