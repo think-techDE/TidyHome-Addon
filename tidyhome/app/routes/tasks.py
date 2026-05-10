@@ -23,26 +23,15 @@ from storage import (add_comment, add_photo, create_task, create_task_from_templ
                      pause_task, reactivate_task, save_task_template, snooze_task,
                      update_task_template)
 from uploads import selected_photo_upload
+from task_actions import save_initial_task_note, save_initial_task_photo
 from task_ui import (_EFFORT_LABELS, _ONETIME_INTERVAL, _parse_interval_choice,
                      _task_history_row, _task_return_path, _template_form_html,
                      _valid_day, _week_strip)
 
 router = APIRouter(prefix="/tasks")
 
-
-def _save_initial_task_note(task: Task, note: str, author: str = "") -> bool:
-    return bool(add_comment("task", task.id, note, author=author))
-
-
-async def _save_initial_task_photo(task: Task, author: str = "",
-                                   photo: UploadFile | None = None,
-                                   photo_camera: UploadFile | None = None,
-                                   photo_file: UploadFile | None = None) -> bool:
-    selected_photo, data = await selected_photo_upload(photo, photo_camera, photo_file)
-    if not selected_photo:
-        return False
-    return bool(add_photo("task", task.id, "before", selected_photo.filename or "",
-                          selected_photo.content_type or "", data, author=author))
+_save_initial_task_note = save_initial_task_note
+_save_initial_task_photo = save_initial_task_photo
 
 
 @router.get("", response_class=HTMLResponse)
@@ -418,9 +407,9 @@ async def task_create(request: Request, name: str = Form(...), room: str = Form(
     create_task(task)
     return_p = str(form.get("return_p") or "")
     creator = resolve_person(request, return_p)
-    _save_initial_task_note(task, str(form.get("initial_note") or ""), author=creator)
-    await _save_initial_task_photo(task, author=creator, photo=photo,
-                                   photo_camera=photo_camera, photo_file=photo_file)
+    save_initial_task_note(task, str(form.get("initial_note") or ""), author=creator)
+    await save_initial_task_photo(task, author=creator, photo=photo,
+                                  photo_camera=photo_camera, photo_file=photo_file)
     await send_task_assignment_notifications(task, sender=creator)
     return RedirectResponse(_base(request) + f"tasks{person_suffix(return_p)}", status_code=303)
 

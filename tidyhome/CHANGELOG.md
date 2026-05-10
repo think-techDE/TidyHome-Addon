@@ -1,3 +1,10 @@
+## 1.3.61
+
+- Technik: Storage-Modultests für Aufgaben, Projekte, Personen/Punkte und die `storage.py`-Fassade ergänzt
+- Technik: Initiale Aufgabenaktionen aus `routes/tasks.py` in `task_actions.py` ausgelagert
+- Technik: Alte private Aufgabenhelfer bleiben als Alias kompatibel
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.60
 
 - Technik: Aufgaben-Storage aus `storage.py` in `storage_tasks.py` ausgelagert
