@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-10 · Version 1.3.57
+Stand: 2026-05-10 · Version 1.3.58
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -176,6 +176,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Admin-Diagnose für verwaiste Personen, Räume, Projektschritte und Fotos
 - [x] Zentrale i18n-Schicht für die bestehende serverseitig gerenderte UI
 - [x] Übersetzungskataloge nach Quellen und Sprachen in eigenen Modulen getrennt
+- [x] Haushaltshilfe-Storage in ein eigenes Modul ausgelagert, `storage.py` bleibt kompatible Fassade
 
 ---
 

@@ -1,3 +1,10 @@
+## 1.3.58
+
+- Technik: Haushaltshilfe-Storage aus `storage.py` in `storage_housekeeping.py` ausgelagert
+- Technik: TinyDB-Instanz und Datenpfade in `storage_runtime.py` gebündelt
+- Technik: `storage.py` bleibt als kompatible Import-Fassade erhalten
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.57
 
 - Technik: Haushaltshilfe-Dashboard und persönliches Arbeitszeit-Log in `housekeeping_ui.py` ausgelagert

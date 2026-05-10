@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.57-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.58-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -228,7 +228,7 @@ Admin- und Geräteeinstellungen können anschließend direkt in der TidyHome-Obe
 Weitere lokale Prüfung:
 
 ```powershell
-.\.venv\Scripts\python.exe -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\housekeeping_format.py tidyhome\app\housekeeping_exports.py tidyhome\app\housekeeping_ui.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
+.\.venv\Scripts\python.exe -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\storage.py tidyhome\app\storage_runtime.py tidyhome\app\storage_housekeeping.py tidyhome\app\housekeeping_format.py tidyhome\app\housekeeping_exports.py tidyhome\app\housekeeping_ui.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
 git diff --check
 ```
 
@@ -252,7 +252,9 @@ tidyhome/
       scores.py      # Punkte und Statistik
       settings.py    # Einstellungen, Admin, Benachrichtigungstest
     models.py        # Pydantic-Modelle
-    storage.py       # TinyDB-Datenbankschicht
+    storage.py       # TinyDB-Fassade und gemeinsame Datenzugriffe
+    storage_runtime.py # TinyDB-Instanz und Datenpfade
+    storage_housekeeping.py # Haushaltshilfe-Zeiten, Lohnhistorie, Abrechnung
     ha_client.py     # Home Assistant API-Client
   assets/
     app.css          # Light/Dark Design-System
