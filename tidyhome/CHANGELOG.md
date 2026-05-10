@@ -1,3 +1,10 @@
+## 1.3.47
+
+- UI: Übersetzungen auf explizite i18n-Schlüssel umgestellt
+- UI: Navigation, Dashboard, Aufgaben-/Projektzeilen, Foto-/Notizkarten und zentrale Einstellungen schlüsselbasiert vorbereitet
+- Technik: freie Inhalte wie Aufgaben-, Raum-, Projekt- und Personennamen werden nicht mehr durch globale Textersetzung verändert
+- Tests: i18n-Tests für UI-Schlüssel und unveränderte freie Inhalte ergänzt
+
 ## 1.3.46
 
 - UI: Admins behalten beim Betrachten anderer Personen ihre eigene Spracheinstellung

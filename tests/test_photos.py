@@ -70,7 +70,10 @@ class PhotoTests(unittest.TestCase):
         self.assertEqual(os.listdir(self.photo_dir), [])
 
     def test_photos_card_offers_live_camera_and_file_fallback(self):
-        html = render.photos_card("task", "task-1", "tasks/task-1/photos", "Ben")
+        html = render.translate_html(
+            render.photos_card("task", "task-1", "tasks/task-1/photos", "Ben"),
+            "de",
+        )
 
         self.assertIn("camera-start", html)
         self.assertIn("camera-native-button", html)

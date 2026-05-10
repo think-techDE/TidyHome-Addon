@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from ha_client import get_areas, get_notify_services, get_persons
-from i18n import language_options, normalize_language
+from i18n import language_options, normalize_language, tr
 from render import (_base, _ha_user, _icon, _ICON_LABELS, ROOM_ICON_CHOICES, ROOM_ICON_LABELS,
                     _auto_room_icon_config, _room_icon, format_date_de,
                     person_suffix, render)
@@ -79,12 +79,12 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
         if vacation_expired else ""
     )
     svc_info = (
-        f'<div class="settings-help">Geräte: {", ".join(escape(s) for s in services)}</div>'
+        f'<div class="settings-help">{tr("settings.devices")}: {", ".join(escape(s) for s in services)}</div>'
         if services else
-        '<div class="settings-help">Keine Geräte hinterlegt. Das konfiguriert der Admin-Bereich.</div>'
+        f'<div class="settings-help">{tr("settings.no_devices")}</div>'
     )
     admin_b = f' <span class="admin-badge">Admin</span>' if pn in admins else ""
-    role_label = ROLES.get(role, role)
+    role_label = tr(f"role.{role}") if role in ROLES else role
     device_count = len(services)
     open_attr = "" if show_admin_fields else " open"
 
@@ -103,22 +103,22 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
     admin_fields = ""
     if show_admin_fields:
         role_opts = "".join(
-            f'<option value="{k}"{" selected" if k == role else ""}>{v}</option>'
+            f'<option value="{k}"{" selected" if k == role else ""}>{tr(f"role.{k}")}</option>'
             for k, v in ROLES.items()
         )
         admin_fields = f"""
         <div class="settings-block">
-          <div class="settings-block-title">Rolle und Sicht</div>
+          <div class="settings-block-title">{tr("settings.role_visibility")}</div>
           <div class="grid-2">
             <div class="form-group">
-              <label>Rolle</label>
+              <label>{tr("settings.role")}</label>
               <select name="role">{role_opts}</select>
             </div>
             <div class="form-group settings-check-field">
               <label class="settings-check">
                 <input type="checkbox" name="can_see_children" value="1"
                        {'checked' if can_see_children else ''}>
-                <span>Kinder sehen</span>
+                <span>{tr("settings.can_see_children")}</span>
               </label>
             </div>
           </div>
@@ -131,56 +131,56 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
           <span class="person-settings-title">{pn_html}{admin_b}{vacation_state}</span>
           <span class="person-settings-meta">{escape(role_label)} · {device_count} Gerät(e)</span>
         </span>
-        <span class="person-settings-toggle">Bearbeiten</span>
+        <span class="person-settings-toggle">{tr("settings.edit")}</span>
       </summary>
       <form class="person-settings-form" method="post" action="{base}{action}">
         <input type="hidden" name="person" value="{pn_attr}">
 
         <div class="settings-block">
-          <div class="settings-block-title">Benachrichtigung</div>
+          <div class="settings-block-title">{tr("settings.notification")}</div>
           {svc_info}
           <div class="grid-2">
             <div class="form-group">
-              <label>Benachrichtigungszeit</label>
+              <label>{tr("settings.notification_time")}</label>
               <input name="notify_time" type="time" value="{escape(time_val, quote=True)}">
             </div>
             <div class="form-group settings-check-field">
               <label class="settings-check">
                 <input type="checkbox" name="enabled" value="1" {checked}>
-                <span>Aktiv</span>
+                <span>{tr("common.active")}</span>
               </label>
             </div>
           </div>
         </div>
 
         <div class="settings-block">
-          <div class="settings-block-title">Anzeige</div>
+          <div class="settings-block-title">{tr("settings.display")}</div>
           <div class="form-group">
-            <label>Sprache</label>
+            <label>{tr("settings.language")}</label>
             <select name="language">{lang_opts}</select>
           </div>
         </div>
 
         <div class="settings-block">
-          <div class="settings-block-title">Motivation</div>
+          <div class="settings-block-title">{tr("settings.motivation")}</div>
           <div class="form-group">
-            <label>Wochenziel (Aufgaben)</label>
+            <label>{tr("settings.weekly_goal")}</label>
             <input name="weekly_goal" type="number" min="0" max="99" value="{weekly_goal}"
-                   placeholder="0 = kein Ziel">
+                   placeholder="{tr("settings.no_goal")}">
           </div>
         </div>
 
         <div class="settings-block">
-          <div class="settings-block-title">Urlaub</div>
+          <div class="settings-block-title">{tr("settings.vacation")}</div>
           <div class="grid-2">
             <div class="form-group settings-check-field">
               <label class="settings-check">
                 <input type="checkbox" name="vacation_enabled" value="1" {vacation_checked}>
-                <span>Urlaubsmodus</span>
+                <span>{tr("settings.vacation_mode")}</span>
               </label>
             </div>
             <div class="form-group">
-              <label>Urlaub bis einschließlich</label>
+              <label>{tr("settings.vacation_until")}</label>
               <input type="date" name="vacation_until" value="{escape(vacation_until, quote=True)}">
             </div>
           </div>
@@ -189,13 +189,13 @@ def _person_settings_card(pn: str, areas: list[str], admins: set[str],
         {admin_fields}
 
         <div class="settings-block">
-          <div class="settings-block-title">Räume ausblenden</div>
+          <div class="settings-block-title">{tr("settings.hide_rooms")}</div>
           <div class="settings-room-list">{room_boxes}</div>
         </div>
 
         <div class="settings-actions">
-          <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
-          <a class="btn btn-ghost btn-sm" href="{base}notify-now/{pn_url}{person_suffix(pn)}">Testen</a>
+          <button class="btn btn-primary btn-sm" type="submit">{tr("common.save")}</button>
+          <a class="btn btn-ghost btn-sm" href="{base}notify-now/{pn_url}{person_suffix(pn)}">{tr("common.test")}</a>
         </div>
       </form>
     </details>"""
@@ -212,7 +212,7 @@ async def settings_form(request: Request, p: str = ""):
     is_admin = ha_user in admins
 
     admin_link = (
-        f'<a href="{base}admin" class="btn btn-primary btn-sm">Admin-Bereich öffnen</a>'
+        f'<a href="{base}admin" class="btn btn-primary btn-sm">{tr("settings.open_admin")}</a>'
         if is_admin else ""
     )
 
@@ -222,13 +222,13 @@ async def settings_form(request: Request, p: str = ""):
             persons = await get_persons()
             pills = "".join(
                 f'<a href="{base}settings?p={quote(pn, safe="")}" class="settings-person-tile">'
-                f'<span>{escape(pn)}</span><small>Einstellungen öffnen</small></a>'
+                f'<span>{escape(pn)}</span><small>{tr("settings.open_profile")}</small></a>'
                 for pn in persons
             )
             own_controls = (
                 f'<div class="settings-actions" style="margin-bottom:0.75rem">'
-                f'<a href="{base}" class="btn btn-primary btn-sm">Zurück zu mir</a>'
-                f'<a href="{base}settings{person_suffix(ha_user)}" class="btn btn-ghost btn-sm">Mein Profil</a>'
+                f'<a href="{base}" class="btn btn-primary btn-sm">{tr("settings.back_to_me")}</a>'
+                f'<a href="{base}settings{person_suffix(ha_user)}" class="btn btn-ghost btn-sm">{tr("menu.my_settings")}</a>'
                 f'</div>'
                 if ha_user else ""
             )
@@ -236,14 +236,14 @@ async def settings_form(request: Request, p: str = ""):
             <div class="hero-card page-hero">
               <div>
                 <div class="hero-eyebrow">Profile und Ansicht</div>
-                <div class="hero-title">Einstellungen</div>
+                <div class="hero-title">{tr("settings.title")}</div>
               </div>
               <div class="page-hero-actions">{admin_link}</div>
             </div>
             <div class="card settings-picker-card">
               <div class="settings-picker-head">
                 <div>
-                  <h3>Person wechseln</h3>
+                  <h3>{tr("menu.switch_person")}</h3>
                   <p class="muted">Als Admin kannst du Profile gezielt öffnen.</p>
                 </div>
               </div>
@@ -268,7 +268,7 @@ async def settings_form(request: Request, p: str = ""):
             for pn in persons
         )
         content = f"""
-        <h2>Wer bist du?</h2>
+        <h2>{tr("menu.who")}</h2>
         <div class="card">
           <div style="display:flex;flex-wrap:wrap;gap:0.5rem">{pills}</div>
         </div>"""
@@ -278,8 +278,8 @@ async def settings_form(request: Request, p: str = ""):
     content = f"""
     <div class="hero-card page-hero">
       <div>
-        <div class="hero-eyebrow">Profil und Benachrichtigung</div>
-        <div class="hero-title">Einstellungen</div>
+        <div class="hero-eyebrow">{tr("settings.profile_notifications")}</div>
+        <div class="hero-title">{tr("settings.title")}</div>
       </div>
       <div class="page-hero-actions">{admin_link}</div>
     </div>

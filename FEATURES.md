@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-10 · Version 1.3.46
+Stand: 2026-05-10 · Version 1.3.47
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -71,6 +71,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Eltern/Admins sehen auf Zuhause den Einstieg zur Haushaltshilfe-Verwaltung
 - [x] Haushaltshilfen sehen auf Zuhause Monatsstunden und bisher erarbeiteten Lohn
 - [x] Sprache pro Person wählbar oder automatisch aus Browser-/Home-Assistant-Sprache
+- [x] Schlüsselbasierte UI-Übersetzung, damit freie Aufgaben-, Raum- und Projektnamen unverändert bleiben
 
 ### Punkte & Motivation
 

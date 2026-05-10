@@ -6,6 +6,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
+from i18n import tr
 from models import Task
 from reminders import (send_task_assignment_notifications, send_task_reminders,
                        task_reminder_recipients)
@@ -25,7 +26,7 @@ from uploads import selected_photo_upload
 
 router = APIRouter(prefix="/tasks")
 
-_EFFORT_LABELS = {"low": "Wenig", "medium": "Mittel", "high": "Viel"}
+_EFFORT_LABELS = {"low": tr("effort.low"), "medium": tr("effort.medium"), "high": tr("effort.high")}
 _EFFORT_BADGE  = {"low": "ok", "medium": "today", "high": "overdue"}
 _ONETIME_INTERVAL = "once"
 
@@ -82,7 +83,7 @@ def _week_strip(tasks: list[Task], selected_day: str = "", person: str = "") -> 
             if not t.is_paused() and t.next_due().isoformat() == iso
         ]
         active = " active" if selected_day == iso else ""
-        label = "Heute" if offset == 0 else "Morgen" if offset == 1 else day.strftime("%a")
+        label = tr("date.today") if offset == 0 else tr("date.tomorrow") if offset == 1 else day.strftime("%a")
         items += (
             f'<a class="week-day{active}" href="tasks?day={iso}{psuffix_amp}">'
             f'<span>{label}</span><strong>{len(due_tasks)}</strong>'
@@ -92,7 +93,7 @@ def _week_strip(tasks: list[Task], selected_day: str = "", person: str = "") -> 
     return (
         '<div class="week-strip">'
         f'<a class="week-day week-day-all{all_active}" href="tasks{reset_suffix}">'
-        '<span>Alle</span><strong>•</strong><small>Filter</small></a>'
+        f'<span>{tr("common.all")}</span><strong>•</strong><small>{tr("tasks.filter")}</small></a>'
         f'{items}</div>'
     )
 
@@ -118,9 +119,9 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     # Filter bar
     all_active = not room and not overdue and not effort and not day
     filters = '<div class="filters">'
-    filters += f'<a class="filter-btn {"active" if all_active else ""}" href="tasks{("?p="+p) if p else ""}">Alle</a>'
-    filters += f'<a class="filter-btn" href="tasks/history{("?p="+p) if p else ""}">Historie</a>'
-    filters += f'<a class="filter-btn {"active" if overdue == "1" else ""}" href="tasks?overdue=1{psuffix}">Überfällig</a>'
+    filters += f'<a class="filter-btn {"active" if all_active else ""}" href="tasks{("?p="+p) if p else ""}">{tr("common.all")}</a>'
+    filters += f'<a class="filter-btn" href="tasks/history{("?p="+p) if p else ""}">{tr("tasks.history")}</a>'
+    filters += f'<a class="filter-btn {"active" if overdue == "1" else ""}" href="tasks?overdue=1{psuffix}">{tr("status.overdue")}</a>'
     for ef, label in _EFFORT_LABELS.items():
         filters += f'<a class="filter-btn {"active" if effort == ef else ""}" href="tasks?effort={ef}{psuffix}">{label}</a>'
     for r in areas:
@@ -159,9 +160,9 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
         rows = (
             '<div class="empty">'
             '<div class="empty-icon">✅</div>'
-            '<div style="font-weight:600">Keine Aufgaben gefunden</div>'
+            f'<div style="font-weight:600">{tr("tasks.empty_title")}</div>'
             '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
-            'Alle erledigt oder kein Filter passend.</div>'
+            f'{tr("tasks.empty_text")}</div>'
             '</div>'
         )
     elif show_grouped:
@@ -200,30 +201,30 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     content = f"""
     <div class="hero-card page-hero">
       <div>
-        <div class="hero-eyebrow">Heute im Blick</div>
-        <div class="hero-title">Aufgaben</div>
+        <div class="hero-eyebrow">{tr("dashboard.today_focus")}</div>
+        <div class="hero-title">{tr("tasks.title")}</div>
       </div>
       <div class="page-hero-actions">
         <a class="btn btn-ghost btn-sm" href="tasks/templates{psuffix_q}">
-          {_icon("archive", 14)} Vorlagen
+          {_icon("archive", 14)} {tr("tasks.templates")}
         </a>
         <a class="btn btn-primary btn-sm" href="tasks/new{psuffix_q}">
-          {_icon("plus", 14, "white")} Neu
+          {_icon("plus", 14, "white")} {tr("common.new")}
         </a>
       </div>
     </div>
     <div class="today-grid" style="margin-bottom:1rem">
       <div class="today-stat">
         <div class="today-value">{today_count}</div>
-        <div class="today-label">Heute</div>
+        <div class="today-label">{tr("date.today")}</div>
       </div>
       <div class="today-stat">
         <div class="today-value">{overdue_count}</div>
-        <div class="today-label">Offen spät</div>
+        <div class="today-label">{tr("tasks.open_late")}</div>
       </div>
       <div class="today-stat">
         <div class="today-value">{planned_count}</div>
-        <div class="today-label">Geplant</div>
+        <div class="today-label">{tr("status.planned")}</div>
       </div>
     </div>
     {filters}
@@ -1016,7 +1017,7 @@ async def _task_form(request: Request, title: str, action: str,
     )
     photos = (
         photos_card("task", task.id, f"tasks/{task.id}/photos", person,
-                    title="Aufgaben-Fotos", margin_top=True)
+                    title=tr("tasks.photos"), margin_top=True)
         if task else ""
     )
     initial_note = "" if task else """

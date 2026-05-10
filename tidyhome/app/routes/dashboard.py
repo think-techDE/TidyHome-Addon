@@ -4,6 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 from ha_client import get_areas
+from i18n import tr
 from render import (_base, _icon, _ring_chart, _room_icon,
                     person_suffix, render, resolve_person, task_row)
 from storage import (filter_tasks_by_role, get_admins, get_person_settings,
@@ -95,7 +96,7 @@ async def dashboard(request: Request, p: str = ""):
     done_of_due  = len(due_today) + len(done_today)
     done_pct     = int(len(done_today) / done_of_due * 100) if done_of_due else 100
 
-    greeting = f"Hallo{' ' + p if p else ''}!"
+    greeting = f"{tr('dashboard.greeting')}{' ' + p if p else ''}!"
 
     # Ring-Charts
     done_color    = "var(--success)" if len(done_today) >= done_of_due else "var(--primary)"
@@ -104,9 +105,9 @@ async def dashboard(request: Request, p: str = ""):
                      else "var(--warning)" if health_pct > 50
                      else "var(--danger)")
 
-    ring_done    = _ring_chart(f"{len(done_today)}/{done_of_due}", done_pct, done_color, "Erledigt")
-    ring_overdue = _ring_chart(str(len(overdue_tasks)), min(len(overdue_tasks) * 20, 100), overdue_color, "Überfällig")
-    ring_health  = _ring_chart(f"{health_pct}%", health_pct, health_color, "Zustand")
+    ring_done    = _ring_chart(f"{len(done_today)}/{done_of_due}", done_pct, done_color, tr("dashboard.done"))
+    ring_overdue = _ring_chart(str(len(overdue_tasks)), min(len(overdue_tasks) * 20, 100), overdue_color, tr("dashboard.overdue"))
+    ring_health  = _ring_chart(f"{health_pct}%", health_pct, health_color, tr("dashboard.health"))
 
     rings_row = f"""
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.55rem;margin-bottom:1rem">
@@ -124,12 +125,12 @@ async def dashboard(request: Request, p: str = ""):
       <a class="btn btn-primary btn-sm"
          href="{base}tasks/new{psuffix_q}"
          style="display:flex;align-items:center;justify-content:center;gap:0.35rem">
-        {plus} Aufgabe
+        {plus} {tr("task.task")}
       </a>
       <a class="btn btn-outline btn-sm"
          href="{base}projects/new{psuffix_q}"
          style="display:flex;align-items:center;justify-content:center;gap:0.35rem">
-        {plus} Projekt
+        {plus} {tr("project.title")}
       </a>
     </div>"""
 
@@ -165,11 +166,11 @@ async def dashboard(request: Request, p: str = ""):
         next_tasks_section = f"""
         <div style="display:flex;justify-content:space-between;align-items:center;
                     margin-bottom:0.6rem">
-          <h2 style="margin:0;font-size:0.95rem">Nächste Aufgaben</h2>
+          <h2 style="margin:0;font-size:0.95rem">{tr("dashboard.next_tasks")}</h2>
           <a href="{base}tasks{psuffix_q}" style="font-size:0.78rem;
              color:var(--primary);text-decoration:none;font-weight:600;
              display:flex;align-items:center;gap:0.1rem">
-             Alle{chev}
+             {tr("common.all")}{chev}
           </a>
         </div>
         <div class="card card-flush" style="margin-bottom:1rem">{task_rows}</div>"""
@@ -177,8 +178,8 @@ async def dashboard(request: Request, p: str = ""):
         next_tasks_section = f"""
         <div class="card" style="text-align:center;padding:1.5rem;margin-bottom:1rem">
           <div style="font-size:1.8rem;margin-bottom:0.5rem">🎉</div>
-          <div style="font-weight:600;font-size:0.9rem">Alles erledigt!</div>
-          <div class="muted" style="margin-top:0.25rem">Keine heutigen oder überfälligen Aufgaben.</div>
+          <div style="font-weight:600;font-size:0.9rem">{tr("dashboard.all_done")}</div>
+          <div class="muted" style="margin-top:0.25rem">{tr("dashboard.no_due_tasks")}</div>
         </div>"""
 
     # Räume ermitteln
@@ -237,7 +238,7 @@ async def dashboard(request: Request, p: str = ""):
                 for r in own_room_list
             )
             room_block_parts.append(
-                f'<h2 style="font-size:0.95rem;margin-bottom:0.6rem">Räume</h2>'
+                f'<h2 style="font-size:0.95rem;margin-bottom:0.6rem">{tr("dashboard.rooms")}</h2>'
                 f'<div class="card card-flush" style="margin-bottom:1rem">{rows}</div>'
             )
 
@@ -249,7 +250,7 @@ async def dashboard(request: Request, p: str = ""):
             )
             room_block_parts.append(
                 f'<h2 style="font-size:0.95rem;margin-bottom:0.6rem;color:var(--muted)">'
-                f'Weitere Räume</h2>'
+                f'{tr("dashboard.more_rooms")}</h2>'
                 f'<div class="card card-flush" style="margin-bottom:1rem">{rows}</div>'
             )
 
@@ -257,7 +258,7 @@ async def dashboard(request: Request, p: str = ""):
     else:
         room_block = (
             '<div class="empty"><div class="empty-icon">🏠</div>'
-            '<div>Noch keine Aufgaben oder Projekte vorhanden.</div></div>'
+            f'<div>{tr("dashboard.empty")}</div></div>'
         )
 
     content = f"""

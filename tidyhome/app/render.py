@@ -4,7 +4,7 @@ from html import escape
 
 from fastapi import Request
 from fastapi.responses import HTMLResponse
-from i18n import resolve_language, translate_html
+from i18n import resolve_language, tr, translate_html
 from storage import (get_admins, get_vacation_mode, is_vacation_mode_active,
                      count_photos, get_person_settings, list_comments, list_photos)
 
@@ -272,13 +272,13 @@ _ICON_PATHS: dict[str, str] = {
     "settings":  '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>',
 }
 
-# Navigation items: (openmoji filename, label, page_key, href)
+# Navigation items: (openmoji filename, i18n_key, page_key, href)
 _NAV_ITEMS = [
-    ("1F3E0", "Zuhause",  "home",     "./"),
-    ("1F9F9", "Aufgaben", "tasks",    "tasks"),
-    ("1F4E6", "Projekte", "projects", "projects"),
-    ("1F4A1", "Punkte",   "scores",   "scores"),
-    ("1F527", "Ich",      "settings", "settings"),
+    ("1F3E0", "nav.home",     "home",     "./"),
+    ("1F9F9", "nav.tasks",    "tasks",    "tasks"),
+    ("1F4E6", "nav.projects", "projects", "projects"),
+    ("1F4A1", "nav.scores",   "scores",   "scores"),
+    ("1F527", "nav.settings", "settings", "settings"),
 ]
 
 
@@ -649,21 +649,21 @@ def comments_card(entity_type: str, entity_id: str, action: str,
     else:
         rows = (
             '<div class="comments-empty">'
-            '<div style="font-weight:600">Noch keine Notizen</div>'
+            f'<div style="font-weight:600">{tr("comments.none")}</div>'
             '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
-            'Halte Hinweise oder Absprachen direkt hier fest.</div>'
+            f'{tr("comments.empty_hint")}</div>'
             '</div>'
         )
 
     margin = "margin-top:1rem;" if margin_top else "margin-bottom:1rem;"
     open_attr = " open" if total else ""
-    count_label = f"{total} Notiz{'en' if total != 1 else ''}" if total else "Keine Notizen"
+    count_label = f"{total} Notiz{'en' if total != 1 else ''}" if total else tr("comments.none")
     return f"""
     <details class="card comments-card" style="{margin}"{open_attr}>
       <summary class="comments-head">
         <div>
-          <h3>Notizen</h3>
-          <div class="muted">{count_label} · Hinweise und Absprachen</div>
+          <h3>{tr("comments.title")}</h3>
+          <div class="muted">{count_label} · {tr("comments.summary")}</div>
         </div>
         <span class="comment-summary-icon">{_icon("edit", 15)}</span>
       </summary>
@@ -671,17 +671,18 @@ def comments_card(entity_type: str, entity_id: str, action: str,
       <form class="comment-form" method="post" action="{action}">
         <input type="hidden" name="return_p" value="{person}">
         <div class="form-group">
-          <label>Neue Notiz</label>
-          <textarea name="text" rows="3" required placeholder="Hinweis oder Kommentar"></textarea>
+          <label>{tr("comments.new")}</label>
+          <textarea name="text" rows="3" required placeholder="{tr("comments.placeholder")}"></textarea>
         </div>
-        <button class="btn btn-primary btn-sm" type="submit">Notiz speichern</button>
+        <button class="btn btn-primary btn-sm" type="submit">{tr("comments.save")}</button>
       </form>
     </details>"""
 
 
 def photos_card(entity_type: str, entity_id: str, action: str,
-                person: str = "", title: str = "Fotos",
+                person: str = "", title: str = "",
                 margin_top: bool = False) -> str:
+    title = title or tr("photos.photos")
     photos = list_photos(entity_type, entity_id)
     total = len(photos)
     safe_id = "".join(ch if ch.isalnum() else "-" for ch in f"{entity_type}-{entity_id}")
@@ -716,28 +717,28 @@ def photos_card(entity_type: str, entity_id: str, action: str,
 
     margin = "margin-top:1rem;" if margin_top else "margin-bottom:1rem;"
     open_attr = " open" if total else ""
-    count_label = f"{total} Foto{'s' if total != 1 else ''}" if total else "Keine Fotos"
+    count_label = f"{total} {tr('photos.photos')}" if total else tr("photos.no_photos")
     return f"""
     <details class="card photos-card" style="{margin}"{open_attr}>
       <summary class="photos-head">
         <div>
           <h3>{title}</h3>
-          <div class="muted">{count_label} · Vorher/Nachher dokumentieren</div>
+          <div class="muted">{count_label} · {tr("photos.document")}</div>
         </div>
         <span class="photo-summary-icon">{_icon("camera", 15)}</span>
       </summary>
-      {_section("Vorher", "before")}
-      {_section("Nachher", "after")}
+      {_section(tr("photos.before"), "before")}
+      {_section(tr("photos.after"), "after")}
       <form class="photo-upload" method="post" action="{action}" enctype="multipart/form-data">
         <input type="hidden" name="return_p" value="{person}">
         <div class="photo-type-picker">
           <label class="option-card">
             <input type="radio" name="photo_type" value="before" checked>
-            <span>Vorher</span>
+            <span>{tr("photos.before")}</span>
           </label>
           <label class="option-card">
             <input type="radio" name="photo_type" value="after">
-            <span>Nachher</span>
+            <span>{tr("photos.after")}</span>
           </label>
         </div>
         <input id="{live_input_id}" class="photo-file-input photo-live-input" type="file"
@@ -749,26 +750,26 @@ def photos_card(entity_type: str, entity_id: str, action: str,
                name="photo_file" accept="image/*" onchange="this.form.submit()">
         <div class="photo-actions">
           <label class="btn btn-ghost btn-sm camera-native-button" for="{camera_input_id}">
-            {_icon("camera", 14)} Kamera öffnen
+            {_icon("camera", 14)} {tr("photos.camera")}
           </label>
           <button class="btn btn-ghost btn-sm camera-start" type="button" hidden>
-            {_icon("camera", 14)} Kamera öffnen
+            {_icon("camera", 14)} {tr("photos.camera")}
           </button>
           <label class="btn btn-outline btn-sm photo-file-button" for="{file_input_id}">
-            {_icon("plus", 14)} Datei auswählen
+            {_icon("plus", 14)} {tr("photos.file")}
           </label>
         </div>
         <div class="camera-panel" hidden>
           <video class="camera-preview" playsinline autoplay muted></video>
           <div class="camera-actions">
             <button class="btn btn-primary btn-sm camera-shot" type="button">
-              {_icon("camera", 14, "white")} Aufnehmen
+              {_icon("camera", 14, "white")} {tr("photos.capture")}
             </button>
-            <button class="btn btn-ghost btn-sm camera-stop" type="button">Schließen</button>
+            <button class="btn btn-ghost btn-sm camera-stop" type="button">{tr("photos.close")}</button>
           </div>
         </div>
         <div class="camera-msg muted"></div>
-        <div class="muted photo-upload-hint">Kamera öffnet die Aufnahme. Datei auswählen lädt ein vorhandenes Foto hoch.</div>
+        <div class="muted photo-upload-hint">{tr("photos.hint")}</div>
       </form>
     </details>"""
 
@@ -777,19 +778,19 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
              paused: bool = False, vacation_until: str = "") -> str:
     from reminders import task_reminder_recipients
 
-    effort_labels = {"low": "Wenig", "medium": "Mittel", "high": "Viel"}
+    effort_labels = {"low": tr("effort.low"), "medium": tr("effort.medium"), "high": tr("effort.high")}
     effort_badges = {"low": "ok", "medium": "today", "high": "overdue"}
     due = task.days_until_due()
 
     if due < 0:
-        badge_text, badge_cls = "Überfällig", "overdue"
+        badge_text, badge_cls = tr("status.overdue"), "overdue"
         date_text = f"{abs(due)}d überfällig"
     elif due == 0:
-        badge_text, badge_cls = "Heute", "today"
-        date_text = "Heute"
+        badge_text, badge_cls = tr("status.today"), "today"
+        date_text = tr("date.today")
     else:
-        badge_text, badge_cls = "Geplant", "ok"
-        date_text = "Morgen" if due == 1 else f"In {due} Tagen"
+        badge_text, badge_cls = tr("status.planned"), "ok"
+        date_text = tr("date.tomorrow") if due == 1 else f"In {due} Tagen"
 
     if task.snooze_until:
         try:
@@ -805,10 +806,10 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
     pause_reason = getattr(task, "pause_reason", "") or ""
 
     if task_paused:
-        badge_text, badge_cls = "Pausiert", "ok"
+        badge_text, badge_cls = tr("status.paused"), "ok"
         date_text = (
             f"Pausiert bis {format_date_de(pause_until)}"
-            if pause_until else "Pausiert"
+            if pause_until else tr("status.paused")
         )
         if pause_reason:
             date_text += f" · {pause_reason}"
@@ -843,7 +844,7 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
         f'<form class="inline" method="post" action="{base}tasks/{task.id}/done">'
         + (f'<input type="hidden" name="done_by" value="{person}">' if person else "")
         + (f'<input type="hidden" name="return_p" value="{person}">' if person else "")
-        + f'<button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>'
+        + f'<button class="icon-btn success" title="{tr("common.done")}">{_icon("check", 17)}</button>'
         f'</form>'
     )
     snooze_btn = (
@@ -859,12 +860,12 @@ def task_row(task, base: str = "", person: str = "", show_assigned: bool = False
         f'title="Andere erinnern">{_icon("bell", 16)}</a>'
     ) if task_reminder_recipients(task, person) else ""
     edit_btn = (
-        f'<a class="icon-btn" href="{base}tasks/{task.id}/edit{psuffix}" title="Bearbeiten">'
+        f'<a class="icon-btn" href="{base}tasks/{task.id}/edit{psuffix}" title="{tr("common.edit")}">'
         f'{_icon("edit", 16)}</a>'
     )
     del_btn = (
         f'<a class="icon-btn danger" href="{base}tasks/{task.id}/delete{psuffix}" '
-        f'onclick="return confirm(\'Aufgabe löschen?\')" title="Löschen">'
+        f'onclick="return confirm(\'{tr("task.delete_confirm")}\')" title="{tr("common.delete")}">'
         f'{_icon("trash", 16)}</a>'
     )
 
@@ -903,7 +904,7 @@ def project_row(project, visible_steps: list, all_steps: list, person: str = "",
     )
     person_hint = f" · {person_name}" if person_name else ""
     status_badge = (
-        '<span class="badge ok">Abgeschlossen</span>'
+        f'<span class="badge ok">{tr("status.done")}</span>'
         if project.completed else f'<span class="badge today">{done}/{total}</span>'
     )
     project_photo_count = count_photos("project", project.id)
@@ -947,11 +948,11 @@ def project_row(project, visible_steps: list, all_steps: list, person: str = "",
     else:
         action_btns = (
             f'<a class="icon-btn" href="projects/{project.id}/edit{person_suffix(person)}" '
-            f'title="Bearbeiten">{_icon("edit", 16)}</a>'
+            f'title="{tr("common.edit")}">{_icon("edit", 16)}</a>'
         )
     del_btn = (
         f'<a class="icon-btn danger" href="projects/{project.id}/delete{person_suffix(person)}" '
-        f'onclick="return confirm(\'Projekt löschen?\')" title="Löschen">'
+        f'onclick="return confirm(\'{tr("project.delete_confirm")}\')" title="{tr("common.delete")}">'
         f'{_icon("trash", 16)}</a>'
     )
 
@@ -967,7 +968,7 @@ def project_row(project, visible_steps: list, all_steps: list, person: str = "",
         </div>
         <div class="proj-meta">
           <span>{project.room}{person_hint}</span>
-          <span>{len(all_steps)} Schritte</span>
+          <span>{len(all_steps)} {tr("project.steps")}</span>
           {assigned}
           {photo_hint}
           {foreign_hint}
@@ -1027,7 +1028,7 @@ def project_step_row(project, step, assignee: str, person_options: str,
         <form class="inline" method="post" action="{base}projects/{project.id}/steps/{step.id}/done">
           <input type="hidden" name="done_by" value="{assignee}">
           <input type="hidden" name="return_p" value="{person}">
-          <button class="icon-btn success" title="Erledigt">{_icon("check", 17)}</button>
+          <button class="icon-btn success" title="{tr("common.done")}">{_icon("check", 17)}</button>
         </form>
         {remind_btn}
         <a class="icon-btn danger"
@@ -1108,34 +1109,34 @@ def render(content: str, request: Request, page: str = "home",
         vacation_banner = (
             '<div class="card" style="border-color:var(--warning);'
             'background:var(--warning-bg);margin-bottom:1rem">'
-            f'<div style="font-weight:750;color:var(--warning)">Urlaubsmodus aktiv{until_txt}</div>'
+            f'<div style="font-weight:750;color:var(--warning)">{tr("vacation.active")}{until_txt}</div>'
             '<div class="muted" style="margin-top:0.25rem;font-size:0.82rem">'
-            'Fällige Aufgaben und tägliche Benachrichtigungen sind pausiert.</div>'
+            f'{tr("vacation.paused_notice")}</div>'
             '</div>'
         )
 
     # Person nav pill / dropdown
     if not display_person:
-        person_nav = f'<a href="{base}settings" class="h-pill">Wer bin ich?</a>'
+        person_nav = f'<a href="{base}settings" class="h-pill">{tr("menu.who")}</a>'
     elif is_admin:
         profile_person = person or ha_user
         viewing_other = bool(ha_user and profile_person != ha_user)
         menu_hint = (
-            f'Ansicht von {profile_person}'
+            f'{tr("menu.view_of")} {profile_person}'
             if viewing_other else
-            'Meine Ansicht'
+            tr("menu.my_view")
         )
         own_link = (
-            f'<a href="{base}" class="hpill-action">{_icon("home", 16)}<span>Zurück zu meiner Ansicht</span></a>'
+            f'<a href="{base}" class="hpill-action">{_icon("home", 16)}<span>{tr("menu.back_to_my_view")}</span></a>'
             if viewing_other else ""
         )
         current_profile = (
             f'<a href="{base}settings{person_suffix(profile_person)}" class="hpill-action">'
-            f'{_icon("settings", 16)}<span>Einstellungen für {profile_person}</span></a>'
+            f'{_icon("settings", 16)}<span>{tr("menu.settings_for")} {profile_person}</span></a>'
         )
         own_profile = (
             f'<a href="{base}settings{person_suffix(ha_user)}" class="hpill-action">'
-            f'{_icon("person", 16)}<span>Meine Einstellungen</span></a>'
+            f'{_icon("person", 16)}<span>{tr("menu.my_settings")}</span></a>'
             if viewing_other else ""
         )
         person_nav = f'''
@@ -1150,16 +1151,16 @@ def render(content: str, request: Request, page: str = "home",
               <div class="hpill-head-label">{menu_hint}</div>
               <div class="hpill-head-name">{display_person}</div>
             </div>
-            <div class="hpill-section-label">Ansicht</div>
+            <div class="hpill-section-label">{tr("menu.view")}</div>
             {own_link}
-            <a href="{base}settings" class="hpill-action">{_icon("person", 16)}<span>Person wechseln</span></a>
-            <div class="hpill-section-label">Einstellungen</div>
+            <a href="{base}settings" class="hpill-action">{_icon("person", 16)}<span>{tr("menu.switch_person")}</span></a>
+            <div class="hpill-section-label">{tr("menu.settings")}</div>
             {own_profile}
             {current_profile}
-            <div class="hpill-section-label">Haushaltshilfen</div>
-            <a href="{base}housekeeping" class="hpill-action">{_icon("clock", 16)}<span>Arbeitszeiten verwalten</span></a>
-            <div class="hpill-section-label">Verwaltung</div>
-            <a href="{base}admin" class="hpill-action">{_icon("settings", 16)}<span>Admin-Bereich</span></a>
+            <div class="hpill-section-label">{tr("menu.housekeepers")}</div>
+            <a href="{base}housekeeping" class="hpill-action">{_icon("clock", 16)}<span>{tr("menu.manage_work_times")}</span></a>
+            <div class="hpill-section-label">{tr("menu.admin")}</div>
+            <a href="{base}admin" class="hpill-action">{_icon("settings", 16)}<span>{tr("menu.admin_area")}</span></a>
           </div>
         </details>'''
     else:
@@ -1170,7 +1171,8 @@ def render(content: str, request: Request, page: str = "home",
 
     # Bottom navigation with local OpenMoji icons
     nav_items = ""
-    for icon_file, label, page_key, href in _NAV_ITEMS:
+    for icon_file, label_key, page_key, href in _NAV_ITEMS:
+        label = tr(label_key)
         active = "active" if page == page_key else ""
         nav_items += (
             f'<a href="{href}{psuffix}" class="nav-item {active}">'

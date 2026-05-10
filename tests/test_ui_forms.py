@@ -13,6 +13,7 @@ os.environ.setdefault("DATA_DIR", tempfile.mkdtemp(prefix="tidyhome-test-"))
 
 from routes.settings import _person_settings_card  # noqa: E402
 from routes.tasks import _task_form  # noqa: E402
+from i18n import translate_html  # noqa: E402
 import storage  # noqa: E402
 
 
@@ -76,12 +77,15 @@ class UiFormTests(unittest.TestCase):
             enabled=True,
         )
 
-        html = _person_settings_card(
-            "Ben",
-            ["Kueche", "Bad"],
-            {"Ben"},
-            base="/",
-            show_admin_fields=True,
+        html = translate_html(
+            _person_settings_card(
+                "Ben",
+                ["Kueche", "Bad"],
+                {"Ben"},
+                base="/",
+                show_admin_fields=True,
+            ),
+            "de",
         )
 
         self.assertIn("person-settings-card", html)

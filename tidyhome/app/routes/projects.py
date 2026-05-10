@@ -4,6 +4,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ha_client import get_areas, get_persons
+from i18n import tr
 from models import Project, Step
 from reminders import send_project_step_reminder
 from render import (_base, _icon, _icon_chooser, _selected,
@@ -75,7 +76,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
     scope_suffix = "&scope=people" if grouped_by_person else ""
 
     filters = '<div class="filters">'
-    filters += f'<a class="filter-btn {"active" if show == "active" and not room and not grouped_by_person else ""}" href="projects{("?p="+p) if p else ""}">Meine</a>'
+    filters += f'<a class="filter-btn {"active" if show == "active" and not room and not grouped_by_person else ""}" href="projects{("?p="+p) if p else ""}">{tr("menu.my_view")}</a>'
     if p in admins:
         filters += f'<a class="filter-btn {"active" if grouped_by_person else ""}" href="projects?scope=people{psuffix}">Nach Personen</a>'
     filters += f'<a class="filter-btn {"active" if show == "done" else ""}" href="projects?show=done{scope_suffix}{psuffix}">Abgeschlossen ({len(done_projects)})</a>'
@@ -86,7 +87,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
 
     rows = ""
     if not projects:
-        hint = "Noch keine abgeschlossenen Projekte." if show == "done" else "Noch keine Ordnungsprojekte."
+        hint = tr("project.archived_empty") if show == "done" else tr("project.empty")
         rows = (
             f'<div class="empty">'
             f'<div class="empty-icon">📦</div>'
@@ -141,11 +142,11 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
     <div class="hero-card page-hero">
       <div>
         <div class="hero-eyebrow">Fortschritt planen</div>
-        <div class="hero-title">Projekte</div>
+        <div class="hero-title">{tr("project.projects")}</div>
       </div>
       <div class="page-hero-actions">
         <a class="btn btn-primary btn-sm" href="projects/new{psuffix_q}">
-          {_icon("plus", 14, "white")} Neu
+          {_icon("plus", 14, "white")} {tr("common.new")}
         </a>
       </div>
     </div>
@@ -156,7 +157,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
       </div>
       <div class="today-stat">
         <div class="today-value">{done_step_count}/{visible_step_count}</div>
-        <div class="today-label">Schritte</div>
+        <div class="today-label">{tr("project.steps")}</div>
       </div>
       <div class="today-stat">
         <div class="today-value">{len(done_projects)}</div>
@@ -260,7 +261,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
             + '</div>'
         )
         step_rows += photos_card("step", s.id, f"{base}projects/{project_id}/steps/{s.id}/photos",
-                                  p, title=f"Fotos: {s.name}")
+                                  p, title=f"{tr('photos.photos')}: {s.name}")
     if not steps:
         step_rows = (
             '<div class="empty">'
@@ -293,7 +294,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
         <div class="progress-fill {fill_cls}" style="width:{pct}%"></div>
       </div>
     </div>
-    {photos_card("project", project_id, f"{base}projects/{project_id}/photos", p, title="Projekt-Fotos")}
+    {photos_card("project", project_id, f"{base}projects/{project_id}/photos", p, title=tr("project.photos"))}
     <div style="margin-bottom:1rem">{step_rows}</div>
     {comments_card("project", project_id, f"projects/{project_id}/comments", p)}
     <div class="card">

@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-10 · Aktuelle Version: 1.3.46
+Stand: 2026-05-10 · Aktuelle Version: 1.3.47
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -37,6 +37,13 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.47
+
+- i18n von globaler Textersetzung auf explizite UI-Schlüssel umgestellt
+- Navigation, Dashboard, Aufgaben-/Projektzeilen, Foto-/Notizkarten und zentrale Einstellungen auf Schlüssel vorbereitet
+- Freie Inhalte wie Aufgaben-, Raum-, Projekt- und Personennamen bleiben sprachunabhängig unverändert
+- Tests für explizite UI-Übersetzung und unveränderte freie Inhalte ergänzt
 
 ### v1.3.46
 

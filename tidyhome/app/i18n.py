@@ -1,3 +1,4 @@
+import re
 from html import escape
 
 
@@ -57,10 +58,165 @@ def resolve_language(setting: str = "auto", accept_language: str = "") -> str:
 def language_options(current: str = "auto") -> str:
     selected = normalize_language(current or "auto")
     return "".join(
+        # Only the automatic option is app UI; language names stay native.
         f'<option value="{escape(code, quote=True)}"'
-        f'{" selected" if code == selected else ""}>{escape(label)}</option>'
+        f'{" selected" if code == selected else ""}>'
+        f'{tr("language.auto") if code == "auto" else escape(label)}</option>'
         for code, label in SUPPORTED_LANGUAGES.items()
     )
+
+
+_TOKEN_RE = re.compile(r"\[\[i18n:([a-z0-9_.-]+)\]\]")
+
+
+def tr(key: str) -> str:
+    """Return a translation token for explicit UI text only.
+
+    The token is resolved by translate_html() after the user's language is known.
+    Free user content must not be wrapped with this helper.
+    """
+    return f"[[i18n:{key}]]"
+
+
+_MESSAGE_SOURCES = {
+    "nav.home": "Zuhause",
+    "nav.tasks": "Aufgaben",
+    "nav.projects": "Projekte",
+    "nav.scores": "Punkte",
+    "nav.settings": "Ich",
+    "common.all": "Alle",
+    "common.active": "Aktiv",
+    "common.cancel": "Abbrechen",
+    "common.delete": "Löschen",
+    "common.done": "Erledigt",
+    "common.edit": "Bearbeiten",
+    "common.new": "Neu",
+    "common.save": "Speichern",
+    "common.test": "Testen",
+    "language.auto": "Automatisch",
+    "status.overdue": "Überfällig",
+    "status.today": "Heute",
+    "status.planned": "Geplant",
+    "status.paused": "Pausiert",
+    "status.done": "Abgeschlossen",
+    "date.today": "Heute",
+    "date.tomorrow": "Morgen",
+    "dashboard.greeting": "Hallo",
+    "dashboard.today_focus": "Heute im Blick",
+    "dashboard.next_tasks": "Nächste Aufgaben",
+    "dashboard.done": "Erledigt",
+    "dashboard.overdue": "Überfällig",
+    "dashboard.health": "Zustand",
+    "dashboard.rooms": "Räume",
+    "dashboard.more_rooms": "Weitere Räume",
+    "dashboard.all_done": "Alles erledigt!",
+    "dashboard.no_due_tasks": "Keine heutigen oder überfälligen Aufgaben.",
+    "dashboard.empty": "Noch keine Aufgaben oder Projekte vorhanden.",
+    "tasks.title": "Aufgaben",
+    "tasks.empty_title": "Keine Aufgaben gefunden",
+    "tasks.empty_text": "Alle erledigt oder kein Filter passend.",
+    "tasks.templates": "Vorlagen",
+    "tasks.history": "Historie",
+    "tasks.open_late": "Offen spät",
+    "tasks.active": "Aktive Aufgaben",
+    "tasks.name": "Aufgabenname",
+    "tasks.photos": "Aufgaben-Fotos",
+    "tasks.filter": "Filter",
+    "task.task": "Aufgabe",
+    "task.create": "Aufgabe erstellen",
+    "task.new": "Neue Aufgabe",
+    "task.edit": "Aufgabe bearbeiten",
+    "task.save": "Aufgabe anlegen",
+    "task.delete_confirm": "Aufgabe löschen?",
+    "task.delete_final_confirm": "Aufgabe endgültig löschen?",
+    "project.title": "Projekt",
+    "project.projects": "Projekte",
+    "project.delete_confirm": "Projekt löschen?",
+    "project.steps": "Schritte",
+    "project.archived_empty": "Noch keine abgeschlossenen Projekte.",
+    "project.empty": "Noch keine Ordnungsprojekte.",
+    "project.photos": "Projekt-Fotos",
+    "photos.before": "Vorher",
+    "photos.after": "Nachher",
+    "photos.no_photos": "Keine Fotos",
+    "photos.photos": "Fotos",
+    "photos.document": "Vorher/Nachher dokumentieren",
+    "photos.camera": "Kamera öffnen",
+    "photos.file": "Datei auswählen",
+    "photos.capture": "Aufnehmen",
+    "photos.close": "Schließen",
+    "photos.hint": "Kamera öffnet die Aufnahme. Datei auswählen lädt ein vorhandenes Foto hoch.",
+    "comments.title": "Notizen",
+    "comments.none": "Noch keine Notizen",
+    "comments.summary": "Hinweise und Absprachen",
+    "comments.new": "Neue Notiz",
+    "comments.save": "Notiz speichern",
+    "comments.placeholder": "Hinweis oder Kommentar",
+    "comments.empty_hint": "Halte Hinweise oder Absprachen direkt hier fest.",
+    "effort.low": "Wenig",
+    "effort.medium": "Mittel",
+    "effort.high": "Viel",
+    "settings.title": "Einstellungen",
+    "settings.profile_notifications": "Profil und Benachrichtigung",
+    "settings.open_admin": "Admin-Bereich öffnen",
+    "settings.open_profile": "Einstellungen öffnen",
+    "settings.back_to_me": "Zurück zu mir",
+    "settings.display": "Anzeige",
+    "settings.language": "Sprache",
+    "settings.notification": "Benachrichtigung",
+    "settings.notification_time": "Benachrichtigungszeit",
+    "settings.no_devices": "Keine Geräte hinterlegt. Das konfiguriert der Admin-Bereich.",
+    "settings.devices": "Geräte",
+    "settings.motivation": "Motivation",
+    "settings.weekly_goal": "Wochenziel (Aufgaben)",
+    "settings.no_goal": "0 = kein Ziel",
+    "settings.vacation": "Urlaub",
+    "settings.vacation_mode": "Urlaubsmodus",
+    "settings.vacation_until": "Urlaub bis einschließlich",
+    "settings.hide_rooms": "Räume ausblenden",
+    "settings.role_visibility": "Rolle und Sicht",
+    "settings.role": "Rolle",
+    "settings.can_see_children": "Kinder sehen",
+    "settings.edit": "Bearbeiten",
+    "role.parent": "Elternteil",
+    "role.child": "Kind",
+    "role.housekeeper": "Haushaltshilfe",
+    "role.member": "Mitglied",
+    "menu.who": "Wer bin ich?",
+    "menu.my_view": "Meine Ansicht",
+    "menu.view": "Ansicht",
+    "menu.view_of": "Ansicht von",
+    "menu.switch_person": "Person wechseln",
+    "menu.settings": "Einstellungen",
+    "menu.settings_for": "Einstellungen für",
+    "menu.my_settings": "Meine Einstellungen",
+    "menu.housekeepers": "Haushaltshilfen",
+    "menu.manage_work_times": "Arbeitszeiten verwalten",
+    "menu.admin": "Verwaltung",
+    "menu.admin_area": "Admin-Bereich",
+    "menu.back_to_my_view": "Zurück zu meiner Ansicht",
+    "vacation.active": "Urlaubsmodus aktiv",
+    "vacation.paused_notice": "Fällige Aufgaben und tägliche Benachrichtigungen sind pausiert.",
+    "score.points": "Punkte",
+    "score.week_points": "Punkte diese Woche",
+    "admin.data_diagnostics": "Daten & Diagnose",
+    "admin.backup_json": "JSON-Backup",
+    "admin.tasks_csv": "Aufgaben CSV",
+    "admin.projects_csv": "Projekte CSV",
+    "admin.scores_csv": "Punkte CSV",
+    "admin.open_diagnostics": "Diagnose öffnen",
+    "admin.diagnostics": "Admin-Diagnose",
+    "admin.data_check": "Datenprüfung",
+    "admin.no_issues": "Keine Probleme gefunden.",
+}
+
+
+def translate_key(key: str, language: str = "de") -> str:
+    source = _MESSAGE_SOURCES.get(key, key)
+    lang = normalize_language(language)
+    if lang in ("de", "auto"):
+        return source
+    return _TRANSLATIONS.get(lang, {}).get(source, source)
 
 
 _TRANSLATIONS = {
@@ -83,6 +239,7 @@ _TRANSLATIONS = {
         "Heute": "Today",
         "Morgen": "Tomorrow",
         "Geplant": "Planned",
+        "Abgeschlossen": "Completed",
         "Pausiert": "Paused",
         "Historie": "History",
         "Vorlagen": "Templates",
@@ -91,11 +248,15 @@ _TRANSLATIONS = {
         "Heute im Blick": "Today at a glance",
         "Keine heutigen oder überfälligen Aufgaben.": "No tasks due today or overdue.",
         "Alle erledigt oder kein Filter passend.": "Everything done or no matching filter.",
+        "Filter": "Filter",
         "Aufgabe erstellen": "Create task",
         "Aufgabe bearbeiten": "Edit task",
         "Neue Aufgabe": "New task",
         "Aufgabe anlegen": "Create task",
+        "Aufgabe löschen?": "Delete task?",
         "Aufgabenname": "Task name",
+        "Projekt löschen?": "Delete project?",
+        "Schritte": "Steps",
         "Was ist zu erledigen?": "What needs to be done?",
         "Als wichtig markieren": "Mark as important",
         "Planung": "Planning",
@@ -124,6 +285,7 @@ _TRANSLATIONS = {
         "Notiz speichern": "Save note",
         "Noch keine Notizen": "No notes yet",
         "Halte Hinweise oder Absprachen direkt hier fest.": "Keep hints or agreements here.",
+        "Hinweise und Absprachen": "Hints and agreements",
         "Hinweis oder Kommentar": "Hint or comment",
         "Aufgaben-Fotos": "Task photos",
         "Vorher-Foto": "Before photo",
@@ -232,6 +394,7 @@ _TRANSLATIONS = {
         "Heute": "Aujourd'hui",
         "Morgen": "Demain",
         "Geplant": "Planifié",
+        "Abgeschlossen": "Terminé",
         "Pausiert": "En pause",
         "Historie": "Historique",
         "Vorlagen": "Modèles",
@@ -240,11 +403,15 @@ _TRANSLATIONS = {
         "Heute im Blick": "Vue du jour",
         "Keine heutigen oder überfälligen Aufgaben.": "Aucune tâche pour aujourd'hui ou en retard.",
         "Alle erledigt oder kein Filter passend.": "Tout est terminé ou aucun filtre ne correspond.",
+        "Filter": "Filtre",
         "Aufgabe erstellen": "Créer une tâche",
         "Aufgabe bearbeiten": "Modifier la tâche",
         "Neue Aufgabe": "Nouvelle tâche",
         "Aufgabe anlegen": "Créer une tâche",
+        "Aufgabe löschen?": "Supprimer la tâche ?",
         "Aufgabenname": "Nom de la tâche",
+        "Projekt löschen?": "Supprimer le projet ?",
+        "Schritte": "Étapes",
         "Was ist zu erledigen?": "Que faut-il faire ?",
         "Als wichtig markieren": "Marquer comme important",
         "Planung": "Planification",
@@ -273,6 +440,7 @@ _TRANSLATIONS = {
         "Notiz speichern": "Enregistrer la note",
         "Noch keine Notizen": "Aucune note",
         "Halte Hinweise oder Absprachen direkt hier fest.": "Ajoute ici les remarques ou accords.",
+        "Hinweise und Absprachen": "Remarques et accords",
         "Hinweis oder Kommentar": "Remarque ou commentaire",
         "Aufgaben-Fotos": "Photos de la tâche",
         "Vorher-Foto": "Photo avant",
@@ -381,6 +549,7 @@ _TRANSLATIONS = {
         "Heute": "Hoy",
         "Morgen": "Mañana",
         "Geplant": "Planificado",
+        "Abgeschlossen": "Completado",
         "Pausiert": "En pausa",
         "Historie": "Historial",
         "Vorlagen": "Plantillas",
@@ -389,11 +558,15 @@ _TRANSLATIONS = {
         "Heute im Blick": "Vista de hoy",
         "Keine heutigen oder überfälligen Aufgaben.": "No hay tareas de hoy ni vencidas.",
         "Alle erledigt oder kein Filter passend.": "Todo hecho o ningún filtro coincide.",
+        "Filter": "Filtro",
         "Aufgabe erstellen": "Crear tarea",
         "Aufgabe bearbeiten": "Editar tarea",
         "Neue Aufgabe": "Nueva tarea",
         "Aufgabe anlegen": "Crear tarea",
+        "Aufgabe löschen?": "¿Eliminar tarea?",
         "Aufgabenname": "Nombre de la tarea",
+        "Projekt löschen?": "¿Eliminar proyecto?",
+        "Schritte": "Pasos",
         "Was ist zu erledigen?": "¿Qué hay que hacer?",
         "Als wichtig markieren": "Marcar como importante",
         "Planung": "Planificación",
@@ -422,6 +595,7 @@ _TRANSLATIONS = {
         "Notiz speichern": "Guardar nota",
         "Noch keine Notizen": "Aún no hay notas",
         "Halte Hinweise oder Absprachen direkt hier fest.": "Guarda aquí indicaciones o acuerdos.",
+        "Hinweise und Absprachen": "Indicaciones y acuerdos",
         "Hinweis oder Kommentar": "Nota o comentario",
         "Aufgaben-Fotos": "Fotos de la tarea",
         "Vorher-Foto": "Foto antes",
@@ -516,9 +690,7 @@ _TRANSLATIONS = {
 
 def translate_html(html: str, language: str = "de") -> str:
     lang = normalize_language(language)
-    if lang == "de" or lang == "auto":
-        return html
-    translations = _TRANSLATIONS.get(lang, {})
-    for source, target in sorted(translations.items(), key=lambda item: len(item[0]), reverse=True):
-        html = html.replace(source, target)
-    return html
+    return _TOKEN_RE.sub(
+        lambda match: escape(translate_key(match.group(1), lang), quote=True),
+        html,
+    )

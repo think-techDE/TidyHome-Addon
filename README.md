@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.46-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.47-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -59,6 +59,7 @@ Die folgenden Bildbeispiele sind aus einer lokalen TidyHome-Preview mit den echt
 - Persönlicher Urlaubsmodus zum Pausieren fälliger Aufgaben und Benachrichtigungen
 - Rollen für Elternteil, Kind, Haushaltshilfe und Mitglied
 - Mehrsprachige Oberfläche mit Deutsch, Englisch, Französisch und Spanisch pro Person oder automatisch nach Browser/HA-Sprache
+- Schlüsselbasierte UI-Übersetzung ohne Veränderung freier Aufgaben-, Raum- oder Projektnamen
 - Haushaltshilfe-Zeiterfassung mit Stundenlohn, Monatsstunden und Gesamtkosten
 - Aufgeräumte Einstellungen und Admin-Übersicht für Rechte, Räume, Geräte, Profile, Export und Diagnose
 - Automatische Personen- und Raumintegration aus Home Assistant

@@ -9,7 +9,7 @@ APP_DIR = Path(__file__).resolve().parents[1] / "tidyhome" / "app"
 sys.path.insert(0, str(APP_DIR))
 os.environ.setdefault("DATA_DIR", tempfile.mkdtemp(prefix="tidyhome-test-"))
 
-from i18n import language_options, normalize_language, resolve_language, translate_html  # noqa: E402
+from i18n import language_options, normalize_language, resolve_language, tr, translate_html  # noqa: E402
 from render import render  # noqa: E402
 import storage  # noqa: E402
 
@@ -38,16 +38,21 @@ class I18nTests(unittest.TestCase):
         self.assertEqual(resolve_language("auto", "nl-NL,nl;q=0.9"), "de")
 
     def test_translate_html_keeps_german_as_source_language(self):
-        html = '<html lang="de"><button>Speichern</button><a>Zuhause</a>'
-        self.assertEqual(translate_html(html, "de"), html)
+        html = f'<html lang="de"><button>{tr("common.save")}</button><a>{tr("nav.home")}</a>'
+        self.assertEqual(translate_html(html, "de"), '<html lang="de"><button>Speichern</button><a>Zuhause</a>')
 
-    def test_translate_html_translates_common_navigation_and_actions(self):
-        html = '<html lang="en"><button>Speichern</button><a>Zuhause</a><span>Aufgaben</span>'
+    def test_translate_html_translates_explicit_ui_tokens(self):
+        html = f'<html lang="en"><button>{tr("common.save")}</button><a>{tr("nav.home")}</a><span>{tr("nav.tasks")}</span>'
         translated = translate_html(html, "en")
 
         self.assertIn(">Save<", translated)
         self.assertIn(">Home<", translated)
         self.assertIn(">Tasks<", translated)
+
+    def test_translate_html_does_not_translate_unmarked_user_content(self):
+        html = "<h1>Zuhause</h1><p>Speichern</p>"
+
+        self.assertEqual(translate_html(html, "en"), html)
 
     def test_language_options_marks_current_language(self):
         options = language_options("fr-FR")
@@ -65,6 +70,7 @@ class I18nTests(unittest.TestCase):
 
         self.assertIn('<html lang="en">', html)
         self.assertIn(">Home<", html)
+        self.assertIn("<h1>Zuhause</h1>", html)
         self.assertNotIn("Accueil", html)
         self.assertEqual(response.headers["content-language"], "en")
 
@@ -76,6 +82,7 @@ class I18nTests(unittest.TestCase):
 
         self.assertIn('<html lang="es">', html)
         self.assertIn(">Inicio<", html)
+        self.assertIn("<h1>Zuhause</h1>", html)
         self.assertEqual(response.headers["content-language"], "es")
 
 
