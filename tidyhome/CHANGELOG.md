@@ -1,3 +1,9 @@
+## 1.3.50
+
+- Technik: Icon-Daten und Icon-Renderer aus `render.py` in `ui_icons.py` ausgelagert
+- Technik: bestehende Render-Importe kompatibel gehalten, damit Routen unverändert funktionieren
+- Tests: bestehende Unit-Tests nach dem Renderer-Split erneut validiert
+
 ## 1.3.49
 
 - Technik: i18n-Datei verschlankt und Übersetzungsquellen in eigene Module ausgelagert
