@@ -1,3 +1,9 @@
+## 1.3.62
+
+- Technik: Aufgabenformular-Renderer aus `routes/tasks.py` in `task_forms.py` ausgelagert
+- Technik: `_task_form` bleibt in `routes/tasks.py` als kompatibler Wrapper erhalten
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.61
 
 - Technik: Storage-Modultests für Aufgaben, Projekte, Personen/Punkte und die `storage.py`-Fassade ergänzt

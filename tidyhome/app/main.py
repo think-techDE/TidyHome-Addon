@@ -16,7 +16,7 @@ from routes.tasks import router as tasks_router
 from scheduler import scheduler_loop
 from storage import PHOTO_DIR
 
-APP_VERSION = "1.3.61"
+APP_VERSION = "1.3.62"
 
 app = FastAPI(title="TidyHome", version=APP_VERSION)
 

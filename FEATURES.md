@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-10 · Version 1.3.61
+Stand: 2026-05-10 · Version 1.3.62
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -181,6 +181,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Aufgaben-, Projekt- und Personen-/Punkte-Storage in eigene Module getrennt
 - [x] Storage-Modultests und Fassade-Kompatibilität gezielt abgesichert
 - [x] Initiale Aufgabenaktionen aus der Aufgabenroute in ein eigenes Helfermodul ausgelagert
+- [x] Aufgabenformular-Renderer aus der Aufgabenroute in ein eigenes Modul ausgelagert
 
 ---
 

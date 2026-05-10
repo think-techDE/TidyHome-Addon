@@ -30,6 +30,7 @@ Technik:
 - `tidyhome/app/housekeeping_ui.py`: Formulare, Monatskarten, Zeitlisten und Seitenkomposition für Haushaltshilfen
 - `tidyhome/app/render.py`: HTML-Layout, Navigation, Icons, gemeinsame Render-Helfer
 - `tidyhome/app/task_actions.py`: Aufgabenaktionen ohne eigenes UI
+- `tidyhome/app/task_forms.py`: Aufgabenformular-Renderer
 - `tidyhome/app/task_ui.py`: UI-Helfer für Wochenleiste, Aufgaben-Historie und Vorlagenformulare
 - `tidyhome/app/ui_cards.py`: Foto- und Notizkarten
 - `tidyhome/app/ui_helpers.py`: generische Request-, Datums- und UI-Helfer
@@ -62,7 +63,7 @@ Technik:
 Basisprüfung:
 
 ```powershell
-& "C:\Users\Danny\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe" -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\storage.py tidyhome\app\storage_runtime.py tidyhome\app\storage_app.py tidyhome\app\storage_tasks.py tidyhome\app\storage_projects.py tidyhome\app\storage_people.py tidyhome\app\storage_housekeeping.py tidyhome\app\task_actions.py tidyhome\app\housekeeping_format.py tidyhome\app\housekeeping_exports.py tidyhome\app\housekeeping_ui.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
+& "C:\Users\Danny\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe" -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\storage.py tidyhome\app\storage_runtime.py tidyhome\app\storage_app.py tidyhome\app\storage_tasks.py tidyhome\app\storage_projects.py tidyhome\app\storage_people.py tidyhome\app\storage_housekeeping.py tidyhome\app\task_actions.py tidyhome\app\task_forms.py tidyhome\app\housekeeping_format.py tidyhome\app\housekeeping_exports.py tidyhome\app\housekeeping_ui.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
 git diff --check
 ```
 
