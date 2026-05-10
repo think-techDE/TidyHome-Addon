@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-10 · Aktuelle Version: 1.3.53
+Stand: 2026-05-10 · Aktuelle Version: 1.3.54
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -31,6 +31,7 @@ Die Codebasis ist inzwischen modularisiert:
 - `main.py` enthält App-Setup, Router und Healthcheck
 - `routes/` enthält Dashboard, Aufgaben, Projekte, Punkte und Einstellungen
 - `render.py` enthält Layout, Navigation und gemeinsame Render-Helfer
+- `task_ui.py` enthält UI-Helfer für Wochenleiste, Aufgaben-Historie und Vorlagenformulare
 - `ui_cards.py` enthält Foto- und Notizkarten
 - `ui_helpers.py` enthält generische Request-, Datums- und UI-Helfer
 - `ui_icons.py` enthält OpenMoji-/SVG-Icon-Daten und Icon-Renderer
@@ -42,6 +43,12 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.54
+
+- Task-Darstellungshelfer aus `routes/tasks.py` in `task_ui.py` ausgelagert
+- Wochenleiste, Aufgaben-Historienzeilen und Vorlagenformular bleiben über importierte Helfer nutzbar
+- Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
 
 ### v1.3.53
 

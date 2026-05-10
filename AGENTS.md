@@ -20,6 +20,7 @@ Technik:
 - `tidyhome/app/models.py`: Pydantic-Modelle für Aufgaben, Projekte, Schritte
 - `tidyhome/app/storage.py`: TinyDB-Zugriff und Geschäftslogik
 - `tidyhome/app/render.py`: HTML-Layout, Navigation, Icons, gemeinsame Render-Helfer
+- `tidyhome/app/task_ui.py`: UI-Helfer für Wochenleiste, Aufgaben-Historie und Vorlagenformulare
 - `tidyhome/app/ui_cards.py`: Foto- und Notizkarten
 - `tidyhome/app/ui_helpers.py`: generische Request-, Datums- und UI-Helfer
 - `tidyhome/app/ui_icons.py`: OpenMoji-/SVG-Icon-Daten und Icon-Renderer

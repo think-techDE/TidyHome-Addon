@@ -1,3 +1,9 @@
+## 1.3.54
+
+- Technik: Task-Darstellungshelfer aus `routes/tasks.py` in `task_ui.py` ausgelagert
+- Technik: Wochenleiste, Aufgaben-Historienzeilen und Vorlagenformular strukturell getrennt
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.53
 
 - Technik: generische UI-Helfer aus `render.py` in `ui_helpers.py` ausgelagert
