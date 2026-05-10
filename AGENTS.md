@@ -22,6 +22,7 @@ Technik:
 - `tidyhome/app/render.py`: HTML-Layout, Navigation, Icons, gemeinsame Render-Helfer
 - `tidyhome/app/ui_cards.py`: Foto- und Notizkarten
 - `tidyhome/app/ui_icons.py`: OpenMoji-/SVG-Icon-Daten und Icon-Renderer
+- `tidyhome/app/ui_rows.py`: Aufgaben-, Projekt- und Projektschrittzeilen
 - `tidyhome/app/i18n.py`: Sprachwahl und Token-Auflösung
 - `tidyhome/app/translations/`: i18n-Quelltexte und Sprachkataloge
 - `tidyhome/app/routes/dashboard.py`: Startseite und Raumansichten

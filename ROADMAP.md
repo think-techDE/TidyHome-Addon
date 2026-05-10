@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-10 · Aktuelle Version: 1.3.51
+Stand: 2026-05-10 · Aktuelle Version: 1.3.52
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -33,6 +33,7 @@ Die Codebasis ist inzwischen modularisiert:
 - `render.py` enthält Layout, Navigation und gemeinsame Render-Helfer
 - `ui_cards.py` enthält Foto- und Notizkarten
 - `ui_icons.py` enthält OpenMoji-/SVG-Icon-Daten und Icon-Renderer
+- `ui_rows.py` enthält Aufgaben-, Projekt- und Projektschrittzeilen
 - `translations/` enthält i18n-Quelltexte und Sprachkataloge
 - `storage.py` bündelt TinyDB-Zugriff und Geschäftslogik
 - `reminders.py` und `scheduler.py` trennen manuelle Reminder von täglichen Benachrichtigungen
@@ -40,6 +41,12 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.52
+
+- Aufgaben-, Projekt- und Projektschrittzeilen aus `render.py` in `ui_rows.py` ausgelagert
+- Bestehende `render.task_row`-, `render.project_row`- und Schritt-Renderzugriffe kompatibel gehalten
+- Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
 
 ### v1.3.51
 

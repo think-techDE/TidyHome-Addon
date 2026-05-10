@@ -1,3 +1,9 @@
+## 1.3.52
+
+- Technik: Aufgaben-, Projekt- und Projektschrittzeilen aus `render.py` in `ui_rows.py` ausgelagert
+- Technik: bestehende Render-Zugriffe auf Zeilenkomponenten kompatibel gehalten
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.51
 
 - Technik: Foto- und Notizkarten aus `render.py` in `ui_cards.py` ausgelagert
