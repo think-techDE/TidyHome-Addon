@@ -1,3 +1,11 @@
+## 1.3.60
+
+- Technik: Aufgaben-Storage aus `storage.py` in `storage_tasks.py` ausgelagert
+- Technik: Projekt-Storage aus `storage.py` in `storage_projects.py` ausgelagert
+- Technik: Personen-, Rollen-, Punkte-, Achievement- und Verlaufslogik in `storage_people.py` gebündelt
+- Technik: `storage.py` bleibt als kompatible Import-Fassade erhalten
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.59
 
 - Technik: App-weite Einstellungen aus `storage.py` in `storage_app.py` ausgelagert

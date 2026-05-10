@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-10 · Version 1.3.59
+Stand: 2026-05-10 · Version 1.3.60
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -178,6 +178,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Übersetzungskataloge nach Quellen und Sprachen in eigenen Modulen getrennt
 - [x] Haushaltshilfe-Storage in ein eigenes Modul ausgelagert, `storage.py` bleibt kompatible Fassade
 - [x] App-weite Einstellungen für Admins, Raum-Icons und Urlaubsmodus in ein eigenes Storage-Modul ausgelagert
+- [x] Aufgaben-, Projekt- und Personen-/Punkte-Storage in eigene Module getrennt
 
 ---
 

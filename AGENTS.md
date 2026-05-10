@@ -21,6 +21,9 @@ Technik:
 - `tidyhome/app/storage.py`: kompatible Fassade für TinyDB-Zugriff und Geschäftslogik
 - `tidyhome/app/storage_runtime.py`: TinyDB-Instanz, Datenpfade und Limits
 - `tidyhome/app/storage_app.py`: Admins, Raum-Icons und Urlaubsmodus
+- `tidyhome/app/storage_tasks.py`: Aufgaben, Vorlagen, Pausen, Historie, Fotos, Notizen
+- `tidyhome/app/storage_projects.py`: Projekte, Projektschritte, Fortschritt und Projektexport
+- `tidyhome/app/storage_people.py`: Personen-Einstellungen, Rollen, Punkte, Achievements und Verlauf
 - `tidyhome/app/storage_housekeeping.py`: Haushaltshilfe-Zeiten, Lohnhistorie und Abrechnung
 - `tidyhome/app/housekeeping_format.py`: Monats-, Status-, Stunden- und Geldformatierung für Haushaltshilfen
 - `tidyhome/app/housekeeping_exports.py`: CSV-/PDF-Abrechnungsexporte für Haushaltshilfen
@@ -58,7 +61,7 @@ Technik:
 Basisprüfung:
 
 ```powershell
-& "C:\Users\Danny\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe" -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\storage.py tidyhome\app\storage_runtime.py tidyhome\app\storage_app.py tidyhome\app\storage_housekeeping.py tidyhome\app\housekeeping_format.py tidyhome\app\housekeeping_exports.py tidyhome\app\housekeeping_ui.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
+& "C:\Users\Danny\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe" -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\storage.py tidyhome\app\storage_runtime.py tidyhome\app\storage_app.py tidyhome\app\storage_tasks.py tidyhome\app\storage_projects.py tidyhome\app\storage_people.py tidyhome\app\storage_housekeeping.py tidyhome\app\housekeeping_format.py tidyhome\app\housekeeping_exports.py tidyhome\app\housekeeping_ui.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
 git diff --check
 ```
 

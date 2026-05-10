@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-10 · Aktuelle Version: 1.3.59
+Stand: 2026-05-10 · Aktuelle Version: 1.3.60
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -41,12 +41,23 @@ Die Codebasis ist inzwischen modularisiert:
 - `storage.py` bleibt kompatible Fassade für TinyDB-Zugriff und Geschäftslogik
 - `storage_runtime.py` enthält TinyDB-Instanz, Datenpfade und Dateigrößenlimits
 - `storage_app.py` enthält Admins, Raum-Icons und Urlaubsmodus
+- `storage_tasks.py` enthält Aufgaben, Vorlagen, Pausen, Historie, Fotos/Notizen und Aufgabenexport
+- `storage_projects.py` enthält Projekte, Projektschritte, Fortschritt und Projektexport
+- `storage_people.py` enthält Personen-Einstellungen, Rollen, Punkte, Achievements und Verlauf
 - `storage_housekeeping.py` enthält Haushaltshilfe-Zeiten, Lohnhistorie und Abrechnung
 - `reminders.py` und `scheduler.py` trennen manuelle Reminder von täglichen Benachrichtigungen
 
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.60
+
+- Aufgaben-Storage aus `storage.py` in `storage_tasks.py` ausgelagert
+- Projekt-Storage aus `storage.py` in `storage_projects.py` ausgelagert
+- Personen-, Rollen-, Punkte-, Achievement- und Verlaufslogik in `storage_people.py` gebündelt
+- `storage.py` bleibt als kompatible Import-Fassade erhalten
+- Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
 
 ### v1.3.59
 
