@@ -19,6 +19,8 @@ Technik:
 - `tidyhome/app/main.py`: FastAPI-App, Router, Healthcheck, interne Version
 - `tidyhome/app/models.py`: Pydantic-Modelle für Aufgaben, Projekte, Schritte
 - `tidyhome/app/storage.py`: TinyDB-Zugriff und Geschäftslogik
+- `tidyhome/app/housekeeping_format.py`: Monats-, Status-, Stunden- und Geldformatierung für Haushaltshilfen
+- `tidyhome/app/housekeeping_exports.py`: CSV-/PDF-Abrechnungsexporte für Haushaltshilfen
 - `tidyhome/app/render.py`: HTML-Layout, Navigation, Icons, gemeinsame Render-Helfer
 - `tidyhome/app/task_ui.py`: UI-Helfer für Wochenleiste, Aufgaben-Historie und Vorlagenformulare
 - `tidyhome/app/ui_cards.py`: Foto- und Notizkarten
@@ -52,7 +54,7 @@ Technik:
 Basisprüfung:
 
 ```powershell
-& "C:\Users\Danny\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe" -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
+& "C:\Users\Danny\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe" -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\housekeeping_format.py tidyhome\app\housekeeping_exports.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
 git diff --check
 ```
 

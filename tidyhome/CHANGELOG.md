@@ -1,3 +1,9 @@
+## 1.3.55
+
+- Technik: Haushaltshilfe-Formatierung aus der Route in `housekeeping_format.py` ausgelagert
+- Technik: CSV-/PDF-Abrechnungsexporte in `housekeeping_exports.py` gebündelt
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.54
 
 - Technik: Task-Darstellungshelfer aus `routes/tasks.py` in `task_ui.py` ausgelagert

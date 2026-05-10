@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-10 · Version 1.3.54
+Stand: 2026-05-10 · Version 1.3.55
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -146,6 +146,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Aufgaben-, Projekt- und Projektschrittzeilen aus dem Haupt-Renderer in ein eigenes UI-Modul ausgelagert
 - [x] Generische UI-Helfer für Datum, Personenauflösung, Suffixe und Ringdiagramme ausgelagert
 - [x] Task-Darstellungshelfer für Wochenleiste, Historie und Vorlagenformular ausgelagert
+- [x] Haushaltshilfe-Formatierung und Abrechnungsexporte in eigene Module ausgelagert
 - [x] Mehrsprachige UI in Deutsch, Englisch, Französisch und Spanisch
 - [x] `Accept-Language` wird inklusive Qualitätswerten für automatische Sprache ausgewertet
 
