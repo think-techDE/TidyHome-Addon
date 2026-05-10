@@ -1,3 +1,9 @@
+## 1.3.56
+
+- Technik: Haushaltshilfe-UI-Helfer aus der Route in `housekeeping_ui.py` ausgelagert
+- Technik: Formulare, Monatskarten, Zeitlisten und Stundensatz-Historie strukturell getrennt
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.55
 
 - Technik: Haushaltshilfe-Formatierung aus der Route in `housekeeping_format.py` ausgelagert
