@@ -21,6 +21,7 @@ Technik:
 - `tidyhome/app/storage.py`: TinyDB-Zugriff und Geschäftslogik
 - `tidyhome/app/render.py`: HTML-Layout, Navigation, Icons, gemeinsame Render-Helfer
 - `tidyhome/app/ui_cards.py`: Foto- und Notizkarten
+- `tidyhome/app/ui_helpers.py`: generische Request-, Datums- und UI-Helfer
 - `tidyhome/app/ui_icons.py`: OpenMoji-/SVG-Icon-Daten und Icon-Renderer
 - `tidyhome/app/ui_rows.py`: Aufgaben-, Projekt- und Projektschrittzeilen
 - `tidyhome/app/i18n.py`: Sprachwahl und Token-Auflösung

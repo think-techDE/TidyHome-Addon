@@ -1,3 +1,9 @@
+## 1.3.53
+
+- Technik: generische UI-Helfer aus `render.py` in `ui_helpers.py` ausgelagert
+- Technik: bestehende Helper-Imports aus `render.py` für Routen kompatibel gehalten
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.52
 
 - Technik: Aufgaben-, Projekt- und Projektschrittzeilen aus `render.py` in `ui_rows.py` ausgelagert
