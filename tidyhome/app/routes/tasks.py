@@ -321,22 +321,22 @@ def _template_form_html(template: dict | None, areas: list[str], persons: list[s
     effort_btns += (
         f'<label class="effort-choice effort-none">'
         f'<input type="radio" name="effort" value=""{" checked" if not effort else ""}>'
-        f'<span>Ohne</span></label>'
+        f'<span>{tr("effort.none")}</span></label>'
     )
     return f"""
     <form class="template-form" method="post" action="{action}">
       <input type="hidden" name="return_p" value="{escape(person, quote=True)}">
       <div class="grid-2">
         <div class="form-group">
-          <label>Vorlagenname</label>
+          <label>{tr("tasks.template_name")}</label>
           <input name="name" required value="{title}" placeholder="z.B. Frühjahrsputz">
         </div>
         <div class="form-group">
-          <label>Aufgabenname</label>
+          <label>{tr("tasks.name")}</label>
           <input name="task_name" required value="{task_name}" placeholder="z.B. Fenster putzen">
         </div>
         <div class="form-group">
-          <label>Raum</label>
+          <label>{tr("form.room")}</label>
           <select name="room">{room_opts}</select>
         </div>
         <div class="form-group">
@@ -344,29 +344,29 @@ def _template_form_html(template: dict | None, areas: list[str], persons: list[s
           <select name="interval_days">{interval_opts}</select>
         </div>
         <div class="form-group">
-          <label>Punkte</label>
+          <label>{tr("form.points")}</label>
           <input name="points" type="number" min="1" max="100" value="{points}">
         </div>
         <div class="form-group settings-check-field">
           <label class="settings-check">
             <input type="checkbox" name="important" value="1" {important_checked}>
-            <span>Wichtig</span>
+            <span>{tr("task.important")}</span>
           </label>
         </div>
       </div>
       <div class="form-group">
-        <label>Aufwand</label>
+        <label>{tr("effort.label")}</label>
         <div class="effort-picker">{effort_btns}</div>
       </div>
       <div class="form-group">
-        <label>Zugewiesen an</label>
+        <label>{tr("form.assigned_to")}</label>
         <div class="task-assignee-grid">{person_boxes}</div>
       </div>
       <div class="form-group">
-        <label>Icon</label>
+        <label>{tr("task.icon")}</label>
         {_icon_chooser(icon)}
       </div>
-      <button class="btn btn-primary btn-sm" type="submit">Vorlage speichern</button>
+      <button class="btn btn-primary btn-sm" type="submit">{tr("tasks.save_template")}</button>
     </form>"""
 
 
@@ -396,10 +396,10 @@ async def task_templates(request: Request, p: str = ""):
           <div class="template-card-actions">
             <form method="post" action="{base}tasks/templates/{tpl.get('id')}/use">
               <input type="hidden" name="return_p" value="{escape(p)}">
-              <button class="btn btn-primary btn-sm" type="submit">{_icon("plus", 14, "white")} Aufgabe erstellen</button>
+              <button class="btn btn-primary btn-sm" type="submit">{_icon("plus", 14, "white")} {tr("task.create")}</button>
             </form>
             <a class="btn btn-ghost btn-sm" href="{base}tasks/templates/{tpl.get('id')}/delete{psuffix_q}"
-               onclick="return confirm('Vorlage löschen?')">{_icon("trash", 14)} Löschen</a>
+               onclick="return confirm('{tr("tasks.delete_template_confirm")}')">{_icon("trash", 14)} {tr("common.delete")}</a>
           </div>
           {_template_form_html(tpl, areas, persons, base, p)}
         </details>"""
@@ -407,26 +407,26 @@ async def task_templates(request: Request, p: str = ""):
         rows = (
             '<div class="empty">'
             '<div class="empty-icon">▦</div>'
-            '<div style="font-weight:700">Noch keine Vorlagen</div>'
+            f'<div style="font-weight:700">{tr("tasks.no_templates")}</div>'
             '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
-            'Lege häufige Aufgaben einmal an und erstelle sie später mit einem Klick.</div></div>'
+            f'{tr("tasks.templates_empty_hint")}</div></div>'
         )
 
     content = f"""
     <div class="hero-card page-hero">
       <div>
-        <div class="hero-eyebrow">Schneller planen</div>
-        <div class="hero-title">Aufgaben-Vorlagen</div>
+        <div class="hero-eyebrow">{tr("tasks.quick_plan")}</div>
+        <div class="hero-title">{tr("tasks.templates_title")}</div>
       </div>
       <div class="page-hero-actions">
-        <a class="btn btn-ghost btn-sm" href="tasks{psuffix_q}">{_icon("chevron_l", 14)} Aufgaben</a>
+        <a class="btn btn-ghost btn-sm" href="tasks{psuffix_q}">{_icon("chevron_l", 14)} {tr("tasks.title")}</a>
       </div>
     </div>
     <details class="card template-create-card" open>
       <summary class="person-settings-summary">
         <span class="person-settings-main">
-          <span class="person-settings-title">Neue Vorlage</span>
-          <span class="person-settings-meta">Standardwerte für ähnliche Aufgaben speichern</span>
+          <span class="person-settings-title">{tr("tasks.new_template")}</span>
+          <span class="person-settings-meta">{tr("tasks.template_defaults_hint")}</span>
         </span>
       </summary>
       {_template_form_html(None, areas, persons, base, p)}
@@ -514,9 +514,9 @@ async def tasks_history(request: Request, p: str = ""):
         rows = (
             '<div class="empty">'
             '<div class="empty-icon">↺</div>'
-            '<div style="font-weight:600">Noch keine erledigten Aufgaben</div>'
+            f'<div style="font-weight:600">{tr("tasks.no_done_title")}</div>'
             '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
-            'Sobald Aufgaben erledigt oder archiviert wurden, erscheinen sie hier.</div>'
+            f'{tr("tasks.no_done_text")}</div>'
             '</div>'
         )
 
@@ -524,18 +524,18 @@ async def tasks_history(request: Request, p: str = ""):
     content = f"""
     <div class="hero-card page-hero">
       <div>
-        <div class="hero-eyebrow">Nacharbeiten und reaktivieren</div>
-        <div class="hero-title">Aufgaben-Historie</div>
+        <div class="hero-eyebrow">{tr("tasks.rework")}</div>
+        <div class="hero-title">{tr("tasks.history_title")}</div>
       </div>
       <div class="page-hero-actions">
         <a class="btn btn-ghost btn-sm" href="tasks{psuffix_q}">
-          {_icon("chevron_l", 14)} Aktive
+          {_icon("chevron_l", 14)} {tr("tasks.active_short")}
         </a>
       </div>
     </div>
     <div class="filters">
-      <a class="filter-btn" href="tasks{psuffix_q}">Aktive Aufgaben</a>
-      <a class="filter-btn active" href="tasks/history{psuffix_q}">Historie</a>
+      <a class="filter-btn" href="tasks{psuffix_q}">{tr("tasks.active")}</a>
+      <a class="filter-btn active" href="tasks/history{psuffix_q}">{tr("tasks.history")}</a>
     </div>
     <div class="card card-flush">{rows}</div>"""
     return render(content, request, page="tasks", person=p)
@@ -1033,7 +1033,7 @@ async def _task_form(request: Request, title: str, action: str,
         file_input_id = "task-new-photo-file"
         initial_photo = f"""
         <div class="task-form-section">
-          <div class="task-form-section-title">Vorher-Foto</div>
+          <div class="task-form-section-title">{tr("task.before_photo")}</div>
           <div class="task-create-photo-card photos-card photo-pending-card">
             <input id="{live_input_id}" class="photo-file-input photo-live-input" type="file"
                    name="photo" accept="image/*">
@@ -1044,27 +1044,27 @@ async def _task_form(request: Request, title: str, action: str,
                    name="photo_file" accept="image/*">
             <div class="photo-actions">
               <label class="btn btn-ghost btn-sm camera-native-button" for="{camera_input_id}">
-                {_i("camera", 14)} Kamera öffnen
+                {_i("camera", 14)} {tr("photos.camera")}
               </label>
               <button class="btn btn-ghost btn-sm camera-start" type="button" hidden>
-                {_i("camera", 14)} Kamera öffnen
+                {_i("camera", 14)} {tr("photos.camera")}
               </button>
               <label class="btn btn-outline btn-sm photo-file-button" for="{file_input_id}">
-                {_i("plus", 14)} Datei auswählen
+                {_i("plus", 14)} {tr("photos.file")}
               </label>
             </div>
             <div class="camera-panel" hidden>
               <video class="camera-preview" playsinline autoplay muted></video>
               <div class="camera-actions">
                 <button class="btn btn-primary btn-sm camera-shot" type="button">
-                  {_i("camera", 14, "white")} Aufnehmen
+                  {_i("camera", 14, "white")} {tr("photos.capture")}
                 </button>
-                <button class="btn btn-ghost btn-sm camera-stop" type="button">Schließen</button>
+                <button class="btn btn-ghost btn-sm camera-stop" type="button">{tr("photos.close")}</button>
               </div>
             </div>
             <div class="camera-msg muted"></div>
             <div class="muted photo-upload-hint">
-              Optional. Das Vorher-Foto wird zusammen mit der Aufgabe gespeichert.
+              {tr("task.before_photo_hint")}
             </div>
           </div>
         </div>"""
@@ -1073,10 +1073,10 @@ async def _task_form(request: Request, title: str, action: str,
           <input type="checkbox" name="important" value="1" {important_checked}>
           <span class="task-priority-main">
             <span class="task-priority-title">
-              {star_svg} Als wichtig markieren
+              {star_svg} {tr("task.mark_important")}
             </span>
             <span class="task-priority-hint">
-              Wichtige Aufgaben werden in Listen hervorgehoben und weiter oben einsortiert.
+              {tr("task.important_hint")}
             </span>
           </span>
         </label>"""
@@ -1084,17 +1084,17 @@ async def _task_form(request: Request, title: str, action: str,
     content = f"""
     <div class="page-header">
       <h2>{title}</h2>
-      <a class="icon-btn" href="{back_url}" title="Abbrechen">{_i("chevron_l", 20)}</a>
+      <a class="icon-btn" href="{back_url}" title="{tr("common.cancel")}">{_i("chevron_l", 20)}</a>
     </div>
     <div class="card task-form-card">
       <form method="post" action="{action}" enctype="multipart/form-data">
         <input type="hidden" name="return_p" value="{person}">
         <input type="hidden" name="return_to" value="{return_to}">
         <div class="task-form-section">
-          <div class="task-form-section-title">Aufgabe</div>
+          <div class="task-form-section-title">{tr("task.section_task")}</div>
           <div class="form-group">
-            <label>Was ist zu erledigen?</label>
-            <input name="name" required placeholder="z.B. Staubsaugen" value="{escape(cur_name)}">
+            <label>{tr("task.what")}</label>
+            <input name="name" required placeholder="{tr("task.name_placeholder")}" value="{escape(cur_name)}">
           </div>
           {priority_option}
           {initial_note}
@@ -1102,48 +1102,48 @@ async def _task_form(request: Request, title: str, action: str,
         {initial_photo}
 
         <div class="task-form-section">
-          <div class="task-form-section-title">Planung</div>
+          <div class="task-form-section-title">{tr("task.section_planning")}</div>
           <div class="grid-2">
             <div class="form-group">
-              <label>Raum</label>
+              <label>{tr("form.room")}</label>
               <select name="room">{room_opts}</select>
             </div>
             <div class="form-group">
-              <label>Intervall</label>
+              <label>{tr("task.interval")}</label>
               <select name="interval_days">{interval_opts}</select>
             </div>
             <div class="form-group">
-              <label>Punkte</label>
+              <label>{tr("form.points")}</label>
               <input name="points" type="number" value="{cur_points}" min="1" max="100">
             </div>
             <div class="form-group">
-              <label>Startdatum (optional)</label>
+              <label>{tr("task.start_date_optional")}</label>
               <input type="date" name="start_date" value="{cur_start_date}">
             </div>
           </div>
           <div class="form-group">
-            <label>Aufwand</label>
+            <label>{tr("effort.label")}</label>
             <div class="effort-picker">{effort_btns}</div>
           </div>
           {snooze_section}
         </div>
 
         <div class="task-form-section">
-          <div class="task-form-section-title">Zuständigkeit</div>
+          <div class="task-form-section-title">{tr("task.section_responsibility")}</div>
           <div class="form-group">
-            <label>Zugewiesen an</label>
+            <label>{tr("form.assigned_to")}</label>
             <div class="task-assignee-grid">{person_boxes}</div>
           </div>
         </div>
 
         <div class="task-form-section">
-          <div class="task-form-section-title">Darstellung</div>
+          <div class="task-form-section-title">{tr("task.section_display")}</div>
           {_icon_chooser(cur_icon)}
         </div>
 
         <div class="form-actions">
           <button class="btn btn-primary btn-full" type="submit">{submit_label}</button>
-          <a class="btn btn-ghost btn-full" href="{back_url}">Abbrechen</a>
+          <a class="btn btn-ghost btn-full" href="{back_url}">{tr("common.cancel")}</a>
         </div>
       </form>
     </div>

@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-10 · Aktuelle Version: 1.3.47
+Stand: 2026-05-10 · Aktuelle Version: 1.3.48
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -37,6 +37,12 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.48
+
+- Scores, Haushaltshilfe-Verwaltung, Projektformulare, Aufgabenformularbereiche und Admin-Kernflächen weiter auf i18n-Schlüssel umgestellt
+- Wörterbuch für Punkte, Haushaltshilfen, Projekt-/Aufgabenformulare und Admin-Texte in Englisch, Französisch und Spanisch erweitert
+- Tests nach der erweiterten i18n-Abdeckung erneut validiert
 
 ### v1.3.47
 

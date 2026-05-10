@@ -1,3 +1,9 @@
+## 1.3.48
+
+- UI: Scores, Haushaltshilfen, Projektformulare, Aufgabenformularbereiche und Admin-Kernflächen weiter auf i18n-Schlüssel umgestellt
+- UI: Übersetzungen für Punkte, Haushaltshilfe-Verwaltung, Projekt-/Aufgabenformulare und Admin-Texte erweitert
+- Technik: freie Inhalte bleiben weiterhin unberührt; nur explizit markierte UI-Texte werden übersetzt
+
 ## 1.3.47
 
 - UI: Übersetzungen auf explizite i18n-Schlüssel umgestellt

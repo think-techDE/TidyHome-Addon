@@ -244,7 +244,7 @@ async def settings_form(request: Request, p: str = ""):
               <div class="settings-picker-head">
                 <div>
                   <h3>{tr("menu.switch_person")}</h3>
-                  <p class="muted">Als Admin kannst du Profile gezielt öffnen.</p>
+                  <p class="muted">{tr("settings.profile_picker_hint")}</p>
                 </div>
               </div>
               {own_controls}
@@ -345,21 +345,21 @@ async def admin_form(request: Request, saved: str = ""):
     saved_banner = """
         <div style="background:var(--success-bg);color:var(--success);padding:0.6rem 0.875rem;
                     border-radius:0.6rem;margin-bottom:1rem;font-size:0.84rem;font-weight:600">
-          Gespeichert
+          {tr("settings.saved")}
         </div>""" if saved == "1" else ""
 
     admin_section = f"""
     <section id="admin-rights" class="card admin-section">
       <div class="admin-section-head">
         <div>
-          <h3>Admin-Rechte</h3>
-          <p class="muted">Wer den Admin-Bereich öffnen und Ansichten wechseln darf.</p>
+          <h3>{tr("settings.admin_rights")}</h3>
+          <p class="muted">{tr("settings.admin_rights_hint")}</p>
         </div>
       </div>
       {saved_banner}
       <form method="post" action="{base}admin/admins">
         <div class="admin-list">{person_cbs}</div>
-        <button class="btn btn-primary btn-sm admin-save" type="submit">Admin-Rechte speichern</button>
+        <button class="btn btn-primary btn-sm admin-save" type="submit">{tr("settings.admin_rights_save")}</button>
       </form>
     </section>"""
 
@@ -367,16 +367,16 @@ async def admin_form(request: Request, saved: str = ""):
     <section id="admin-data" class="card admin-section">
       <div class="admin-section-head">
         <div>
-          <h3>Daten & Diagnose</h3>
-          <p class="muted">Backup, CSV-Exporte und Prüfung auf verwaiste Referenzen.</p>
+          <h3>{tr("admin.data_diagnostics")}</h3>
+          <p class="muted">{tr("settings.data_diagnostics_hint")}</p>
         </div>
       </div>
       <div class="admin-data-actions">
-        <a class="btn btn-primary btn-sm" href="{base}admin/export.json">{_icon("download", 14, "white")} JSON-Backup</a>
-        <a class="btn btn-ghost btn-sm" href="{base}admin/export/tasks.csv">Aufgaben CSV</a>
-        <a class="btn btn-ghost btn-sm" href="{base}admin/export/projects.csv">Projekte CSV</a>
-        <a class="btn btn-ghost btn-sm" href="{base}admin/export/scores.csv">Punkte CSV</a>
-        <a class="btn btn-outline btn-sm" href="{base}admin/diagnostics">{_icon("alert", 14)} Diagnose öffnen</a>
+        <a class="btn btn-primary btn-sm" href="{base}admin/export.json">{_icon("download", 14, "white")} {tr("admin.backup_json")}</a>
+        <a class="btn btn-ghost btn-sm" href="{base}admin/export/tasks.csv">{tr("admin.tasks_csv")}</a>
+        <a class="btn btn-ghost btn-sm" href="{base}admin/export/projects.csv">{tr("admin.projects_csv")}</a>
+        <a class="btn btn-ghost btn-sm" href="{base}admin/export/scores.csv">{tr("admin.scores_csv")}</a>
+        <a class="btn btn-outline btn-sm" href="{base}admin/diagnostics">{_icon("alert", 14)} {tr("admin.open_diagnostics")}</a>
       </div>
     </section>"""
 
@@ -385,7 +385,7 @@ async def admin_form(request: Request, saved: str = ""):
         device_section = """
         <section id="admin-devices" class="card admin-section" style="background:var(--warning-bg);border:1px solid var(--warning)">
           <p style="color:var(--warning);margin:0;font-size:0.85rem">
-            Noch keine Admins festgelegt. Wähle oben mindestens eine Person aus.
+            {tr("settings.no_admins_hint")}
           </p>
         </section>"""
     else:
@@ -413,7 +413,7 @@ async def admin_form(request: Request, saved: str = ""):
                 extra = ", ".join(s for s in selected_svcs if s not in available_svcs)
                 extra_field = f"""
                 <div class="form-group" style="margin-top:0.75rem">
-                  <label>Weitere Services (manuell)</label>
+                  <label>{tr("settings.extra_services")}</label>
                   <input name="extra_services" value="{extra}"
                          placeholder="notify.anderer_service">
                 </div>"""
@@ -423,31 +423,31 @@ async def admin_form(request: Request, saved: str = ""):
                 svc_val = ", ".join(selected_svcs)
                 svc_content = f"""
                 <div class="form-group">
-                  <label>Notify-Services</label>
+                  <label>{tr("settings.notify_services")}</label>
                   <input name="extra_services" value="{svc_val}"
                          placeholder="notify.mobile_app_iphone, notify.alexa_kueche">
                 </div>"""
-                hint = '<div class="muted" style="margin-bottom:0.75rem;font-size:0.78rem">HA-Services konnten nicht geladen werden – bitte manuell eintragen.</div>'
+                hint = f'<div class="muted" style="margin-bottom:0.75rem;font-size:0.78rem">{tr("settings.services_load_failed")}</div>'
 
             cards += f"""
             <details class="admin-details">
               <summary>
                 <span>{pn}{admin_b}</span>
-                <span class="muted">{len(selected_svcs)} Gerät(e)</span>
+                <span class="muted">{len(selected_svcs)} {tr("settings.devices")}</span>
               </summary>
               <form method="post" action="{base}admin">
                 <input type="hidden" name="person" value="{pn}">
                 {hint if not available_svcs else ''}
                 {svc_content}
-                <button class="btn btn-primary btn-sm" style="margin-top:0.5rem" type="submit">Speichern</button>
+                <button class="btn btn-primary btn-sm" style="margin-top:0.5rem" type="submit">{tr("common.save")}</button>
               </form>
             </details>"""
         device_section = f"""
         <section id="admin-devices" class="card admin-section">
           <div class="admin-section-head">
             <div>
-              <h3>Benachrichtigungen</h3>
-              <p class="muted">Notify-Geräte pro Person verwalten.</p>
+              <h3>{tr("settings.notifications")}</h3>
+              <p class="muted">{tr("settings.notifications_hint")}</p>
             </div>
           </div>
           <div class="admin-list">{cards}</div>
@@ -530,14 +530,14 @@ function filterRoomIcons(input){
 
     room_icons_section = f"""
     <section id="admin-room-icons" class="card admin-section">
-      <h3 style="margin-bottom:0.25rem">Raum-Icons</h3>
+      <h3 style="margin-bottom:0.25rem">{tr("settings.room_icons")}</h3>
       <p class="muted" style="margin-bottom:1rem;font-size:0.8rem">
-        Klicke ein Symbol an – 🔮 nutzt automatisch den Raumnamen.
+        {tr("settings.room_icon_hint")}
       </p>
       <form method="post" action="{base}admin/room-icons">
-        <div class="icon-filter"><input type="search" placeholder="Raum-Icon suchen" oninput="filterRoomIcons(this)" autocomplete="off"></div>
+        <div class="icon-filter"><input type="search" placeholder="{tr("settings.room_icon_search")}" oninput="filterRoomIcons(this)" autocomplete="off"></div>
         <div class="ri-grid">{room_cards}</div>
-        <button class="btn btn-primary btn-sm admin-save" type="submit">Speichern</button>
+        <button class="btn btn-primary btn-sm admin-save" type="submit">{tr("common.save")}</button>
       </form>
       {ri_js}
     </section>"""
@@ -555,16 +555,16 @@ function filterRoomIcons(input){
         <strong>{admin_count}</strong><span>Admins</span>
       </a>
       <a class="admin-overview-card" href="#admin-room-icons">
-        <strong>{len(areas)}</strong><span>Räume</span>
+        <strong>{len(areas)}</strong><span>{tr("dashboard.rooms")}</span>
       </a>
       <a class="admin-overview-card" href="#admin-devices">
-        <strong>{len(persons)}</strong><span>Benachrichtigungen</span>
+        <strong>{len(persons)}</strong><span>{tr("settings.notifications")}</span>
       </a>
       <a class="admin-overview-card" href="#admin-people">
-        <strong>{len(persons)}</strong><span>Profile</span>
+        <strong>{len(persons)}</strong><span>{tr("settings.profiles")}</span>
       </a>
       <a class="admin-overview-card" href="#admin-data">
-        <strong>CSV</strong><span>Daten</span>
+        <strong>CSV</strong><span>{tr("settings.data")}</span>
       </a>
     </div>"""
 
@@ -572,9 +572,9 @@ function filterRoomIcons(input){
     <div class="admin-hero">
       <div>
         <h2>Admin</h2>
-        <p class="muted">Rechte, Räume, Benachrichtigungen und Personen an einem Ort.</p>
+        <p class="muted">{tr("settings.admin_subtitle")}</p>
       </div>
-      <span class="admin-badge">{len(persons)} Personen</span>
+      <span class="admin-badge">{len(persons)} {tr("settings.people")}</span>
     </div>
     {admin_overview}
     <div class="admin-stack">

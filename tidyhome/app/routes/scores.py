@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from html import escape
 
+from i18n import tr
 from render import _icon, format_date_de, person_suffix, render, resolve_person
 from storage import (get_person_achievements, get_person_score_history,
                      get_person_settings, get_person_stats,
@@ -10,9 +11,9 @@ from storage import (get_person_achievements, get_person_score_history,
 router = APIRouter()
 
 _PERIODS = [
-    ("all",        "Gesamt"),
-    ("month",      "Dieser Monat"),
-    ("last_month", "Letzter Monat"),
+    ("all",        "score.period.all"),
+    ("month",      "score.period.month"),
+    ("last_month", "score.period.last_month"),
 ]
 
 
@@ -24,19 +25,19 @@ async def scores(request: Request, period: str = "all", p: str = ""):
     month_data = get_scores(period="month")
 
     tabs = '<div class="filters">'
-    for key, label in _PERIODS:
+    for key, label_key in _PERIODS:
         active = "active" if period == key else ""
-        tabs += f'<a class="filter-btn {active}" href="scores?period={key}{("&p=" + p) if p else ""}">{label}</a>'
+        tabs += f'<a class="filter-btn {active}" href="scores?period={key}{("&p=" + p) if p else ""}">{tr(label_key)}</a>'
     tabs += '</div>'
 
     rows = ""
     if not data:
-        hint = "Noch keine Punkte in diesem Zeitraum." if period != "all" else "Noch keine Punkte vergeben."
+        hint = tr("score.no_points_period") if period != "all" else tr("score.no_points_all")
         rows = (
             f'<div class="empty">'
             f'<div class="empty-icon">★</div>'
             f'<div style="font-weight:700">{hint}</div>'
-            f'<div class="muted" style="font-size:0.8rem">Erledigte Aufgaben und Projektschritte erscheinen hier automatisch.</div>'
+            f'<div class="muted" style="font-size:0.8rem">{tr("score.auto_hint")}</div>'
             f'</div>'
         )
     else:
@@ -48,26 +49,26 @@ async def scores(request: Request, period: str = "all", p: str = ""):
             top_cls = " is-top" if i == 0 else ""
             source_meta = []
             if t_done:
-                source_meta.append(f"{t_done} Aufgaben")
+                source_meta.append(f"{t_done} {tr('tasks.title')}")
             if pr_done:
-                source_meta.append(f"{pr_done} Projektschritte")
-            source_txt = " · ".join(source_meta) if source_meta else "Noch keine Details"
+                source_meta.append(f"{pr_done} {tr('score.project_steps')}")
+            source_txt = " · ".join(source_meta) if source_meta else tr("score.no_details")
             rows += f"""
             <div class="score-row-modern{me_cls}{top_cls}">
               <div class="score-rank">{rank}</div>
               <div class="score-main">
-                <div class="score-name">{s["person"]}</div>
+                <div class="score-name">{escape(s["person"])}</div>
                 <div class="score-meta"><span>{source_txt}</span></div>
               </div>
               <div class="score-points">
                 <strong>{s["points"]}</strong>
-                <span>Punkte</span>
+                <span>{tr("score.points")}</span>
               </div>
             </div>"""
 
     note = ""
     if period != "all":
-        note = '<div class="muted" style="margin-top:0.5rem;font-size:0.75rem">Nur Aktivitäten seit Einführung des Zeitraum-Trackings werden gezählt.</div>'
+        note = f'<div class="muted" style="margin-top:0.5rem;font-size:0.75rem">{tr("score.period_note")}</div>'
 
     # Persönliche Statistik (nur wenn Person aktiv)
     personal_section = ""
@@ -80,21 +81,22 @@ async def scores(request: Request, period: str = "all", p: str = ""):
         rank_all = next((i + 1 for i, s in enumerate(all_time) if s["person"] == p), None)
         rank_month = next((i + 1 for i, s in enumerate(month_data) if s["person"] == p), None)
 
-        streak_txt = f"{stats['streak']} Tag{'e' if stats['streak'] != 1 else ''}" if stats["streak"] else "–"
-        streak_hint = "Serie aktiv" if stats["streak"] >= 3 else "Dranbleiben"
+        streak_txt = f"{stats['streak']} {tr('score.days') if stats['streak'] != 1 else tr('score.day')}" if stats["streak"] else "–"
+        streak_hint = tr("score.streak_active") if stats["streak"] >= 3 else tr("score.keep_going")
 
         goal_bar = ""
-        goal_hint = "Kein Wochenziel gesetzt"
+        goal_hint = tr("score.no_weekly_goal")
         if goal:
             pct = min(int(stats["week_tasks"] / goal * 100), 100)
             fill_cls = "green" if pct >= 100 else ""
             remaining = max(goal - stats["week_tasks"], 0)
-            goal_hint = "Wochenziel erreicht" if remaining == 0 else f"Noch {remaining} Aufgabe{'n' if remaining != 1 else ''} bis zum Ziel"
+            task_label = tr("task.task") if remaining == 1 else tr("tasks.title")
+            goal_hint = tr("score.weekly_goal_done") if remaining == 0 else f"{tr('score.goal_remaining_prefix')} {remaining} {task_label} {tr('score.goal_remaining_suffix')}"
             goal_bar = f"""
             <div style="margin-top:0.75rem">
               <div style="display:flex;justify-content:space-between;
                           font-size:0.75rem;color:var(--muted);margin-bottom:0.3rem">
-                <span>{goal_hint}</span><span>{stats['week_tasks']}/{goal} Aufgaben</span>
+                <span>{goal_hint}</span><span>{stats['week_tasks']}/{goal} {tr("tasks.title")}</span>
               </div>
               <div class="progress-track">
                 <div class="progress-fill {fill_cls}" style="width:{pct}%"></div>
@@ -103,12 +105,12 @@ async def scores(request: Request, period: str = "all", p: str = ""):
         else:
             goal_bar = """
             <div class="muted" style="margin-top:0.75rem;font-size:0.8rem">
-              Kein Wochenziel gesetzt. Mit einem Ziel werden Fortschritt und Restaufgaben hier sichtbar.
+              """ + tr("score.no_weekly_goal_hint") + """
             </div>"""
 
         activity_rows = ""
         for event in recent:
-            event_type = "Projektschritt" if event.get("type") == "project" else "Aufgabe"
+            event_type = tr("score.project_step") if event.get("type") == "project" else tr("task.task")
             label = event.get("label") or event_type
             activity_rows += f"""
             <div class="score-activity-row">
@@ -122,9 +124,9 @@ async def scores(request: Request, period: str = "all", p: str = ""):
         if not activity_rows:
             activity_rows = (
                 '<div class="empty" style="padding:1.25rem 1rem">'
-                '<div style="font-weight:700">Noch keine Erfolge sichtbar</div>'
+                f'<div style="font-weight:700">{tr("score.no_success_title")}</div>'
                 '<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
-                'Erledigte Aufgaben erscheinen hier als Verlauf.</div></div>'
+                f'{tr("score.no_success_text")}</div></div>'
             )
 
         unlocked_count = len([a for a in achievements if a["unlocked"]])
@@ -143,16 +145,16 @@ async def scores(request: Request, period: str = "all", p: str = ""):
 
         personal_section = f"""
         <div class="hero-card">
-          <div class="hero-eyebrow">Dein Fortschritt</div>
+          <div class="hero-eyebrow">{tr("score.progress")}</div>
           <div class="page-hero">
             <div>
-              <div class="hero-title">{p}</div>
-              <div class="muted">Jede erledigte Aufgabe zählt sichtbar.</div>
+              <div class="hero-title">{escape(p)}</div>
+              <div class="muted">{tr("score.visible_count_hint")}</div>
             </div>
             <div class="page-hero-actions">
-              <span class="badge ok">#{rank_all or "–"} gesamt</span>
+              <span class="badge ok">#{rank_all or "–"} {tr("score.overall")}</span>
               <a class="btn btn-ghost btn-sm" href="scores/history{person_suffix(p)}">
-                {_icon("calendar", 14)} Verlauf
+                {_icon("calendar", 14)} {tr("score.history")}
               </a>
             </div>
           </div>
@@ -161,7 +163,7 @@ async def scores(request: Request, period: str = "all", p: str = ""):
         <div class="achievement-strip">
           <div class="achievement-card">
             <div class="today-value">{stats['week_points']}</div>
-            <div class="today-label">Punkte diese Woche</div>
+            <div class="today-label">{tr("score.week_points")}</div>
           </div>
           <div class="achievement-card">
             <div class="today-value">{streak_txt}</div>
@@ -169,38 +171,38 @@ async def scores(request: Request, period: str = "all", p: str = ""):
           </div>
           <div class="achievement-card">
             <div class="today-value">#{rank_month or "–"}</div>
-            <div class="today-label">Monatsrang</div>
+            <div class="today-label">{tr("score.month_rank")}</div>
           </div>
         </div>
         <div class="today-grid" style="margin-bottom:1rem">
           <div class="today-stat">
             <div class="today-value">{stats['tasks_done']}</div>
-            <div class="today-label">Aufgaben</div>
+            <div class="today-label">{tr("tasks.title")}</div>
           </div>
           <div class="today-stat">
             <div class="today-value">{stats['proj_steps']}</div>
-            <div class="today-label">Projektschritte</div>
+            <div class="today-label">{tr("score.project_steps")}</div>
           </div>
           <div class="today-stat">
             <div class="today-value">{stats['total_points']}</div>
-            <div class="today-label">Gesamtpunkte</div>
+            <div class="today-label">{tr("score.total_points")}</div>
           </div>
         </div>
         <div class="card achievement-summary-card">
           <div class="score-activity-head">
             <div>
-              <h3>Achievements</h3>
-              <div class="muted">{unlocked_count}/{len(achievements)} freigeschaltet</div>
+              <h3>{tr("score.achievements")}</h3>
+              <div class="muted">{unlocked_count}/{len(achievements)} {tr("score.unlocked")}</div>
             </div>
-            <a class="btn btn-ghost btn-sm" href="scores/history{person_suffix(p)}">Alle ansehen</a>
+            <a class="btn btn-ghost btn-sm" href="scores/history{person_suffix(p)}">{tr("score.view_all")}</a>
           </div>
           <div class="mini-achievement-grid">{achievement_rows}</div>
         </div>
         <div class="card card-flush score-activity-card">
           <div class="score-activity-head">
             <div>
-              <h3>Letzte Erfolge</h3>
-              <div class="muted">Was zuletzt Punkte gebracht hat</div>
+              <h3>{tr("score.recent_success")}</h3>
+              <div class="muted">{tr("score.recent_success_hint")}</div>
             </div>
           </div>
           {activity_rows}
@@ -213,8 +215,8 @@ async def scores(request: Request, period: str = "all", p: str = ""):
     {personal_section}
     <div class="page-header">
       <div>
-        <h2>Bestenliste</h2>
-        <div class="muted">{total_points_period} Punkte · {total_done_period} Erledigungen · Spitze: {leader}</div>
+        <h2>{tr("score.leaderboard")}</h2>
+        <div class="muted">{total_points_period} {tr("score.points")} · {total_done_period} {tr("score.completions")} · {tr("score.leader")}: {escape(leader)}</div>
       </div>
       <div style="color:var(--primary);display:flex;align-items:center">{_icon("star", 22, "var(--primary)")}</div>
     </div>
@@ -233,7 +235,7 @@ def _history_rows(items: list[dict]) -> str:
         <div class="history-row">
           <div class="history-row-head">
             <strong>{escape(item.get("label", ""))}</strong>
-            <span>{item.get("points", 0)} Punkte · {item.get("tasks", 0)} Aufgaben · {item.get("projects", 0)} Projekte</span>
+            <span>{item.get("points", 0)} {tr("score.points")} · {item.get("tasks", 0)} {tr("tasks.title")} · {item.get("projects", 0)} {tr("project.projects")}</span>
           </div>
           <div class="progress-track">
             <div class="progress-fill green" style="width:{pct}%"></div>
@@ -247,7 +249,7 @@ async def score_history(request: Request, p: str = ""):
     p = resolve_person(request, p)
     if not p:
         return render(
-            '<div class="empty"><div style="font-weight:700">Keine Person ausgewählt</div></div>',
+            f'<div class="empty"><div style="font-weight:700">{tr("score.no_person")}</div></div>',
             request,
             page="scores",
             person=p,
@@ -270,30 +272,30 @@ async def score_history(request: Request, p: str = ""):
     content = f"""
     <div class="hero-card page-hero">
       <div>
-        <div class="hero-eyebrow">Persönliche Entwicklung</div>
-        <div class="hero-title">Verlauf von {escape(p)}</div>
-        <div class="muted">{stats["total_points"]} Punkte · {stats["tasks_done"]} Aufgaben · {stats["proj_steps"]} Projektschritte</div>
+        <div class="hero-eyebrow">{tr("score.personal_development")}</div>
+        <div class="hero-title">{tr("score.history_of")} {escape(p)}</div>
+        <div class="muted">{stats["total_points"]} {tr("score.points")} · {stats["tasks_done"]} {tr("tasks.title")} · {stats["proj_steps"]} {tr("score.project_steps")}</div>
       </div>
       <div class="page-hero-actions">
-        <a class="btn btn-ghost btn-sm" href="scores{person_suffix(p)}">{_icon("chevron_l", 14)} Punkte</a>
+        <a class="btn btn-ghost btn-sm" href="scores{person_suffix(p)}">{_icon("chevron_l", 14)} {tr("score.points")}</a>
       </div>
     </div>
     <div class="card achievement-summary-card">
       <div class="score-activity-head">
         <div>
-          <h3>Achievements</h3>
-          <div class="muted">{len(unlocked)}/{len(achievements)} freigeschaltet</div>
+          <h3>{tr("score.achievements")}</h3>
+          <div class="muted">{len(unlocked)}/{len(achievements)} {tr("score.unlocked")}</div>
         </div>
       </div>
       <div class="achievement-tile-grid">{achievement_cards}</div>
     </div>
     <div class="grid-2">
       <div class="card">
-        <h3 style="margin-bottom:0.75rem">Letzte Wochen</h3>
+        <h3 style="margin-bottom:0.75rem">{tr("score.last_weeks")}</h3>
         {_history_rows(history["weeks"])}
       </div>
       <div class="card">
-        <h3 style="margin-bottom:0.75rem">Letzte Monate</h3>
+        <h3 style="margin-bottom:0.75rem">{tr("score.last_months")}</h3>
         {_history_rows(history["months"])}
       </div>
     </div>"""

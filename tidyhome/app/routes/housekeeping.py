@@ -6,6 +6,7 @@ from io import StringIO
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
+from i18n import tr
 from render import _base, _icon, format_date_de, person_suffix, render, resolve_person
 from storage import (add_housekeeping_entry, delete_housekeeping_entry, get_admins,
                      get_housekeeping_billing,
@@ -43,10 +44,10 @@ def _decimal(value: float) -> str:
 
 def _status_label(status: str) -> str:
     return {
-        "open": "Offen",
-        "reviewed": "Geprüft",
-        "paid": "Bezahlt",
-    }.get(status, "Offen")
+        "open": tr("housekeeping.status.open"),
+        "reviewed": tr("housekeeping.status.reviewed"),
+        "paid": tr("housekeeping.status.paid"),
+    }.get(status, tr("housekeeping.status.open"))
 
 
 def _status_badge(status: str) -> str:
@@ -85,10 +86,10 @@ def _month_nav(base: str, month: str, person: str) -> str:
     return f"""
     <form class="month-filter" method="get" action="{base}housekeeping">
       <input type="hidden" name="p" value="{escape(person, quote=True)}">
-      <label>Monat</label>
+      <label>{tr("housekeeping.month")}</label>
       <input type="month" name="month" value="{escape(month, quote=True)}">
-      <button class="btn btn-ghost btn-sm" type="submit">Anzeigen</button>
-      <a class="btn btn-ghost btn-sm" href="{base}housekeeping?month={_current_month()}{psuffix}">Aktueller Monat</a>
+      <button class="btn btn-ghost btn-sm" type="submit">{tr("housekeeping.show")}</button>
+      <a class="btn btn-ghost btn-sm" href="{base}housekeeping?month={_current_month()}{psuffix}">{tr("housekeeping.current_month")}</a>
     </form>"""
 
 
@@ -102,7 +103,7 @@ def _entry_form(base: str, helpers: list[str], actor: str, month: str,
         if entry.get("id") else
         f"{base}housekeeping/entries"
     )
-    button = "Korrigieren" if entry.get("id") else "Arbeitszeit speichern"
+    button = tr("housekeeping.correct") if entry.get("id") else tr("housekeeping.save_time")
     person_field = f'<input type="hidden" name="person" value="{escape(target, quote=True)}">'
     if not force_person and helpers:
         opts = "".join(
@@ -111,7 +112,7 @@ def _entry_form(base: str, helpers: list[str], actor: str, month: str,
         )
         person_field = f"""
         <div class="form-group">
-          <label>Haushaltshilfe</label>
+          <label>{tr("role.housekeeper")}</label>
           <select name="person">{opts}</select>
         </div>"""
     note_val = escape(entry.get("note", ""), quote=True)
@@ -125,7 +126,7 @@ def _entry_form(base: str, helpers: list[str], actor: str, month: str,
         delete_button = (
             f'<button class="btn btn-ghost btn-sm danger-text" type="submit" '
             f'formaction="{base}housekeeping/entries/{entry["id"]}/delete" '
-            f'onclick="return confirm(\'Eintrag löschen?\')">Löschen</button>'
+            f'onclick="return confirm(\'{tr("housekeeping.delete_entry_confirm")}\')">{tr("common.delete")}</button>'
         )
     return f"""
     <form class="{wrapper_cls}" method="post" action="{action}">
@@ -133,34 +134,34 @@ def _entry_form(base: str, helpers: list[str], actor: str, month: str,
       <input type="hidden" name="month" value="{escape(month, quote=True)}">
       {person_field}
       <div class="quick-time-actions">
-        <button class="btn btn-ghost btn-sm" type="button" data-hk-quick="today">Heute</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-hk-quick="start">Start jetzt</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-hk-quick="end">Ende jetzt</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-hk-quick="today">{tr("housekeeping.today")}</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-hk-quick="start">{tr("housekeeping.start_now")}</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-hk-quick="end">{tr("housekeeping.end_now")}</button>
         <button class="btn btn-ghost btn-sm" type="button" data-hk-break="0">0 Min.</button>
         <button class="btn btn-ghost btn-sm" type="button" data-hk-break="15">15 Min.</button>
         <button class="btn btn-ghost btn-sm" type="button" data-hk-break="30">30 Min.</button>
       </div>
       <div class="grid-2">
         <div class="form-group">
-          <label>Datum</label>
+          <label>{tr("housekeeping.date")}</label>
           <input type="date" name="work_date" value="{date_val}" required>
         </div>
         <div class="form-group">
-          <label>Pause (Min.)</label>
+          <label>{tr("housekeeping.break_minutes")}</label>
           <input type="number" name="break_minutes" min="0" max="600" value="{break_val}">
         </div>
         <div class="form-group">
-          <label>Start</label>
+          <label>{tr("housekeeping.start")}</label>
           <input type="time" name="start_time" value="{start_val}" required>
         </div>
         <div class="form-group">
-          <label>Ende</label>
+          <label>{tr("housekeeping.end")}</label>
           <input type="time" name="end_time" value="{end_val}" required>
         </div>
       </div>
       <div class="form-group">
-        <label>Notiz (optional)</label>
-        <input name="note" value="{note_val}" placeholder="z.B. Fenster, Bad, Küche">
+        <label>{tr("housekeeping.note_optional")}</label>
+        <input name="note" value="{note_val}" placeholder="{tr("housekeeping.note_placeholder")}">
       </div>
       <div class="settings-actions">
         <button class="btn btn-primary btn-sm" type="submit">{button}</button>
@@ -173,7 +174,7 @@ def _entries_for_person(base: str, person: str, actor: str, month: str,
                         read_only: bool = False) -> str:
     entries = list_housekeeping_entries(person, month)
     if not entries:
-        return '<div class="empty" style="padding:1rem">Noch keine Arbeitszeiten in diesem Monat.</div>'
+        return f'<div class="empty" style="padding:1rem">{tr("housekeeping.no_entries_month")}</div>'
     rows = ""
     for entry in entries:
         hours = housekeeping_entry_hours(entry)
@@ -181,7 +182,7 @@ def _entries_for_person(base: str, person: str, actor: str, month: str,
         cost = hours * wage
         note = escape(entry.get("note", ""))
         note_part = f'<span>· {note}</span>' if note else ""
-        wage_part = f"· {_money(wage)}/h" if housekeeping_entry_has_wage(entry) else "· kein Satz"
+        wage_part = f"· {_money(wage)}/h" if housekeeping_entry_has_wage(entry) else f"· {tr('housekeeping.no_rate')}"
         summary = f"""
             <span>
               <strong>{format_date_de(entry.get("date", ""))}</strong>
@@ -204,7 +205,7 @@ def _entries_for_person(base: str, person: str, actor: str, month: str,
 def _wage_history(base: str, person: str, actor: str, month: str) -> str:
     rows = list_housekeeper_wages(person)
     if not rows:
-        return '<div class="muted wage-history-empty">Noch kein Stundensatz hinterlegt.</div>'
+        return f'<div class="muted wage-history-empty">{tr("housekeeping.no_wage_history")}</div>'
     items = ""
     for row in rows:
         valid_from = row.get("valid_from") or ""
@@ -216,7 +217,7 @@ def _wage_history(base: str, person: str, actor: str, month: str) -> str:
         elif valid_to:
             period = f"bis {format_date_de(valid_to)}"
         else:
-            period = "ohne Zeitraum"
+            period = tr("housekeeping.no_period")
         wage_id = escape(row.get("id", ""), quote=True)
         valid_from = escape(valid_from, quote=True)
         valid_to = escape(valid_to, quote=True)
@@ -231,14 +232,14 @@ def _wage_history(base: str, person: str, actor: str, month: str) -> str:
             f'<input type="hidden" name="month" value="{escape(month, quote=True)}">'
             f'<input type="hidden" name="person" value="{escape(person, quote=True)}">'
             '<div class="grid-2">'
-            '<div class="form-group"><label>Stundenlohn</label>'
+            f'<div class="form-group"><label>{tr("housekeeping.hourly_wage")}</label>'
             f'<input name="hourly_wage" inputmode="decimal" value="{row.get("hourly_wage", 0):.2f}"></div>'
-            '<div class="form-group"><label>Gültig ab</label>'
+            f'<div class="form-group"><label>{tr("housekeeping.valid_from")}</label>'
             f'<input type="date" name="valid_from" value="{valid_from}"></div>'
-            '<div class="form-group"><label>Gültig bis</label>'
+            f'<div class="form-group"><label>{tr("housekeeping.valid_to")}</label>'
             f'<input type="date" name="valid_to" value="{valid_to}"></div>'
             '</div>'
-            '<button class="btn btn-ghost btn-sm" type="submit">Stundensatz korrigieren</button>'
+            f'<button class="btn btn-ghost btn-sm" type="submit">{tr("housekeeping.correct_rate")}</button>'
             '</form>'
             '</details>'
         )
@@ -248,11 +249,11 @@ def _wage_history(base: str, person: str, actor: str, month: str) -> str:
 def _housekeeping_warning(item: dict) -> str:
     warnings = []
     if not item.get("has_wage_history"):
-        warnings.append("Kein Stundensatz hinterlegt.")
+        warnings.append(tr("housekeeping.no_rate_configured"))
     if item.get("missing_wage_entries"):
         dates = ", ".join(format_date_de(d) for d in item.get("missing_wage_dates", [])[:3])
         suffix = f" ({dates})" if dates else ""
-        warnings.append(f"{item['missing_wage_entries']} Einträge ohne gültigen Satz{suffix}.")
+        warnings.append(f"{item['missing_wage_entries']} {tr('housekeeping.entries_without_rate')}{suffix}.")
     if not warnings:
         return ""
     return '<div class="housekeeping-warning">' + " ".join(escape(w) for w in warnings) + "</div>"
@@ -262,7 +263,7 @@ def _billing_status_form(base: str, person: str, month: str, actor: str,
                          status: str) -> str:
     options = "".join(
         f'<option value="{key}"{" selected" if key == status else ""}>{label}</option>'
-        for key, label in [("open", "Offen"), ("reviewed", "Geprüft"), ("paid", "Bezahlt")]
+        for key, label in [("open", tr("housekeeping.status.open")), ("reviewed", tr("housekeeping.status.reviewed")), ("paid", tr("housekeeping.status.paid"))]
     )
     return f"""
     <form class="billing-status-form" method="post" action="{base}housekeeping/status">
@@ -270,7 +271,7 @@ def _billing_status_form(base: str, person: str, month: str, actor: str,
       <input type="hidden" name="month" value="{escape(month, quote=True)}">
       <input type="hidden" name="person" value="{escape(person, quote=True)}">
       <select name="status">{options}</select>
-      <button class="btn btn-ghost btn-sm" type="submit">Status speichern</button>
+      <button class="btn btn-ghost btn-sm" type="submit">{tr("housekeeping.save_status")}</button>
     </form>"""
 
 
@@ -465,11 +466,11 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
           <div class="admin-section-head">
             <div>
               <h3>{escape(person)}</h3>
-              <p class="muted">{item['entries']} Einträge · {_hours(item['hours'])} h · {_money(item['cost'])}</p>
+              <p class="muted">{item['entries']} {tr("housekeeping.entries")} · {_hours(item['hours'])} h · {_money(item['cost'])}</p>
             </div>
             <div class="housekeeping-card-badges">
               {_status_badge(item.get("status", "open"))}
-              <span class="badge ok">aktuell {_money(item['hourly_wage'])}/h</span>
+              <span class="badge ok">{tr("housekeeping.current_rate")} {_money(item['hourly_wage'])}/h</span>
             </div>
           </div>
           {_housekeeping_warning(item)}
@@ -480,8 +481,8 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
           <details class="housekeeping-subdetails">
             <summary class="housekeeping-subsummary">
               <span>
-                <strong>Stundensatz und Historie</strong>
-                <small>Gültigkeit und vergangene Sätze</small>
+                <strong>{tr("housekeeping.wage_history")}</strong>
+                <small>{tr("housekeeping.wage_history_hint")}</small>
               </span>
               <span class="details-caret">▾</span>
             </summary>
@@ -491,18 +492,18 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
                 <input type="hidden" name="month" value="{escape(month, quote=True)}">
                 <input type="hidden" name="person" value="{escape(person, quote=True)}">
                 <div class="form-group">
-                  <label>Stundenlohn</label>
+                  <label>{tr("housekeeping.hourly_wage")}</label>
                   <input name="hourly_wage" inputmode="decimal" value="{item['hourly_wage']:.2f}">
                 </div>
                 <div class="form-group">
-                  <label>Gültig ab</label>
+                  <label>{tr("housekeeping.valid_from")}</label>
                   <input type="date" name="valid_from" value="{date.today().isoformat()}" required>
                 </div>
                 <div class="form-group">
-                  <label>Gültig bis</label>
+                  <label>{tr("housekeeping.valid_to")}</label>
                   <input type="date" name="valid_to">
                 </div>
-                <button class="btn btn-ghost btn-sm" type="submit">Stundensatz hinzufügen</button>
+                <button class="btn btn-ghost btn-sm" type="submit">{tr("housekeeping.add_rate")}</button>
               </form>
               {_wage_history(base, person, actor, month)}
             </div>
@@ -516,8 +517,8 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
         <details class="card housekeeping-foldout">
           <summary class="housekeeping-foldout-head">
             <span>
-              <strong>Arbeitszeit erfassen</strong>
-              <small>Neue Arbeitszeit für eine Haushaltshilfe eintragen</small>
+              <strong>{tr("housekeeping.record_worktime")}</strong>
+              <small>{tr("housekeeping.record_worktime_hint")}</small>
             </span>
             <span class="details-caret">▾</span>
           </summary>
@@ -529,27 +530,27 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
     if not helpers:
         helper_cards = """
         <div class="card">
-          <h3>Keine Haushaltshilfen angelegt</h3>
+          <h3>{tr("housekeeping.no_housekeepers")}</h3>
           <p class="muted" style="margin-top:0.25rem">
-            Lege in den Personeneinstellungen zuerst mindestens eine Person mit Rolle Haushaltshilfe fest.
+            {tr("housekeeping.no_housekeepers_hint")}
           </p>
         </div>"""
 
     content = f"""
     <div class="hero-card page-hero">
       <div>
-        <div class="hero-eyebrow">Haushaltshilfen</div>
-        <div class="hero-title">Arbeitszeiten</div>
-        <div class="muted">Monatsübersicht, Stundensätze und Korrekturen.</div>
+        <div class="hero-eyebrow">{tr("housekeeping.housekeepers")}</div>
+        <div class="hero-title">{tr("housekeeping.work_times")}</div>
+        <div class="muted">{tr("housekeeping.monthly_overview")}</div>
       </div>
       <div class="page-hero-actions">
         <span class="badge ok">{escape(month)}</span>
       </div>
     </div>
     <div class="housekeeping-summary-grid">
-      <div class="today-stat"><div class="today-value">{_hours(summary['total_hours'])}</div><div class="today-label">Stunden</div></div>
-      <div class="today-stat"><div class="today-value">{_money(summary['total_cost'])}</div><div class="today-label">Gesamtkosten</div></div>
-      <div class="today-stat"><div class="today-value">{len(helpers)}</div><div class="today-label">Haushaltshilfen</div></div>
+      <div class="today-stat"><div class="today-value">{_hours(summary['total_hours'])}</div><div class="today-label">{tr("housekeeping.hours")}</div></div>
+      <div class="today-stat"><div class="today-value">{_money(summary['total_cost'])}</div><div class="today-label">{tr("housekeeping.total_cost")}</div></div>
+      <div class="today-stat"><div class="today-value">{len(helpers)}</div><div class="today-label">{tr("housekeeping.housekeepers")}</div></div>
     </div>
     {_month_nav(base, month, actor)}
     {_monthly_cards(summary, base, month)}
@@ -618,15 +619,14 @@ async def housekeeping_log(request: Request, month: str = "", p: str = ""):
     entries = _entries_for_person(base, actor, actor, month, read_only=read_only)
     psuffix = person_suffix(actor)
     entry_form = (
-        '<div class="housekeeping-warning">Dieser Monat ist als bezahlt markiert. '
-        'Arbeitszeiten sind nur noch lesend sichtbar.</div>'
+        f'<div class="housekeeping-warning">{tr("housekeeping.paid_readonly")}</div>'
         if read_only else
         f"""
     <details class="card housekeeping-foldout">
       <summary class="housekeeping-foldout-head">
         <span>
-          <strong>Arbeitszeit eintragen</strong>
-          <small>Neue Arbeitszeit für diesen Monat erfassen</small>
+          <strong>{tr("housekeeping.record_time")}</strong>
+          <small>{tr("housekeeping.record_time_month")}</small>
         </span>
         <span class="details-caret">▾</span>
       </summary>
@@ -638,31 +638,31 @@ async def housekeeping_log(request: Request, month: str = "", p: str = ""):
     content = f"""
     <div class="hero-card page-hero">
       <div>
-        <div class="hero-eyebrow">Arbeitszeit</div>
+        <div class="hero-eyebrow">{tr("housekeeping.worktime")}</div>
         <div class="hero-title">{escape(actor)}</div>
-        <div class="muted">Erfasster Stand für {escape(month)}</div>
+        <div class="muted">{tr("housekeeping.captured_state")} {escape(month)}</div>
       </div>
       <div class="page-hero-actions">
         {_status_badge(billing.get("status", "open"))}
-        <a class="btn btn-ghost btn-sm" href="{base}{psuffix}">Zuhause</a>
+        <a class="btn btn-ghost btn-sm" href="{base}{psuffix}">{tr("nav.home")}</a>
       </div>
     </div>
     <div class="housekeeping-summary-grid">
-      <div class="today-stat"><div class="today-value">{_hours(item['hours'])}</div><div class="today-label">Stunden</div></div>
-      <div class="today-stat"><div class="today-value">{_money(item['cost'])}</div><div class="today-label">Erarbeitet</div></div>
-      <div class="today-stat"><div class="today-value">{_money(item['hourly_wage'])}</div><div class="today-label">aktueller Satz</div></div>
+      <div class="today-stat"><div class="today-value">{_hours(item['hours'])}</div><div class="today-label">{tr("housekeeping.hours")}</div></div>
+      <div class="today-stat"><div class="today-value">{_money(item['cost'])}</div><div class="today-label">{tr("housekeeping.earned")}</div></div>
+      <div class="today-stat"><div class="today-value">{_money(item['hourly_wage'])}</div><div class="today-label">{tr("housekeeping.current_rate")}</div></div>
     </div>
     <form class="month-filter" method="get" action="{base}housekeeping/log">
       <input type="hidden" name="p" value="{escape(actor, quote=True)}">
-      <label>Monat</label>
+      <label>{tr("housekeeping.month")}</label>
       <input type="month" name="month" value="{escape(month, quote=True)}">
-      <button class="btn btn-ghost btn-sm" type="submit">Anzeigen</button>
+      <button class="btn btn-ghost btn-sm" type="submit">{tr("housekeeping.show")}</button>
     </form>
     {entry_form}
     <div class="card card-flush">
       <div class="score-activity-head">
-        <h3>Erfasste Zeiten</h3>
-        <div class="muted">Du kannst deine Einträge nachträglich korrigieren.</div>
+        <h3>{tr("housekeeping.captured_times")}</h3>
+        <div class="muted">{tr("housekeeping.can_correct")}</div>
       </div>
       {entries}
     </div>

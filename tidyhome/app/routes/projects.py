@@ -79,7 +79,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
     filters += f'<a class="filter-btn {"active" if show == "active" and not room and not grouped_by_person else ""}" href="projects{("?p="+p) if p else ""}">{tr("menu.my_view")}</a>'
     if p in admins:
         filters += f'<a class="filter-btn {"active" if grouped_by_person else ""}" href="projects?scope=people{psuffix}">Nach Personen</a>'
-    filters += f'<a class="filter-btn {"active" if show == "done" else ""}" href="projects?show=done{scope_suffix}{psuffix}">Abgeschlossen ({len(done_projects)})</a>'
+    filters += f'<a class="filter-btn {"active" if show == "done" else ""}" href="projects?show=done{scope_suffix}{psuffix}">{tr("status.done")} ({len(done_projects)})</a>'
     for r in areas:
         active_cls = "active" if room == r and show != "done" else ""
         filters += f'<a class="filter-btn {active_cls}" href="projects?room={r}{scope_suffix}{psuffix}">{r}</a>'
@@ -93,7 +93,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
             f'<div class="empty-icon">📦</div>'
             f'<div style="font-weight:600">{hint}</div>'
             f'<div class="muted" style="font-size:0.8rem;margin-top:0.2rem">'
-            f'Leg ein neues Projekt an, um loszulegen.</div>'
+            f'{tr("project.create")}.</div>'
             f'</div>'
         )
     else:
@@ -141,7 +141,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
     content = f"""
     <div class="hero-card page-hero">
       <div>
-        <div class="hero-eyebrow">Fortschritt planen</div>
+        <div class="hero-eyebrow">{tr("project.progress_plan")}</div>
         <div class="hero-title">{tr("project.projects")}</div>
       </div>
       <div class="page-hero-actions">
@@ -153,7 +153,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
     <div class="today-grid" style="margin-bottom:1rem">
       <div class="today-stat">
         <div class="today-value">{len(active_projects)}</div>
-        <div class="today-label">Offen</div>
+        <div class="today-label">{tr("project.open")}</div>
       </div>
       <div class="today-stat">
         <div class="today-value">{done_step_count}/{visible_step_count}</div>
@@ -161,7 +161,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
       </div>
       <div class="today-stat">
         <div class="today-value">{len(done_projects)}</div>
-        <div class="today-label">Fertig</div>
+        <div class="today-label">{tr("project.done")}</div>
       </div>
     </div>
     {filters}
@@ -175,37 +175,37 @@ async def project_new_form(request: Request, p: str = ""):
     areas   = await get_areas()
     persons = await get_persons()
     room_opts   = "".join(f'<option value="{r}">{r}</option>' for r in areas)
-    person_opts = '<option value="">— Niemand —</option>' + "".join(
+    person_opts = f'<option value="">— {tr("common.none")} —</option>' + "".join(
         f'<option value="{pn}">{pn}</option>' for pn in persons)
     content = f"""
     <div class="page-header">
-      <h2>Neues Projekt</h2>
-      <a class="icon-btn" href="projects{_p_suffix(p)}" title="Abbrechen">{_icon("chevron_l", 20)}</a>
+      <h2>{tr("project.new")}</h2>
+      <a class="icon-btn" href="projects{_p_suffix(p)}" title="{tr("common.cancel")}">{_icon("chevron_l", 20)}</a>
     </div>
     <div class="card">
       <form method="post" action="projects">
         <input type="hidden" name="return_p" value="{p}">
         <div class="form-group">
-          <label>Projektname</label>
-          <input name="name" required placeholder="z.B. Keller aufräumen">
+          <label>{tr("project.name")}</label>
+          <input name="name" required placeholder="{tr("form.project_name_placeholder")}">
         </div>
         <div class="grid-2">
           <div class="form-group">
-            <label>Raum</label>
+            <label>{tr("form.room")}</label>
             <select name="room">{room_opts}</select>
           </div>
           <div class="form-group">
-            <label>Zugewiesen an</label>
+            <label>{tr("form.assigned_to")}</label>
             <select name="assigned_to">{person_opts}</select>
           </div>
         </div>
         <div class="form-group">
-          <label>Beschreibung (optional)</label>
-          <input name="description" placeholder="Was soll erreicht werden?">
+          <label>{tr("form.description_optional")}</label>
+          <input name="description" placeholder="{tr("form.project_description_placeholder")}">
         </div>
         {_icon_chooser("", "icon", include_room_icons=True)}
-        <button class="btn btn-primary btn-full" type="submit">Projekt anlegen</button>
-        <a class="btn btn-ghost btn-full" href="projects{_p_suffix(p)}" style="margin-top:0.5rem">Abbrechen</a>
+        <button class="btn btn-primary btn-full" type="submit">{tr("project.create")}</button>
+        <a class="btn btn-ghost btn-full" href="projects{_p_suffix(p)}" style="margin-top:0.5rem">{tr("common.cancel")}</a>
       </form>
     </div>"""
     return render(content, request, page="projects", person=p)
@@ -241,7 +241,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
     person_names = list(persons)
     if default_done_by and default_done_by not in person_names:
         person_names.insert(0, default_done_by)
-    person_opts = f'<option value=""{_selected("", default_done_by)}>— Niemand —</option>' + "".join(
+    person_opts = f'<option value=""{_selected("", default_done_by)}>— {tr("common.none")} —</option>' + "".join(
         f'<option value="{pn}"{_selected(pn, default_done_by)}>{pn}</option>'
         for pn in person_names)
 
@@ -252,7 +252,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
         step_person_names = list(person_names)
         if assignee and assignee not in step_person_names:
             step_person_names.insert(0, assignee)
-        step_person_opts = f'<option value=""{_selected("", assignee)}>— Niemand —</option>' + "".join(
+        step_person_opts = f'<option value=""{_selected("", assignee)}>— {tr("common.none")} —</option>' + "".join(
             f'<option value="{pn}"{_selected(pn, assignee)}>{pn}</option>'
             for pn in step_person_names)
         step_rows += (
@@ -266,7 +266,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
         step_rows = (
             '<div class="empty">'
             '<div class="empty-icon">📝</div>'
-            '<div>Noch keine Schritte. Füge unten den ersten hinzu.</div>'
+            f'<div>{tr("project.no_steps")}</div>'
             '</div>'
         )
 
@@ -282,13 +282,13 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
       </div>
       <a class="btn btn-ghost btn-sm" href="{base}projects/{project_id}/edit{_p_suffix(p)}"
          style="display:flex;align-items:center;gap:0.3rem">
-        {_icon("edit", 14, "var(--primary-dark)")} Bearbeiten
+        {_icon("edit", 14, "var(--primary-dark)")} {tr("common.edit")}
       </a>
     </div>
     {desc}
     <div class="card project-progress-card">
       <div class="project-progress-head">
-        <span>{done} von {total} Schritten</span><span>{pct}%</span>
+        <span>{done} von {total} {tr("project.steps")}</span><span>{pct}%</span>
       </div>
       <div class="progress-track">
         <div class="progress-fill {fill_cls}" style="width:{pct}%"></div>
@@ -298,28 +298,28 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
     <div style="margin-bottom:1rem">{step_rows}</div>
     {comments_card("project", project_id, f"projects/{project_id}/comments", p)}
     <div class="card">
-      <h3 style="margin-bottom:0.75rem">Schritt hinzufügen</h3>
+      <h3 style="margin-bottom:0.75rem">{tr("project.add_step")}</h3>
       <form method="post" action="{base}projects/{project_id}/steps">
         <input type="hidden" name="return_p" value="{p}">
         <div class="grid-2">
           <div class="form-group">
-            <label>Beschreibung</label>
-            <input name="name" required placeholder="z.B. Kartons sortieren">
+            <label>{tr("form.description")}</label>
+            <input name="name" required placeholder="{tr("form.step_name_placeholder")}">
           </div>
           <div class="form-group">
-            <label>Punkte</label>
+            <label>{tr("form.points")}</label>
             <input name="points" type="number" value="5" min="1" max="100">
           </div>
         </div>
         <div class="form-group">
-          <label>Zugewiesen an</label>
+          <label>{tr("form.assigned_to")}</label>
           <select name="assigned_to">{person_opts}</select>
         </div>
         <div class="project-step-add-actions">
           <button class="btn btn-primary btn-sm" type="submit">
-            {_icon("plus", 14, "white")} Hinzufügen
+            {_icon("plus", 14, "white")} {tr("common.add")}
           </button>
-          <a class="btn btn-ghost btn-sm" href="{base}projects">← Alle Projekte</a>
+          <a class="btn btn-ghost btn-sm" href="{base}projects">← {tr("project.all")}</a>
         </div>
       </form>
     </div>"""
@@ -338,39 +338,39 @@ async def project_edit_form(project_id: str, request: Request, p: str = ""):
     room_opts = "".join(
         f'<option value="{r}"{_selected(r, proj.room)}>{r}</option>' for r in areas)
     person_opts = (
-        f'<option value=""{_selected("", proj.assigned_to or "")}>— Niemand —</option>'
+        f'<option value=""{_selected("", proj.assigned_to or "")}>— {tr("common.none")} —</option>'
         + "".join(f'<option value="{pn}"{_selected(pn, proj.assigned_to or "")}>{pn}</option>'
                   for pn in persons))
     content = f"""
     <div class="page-header">
-      <h2>Projekt bearbeiten</h2>
-      <a class="icon-btn" href="{base}projects/{project_id}{_p_suffix(p)}" title="Abbrechen">{_icon("chevron_l", 20)}</a>
+      <h2>{tr("project.edit")}</h2>
+      <a class="icon-btn" href="{base}projects/{project_id}{_p_suffix(p)}" title="{tr("common.cancel")}">{_icon("chevron_l", 20)}</a>
     </div>
     <div class="card">
       <form method="post" action="{base}projects/{project_id}/edit">
         <input type="hidden" name="return_p" value="{p}">
         <div class="form-group">
-          <label>Name</label>
+          <label>{tr("form.name")}</label>
           <input name="name" required value="{proj.name}">
         </div>
         <div class="grid-2">
           <div class="form-group">
-            <label>Raum</label>
+            <label>{tr("form.room")}</label>
             <select name="room">{room_opts}</select>
           </div>
           <div class="form-group">
-            <label>Zugewiesen an</label>
+            <label>{tr("form.assigned_to")}</label>
             <select name="assigned_to">{person_opts}</select>
           </div>
         </div>
         <div class="form-group">
-          <label>Beschreibung</label>
+          <label>{tr("form.description")}</label>
           <input name="description" value="{proj.description or ''}">
         </div>
         {_icon_chooser(proj.icon, "icon", include_room_icons=True)}
-        <button class="btn btn-primary btn-full" type="submit">Speichern</button>
+        <button class="btn btn-primary btn-full" type="submit">{tr("common.save")}</button>
         <a class="btn btn-ghost btn-full" href="{base}projects/{project_id}{_p_suffix(p)}"
-           style="margin-top:0.5rem">Abbrechen</a>
+           style="margin-top:0.5rem">{tr("common.cancel")}</a>
       </form>
     </div>"""
     return render(content, request, page="projects", person=p)
