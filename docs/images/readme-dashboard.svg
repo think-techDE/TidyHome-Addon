@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">TidyHome Dashboard</title>
+  <desc id="desc">Beispielansicht des TidyHome Dashboards mit Statusringen, heutigen Aufgaben und Raumübersicht.</desc>
+  <defs>
+    <style>
+      .bg{fill:#101114}.surface{fill:#17191f;stroke:#30333b;stroke-width:1.5}.surface2{fill:#20232b}.text{fill:#f7f1f3;font-family:Inter,Segoe UI,Arial,sans-serif}.muted{fill:#b9b0b6}.accent{fill:#c86f9a}.success{fill:#66d07f}.danger{fill:#ff6b61}.warning{fill:#f0c65d}.line{stroke:#30333b;stroke-width:1.2}.btn{fill:#c86f9a}.btn2{fill:#17191f;stroke:#7d435d;stroke-width:2}.pill{fill:#1f3a28}.pill2{fill:#3b3020}.photo{fill:#2c3039}.soft{fill:#2a1d28}
+    </style>
+  </defs>
+  <rect class="bg" width="1200" height="760" rx="28"/>
+  <rect x="0" y="0" width="1200" height="86" fill="#17191f"/>
+  <line x1="0" y1="86" x2="1200" y2="86" class="line"/>
+  <rect x="48" y="24" width="42" height="42" rx="10" fill="#e5a5c5"/>
+  <text class="text" x="63" y="53" font-size="22">🏠</text>
+  <text class="text" x="106" y="55" font-size="30" font-weight="800">TidyHome</text>
+  <rect x="965" y="21" width="175" height="45" rx="23" fill="#352431" stroke="#7d435d" stroke-width="2"/>
+  <text class="text" x="1000" y="51" font-size="22" font-weight="800">Ben ▾</text>
+
+  <text class="text" x="50" y="144" font-size="42" font-weight="850">Hallo Ben!</text>
+
+  <g transform="translate(50,180)">
+    <rect class="surface" width="335" height="150" rx="16"/>
+    <circle cx="96" cy="68" r="44" fill="none" stroke="#e9e1e5" stroke-width="10"/>
+    <path d="M96 24 A44 44 0 1 1 59 91" fill="none" stroke="#c86f9a" stroke-width="10" stroke-linecap="round"/>
+    <text class="text" x="79" y="77" font-size="24" font-weight="850">1/2</text>
+    <text class="muted" x="63" y="121" font-size="15" font-weight="800">ERLEDIGT</text>
+  </g>
+  <g transform="translate(432,180)">
+    <rect class="surface" width="335" height="150" rx="16"/>
+    <circle cx="96" cy="68" r="44" fill="none" stroke="#e9e1e5" stroke-width="10"/>
+    <path d="M96 24 A44 44 0 0 1 100 24" fill="none" stroke="#66d07f" stroke-width="10" stroke-linecap="round"/>
+    <text class="text" x="89" y="77" font-size="24" font-weight="850">0</text>
+    <text class="muted" x="54" y="121" font-size="15" font-weight="800">ÜBERFÄLLIG</text>
+  </g>
+  <g transform="translate(814,180)">
+    <rect class="surface" width="335" height="150" rx="16"/>
+    <circle cx="96" cy="68" r="44" fill="none" stroke="#66d07f" stroke-width="10"/>
+    <text class="text" x="69" y="77" font-size="24" font-weight="850">100%</text>
+    <text class="muted" x="65" y="121" font-size="15" font-weight="800">ZUSTAND</text>
+  </g>
+
+  <rect x="50" y="358" width="520" height="54" rx="14" class="btn"/>
+  <text class="text" x="265" y="394" font-size="22" font-weight="850">+ Aufgabe</text>
+  <rect x="595" y="358" width="554" height="54" rx="14" class="btn2"/>
+  <text x="842" y="394" font-size="22" font-weight="850" fill="#ffd2e3">+ Projekt</text>
+
+  <text class="text" x="50" y="477" font-size="30" font-weight="850">Nächste Aufgaben</text>
+  <text x="1078" y="477" font-size="22" font-weight="800" fill="#d680aa">Alle ›</text>
+  <rect x="50" y="500" width="1099" height="178" rx="18" class="surface"/>
+  <g transform="translate(78,527)">
+    <circle cx="45" cy="45" r="40" fill="#20232b"/>
+    <text x="26" y="58" font-size="32">🗑️</text>
+    <text class="text" x="100" y="38" font-size="28" font-weight="850">Biomüll</text>
+    <text class="muted" x="212" y="38" font-size="24" font-weight="700">· Morgen</text>
+    <rect x="542" y="8" width="112" height="38" rx="19" class="pill"/>
+    <text x="568" y="33" font-size="18" font-weight="850" fill="#72dd88">Geplant</text>
+    <text x="690" y="37" font-size="28" fill="#66d07f">✓</text>
+    <text x="746" y="37" font-size="28" fill="#b9b0b6">◷</text>
+    <text x="815" y="37" font-size="28" fill="#b9b0b6">✎</text>
+    <text x="882" y="37" font-size="28" fill="#ff6b61">□</text>
+  </g>
+  <line x1="50" y1="589" x2="1149" y2="589" class="line"/>
+  <g transform="translate(78,607)">
+    <circle cx="45" cy="45" r="40" fill="#20232b"/>
+    <text x="24" y="58" font-size="31">🚗</text>
+    <text class="text" x="100" y="38" font-size="28" font-weight="850">Auto saugen</text>
+    <text class="muted" x="270" y="38" font-size="24" font-weight="700">· In 29 Tagen</text>
+    <rect x="542" y="7" width="112" height="38" rx="19" class="pill"/>
+    <text x="568" y="32" font-size="18" font-weight="850" fill="#72dd88">Geplant</text>
+    <rect x="560" y="52" width="85" height="32" rx="16" class="pill2"/>
+    <text x="584" y="74" font-size="16" font-weight="850" fill="#f0c65d">Mittel</text>
+    <text x="690" y="55" font-size="28" fill="#66d07f">✓</text>
+    <text x="746" y="55" font-size="28" fill="#b9b0b6">◷</text>
+    <text x="815" y="55" font-size="28" fill="#b9b0b6">✎</text>
+    <text x="882" y="55" font-size="28" fill="#ff6b61">□</text>
+  </g>
+</svg>
