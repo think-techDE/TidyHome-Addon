@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-10 · Aktuelle Version: 1.3.56
+Stand: 2026-05-10 · Aktuelle Version: 1.3.57
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -44,6 +44,12 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.57
+
+- Haushaltshilfe-Dashboard und persönliches Arbeitszeit-Log in `housekeeping_ui.py` ausgelagert
+- `routes/housekeeping.py` weiter auf Datenfluss, Rechteprüfung und Responses reduziert
+- Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
 
 ### v1.3.56
 

@@ -21,7 +21,7 @@ Technik:
 - `tidyhome/app/storage.py`: TinyDB-Zugriff und Geschäftslogik
 - `tidyhome/app/housekeeping_format.py`: Monats-, Status-, Stunden- und Geldformatierung für Haushaltshilfen
 - `tidyhome/app/housekeeping_exports.py`: CSV-/PDF-Abrechnungsexporte für Haushaltshilfen
-- `tidyhome/app/housekeeping_ui.py`: Formulare, Monatskarten, Zeitlisten und UI-Bausteine für Haushaltshilfen
+- `tidyhome/app/housekeeping_ui.py`: Formulare, Monatskarten, Zeitlisten und Seitenkomposition für Haushaltshilfen
 - `tidyhome/app/render.py`: HTML-Layout, Navigation, Icons, gemeinsame Render-Helfer
 - `tidyhome/app/task_ui.py`: UI-Helfer für Wochenleiste, Aufgaben-Historie und Vorlagenformulare
 - `tidyhome/app/ui_cards.py`: Foto- und Notizkarten

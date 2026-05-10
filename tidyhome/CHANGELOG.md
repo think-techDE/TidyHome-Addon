@@ -1,3 +1,9 @@
+## 1.3.57
+
+- Technik: Haushaltshilfe-Dashboard und persönliches Arbeitszeit-Log in `housekeeping_ui.py` ausgelagert
+- Technik: `routes/housekeeping.py` weiter auf Datenfluss, Rechteprüfung und Responses reduziert
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.56
 
 - Technik: Haushaltshilfe-UI-Helfer aus der Route in `housekeeping_ui.py` ausgelagert

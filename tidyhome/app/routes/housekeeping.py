@@ -1,26 +1,12 @@
-from datetime import date
-from html import escape
-
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from housekeeping_exports import (housekeeping_csv_content,
                                   housekeeping_export_filename,
                                   housekeeping_pdf_content)
-from housekeeping_format import (hours as _hours, money as _money,
-                                 month_from_date as _month_from_date,
-                                 month_value as _month_value,
-                                 status_badge as _status_badge)
-from housekeeping_ui import (billing_status_form as _billing_status_form,
-                             entries_for_person as _entries_for_person,
-                             entry_form as _entry_form,
-                             export_actions as _export_actions,
-                             housekeeping_warning as _housekeeping_warning,
-                             month_nav as _month_nav,
-                             monthly_cards as _monthly_cards,
-                             quick_time_script as _quick_time_script,
-                             wage_history as _wage_history)
-from i18n import tr
+from housekeeping_format import (month_from_date as _month_from_date,
+                                 month_value as _month_value)
+from housekeeping_ui import dashboard_content, log_content
 from render import _base, person_suffix, render, resolve_person
 from storage import (add_housekeeping_entry, delete_housekeeping_entry, get_admins,
                      get_housekeeping_billing,
@@ -67,106 +53,7 @@ async def housekeeping_dashboard(request: Request, month: str = "", p: str = "")
     month = _month_value(month)
     helpers = sorted(list_people_by_role("housekeeper"))
     summary = get_housekeeping_month_summary(month=month)
-
-    helper_cards = ""
-    for item in summary["people"]:
-        person = item["person"]
-        helper_cards += f"""
-        <section class="card housekeeping-person-card">
-          <div class="admin-section-head">
-            <div>
-              <h3>{escape(person)}</h3>
-              <p class="muted">{item['entries']} {tr("housekeeping.entries")} · {_hours(item['hours'])} h · {_money(item['cost'])}</p>
-            </div>
-            <div class="housekeeping-card-badges">
-              {_status_badge(item.get("status", "open"))}
-              <span class="badge ok">{tr("housekeeping.current_rate")} {_money(item['hourly_wage'])}/h</span>
-            </div>
-          </div>
-          {_housekeeping_warning(item)}
-          <div class="billing-tools">
-            {_billing_status_form(base, person, month, actor, item.get("status", "open"))}
-            {_export_actions(base, person, month)}
-          </div>
-          <details class="housekeeping-subdetails">
-            <summary class="housekeeping-subsummary">
-              <span>
-                <strong>{tr("housekeeping.wage_history")}</strong>
-                <small>{tr("housekeeping.wage_history_hint")}</small>
-              </span>
-              <span class="details-caret">▾</span>
-            </summary>
-            <div class="housekeeping-subbody">
-              <form class="wage-form" method="post" action="{base}housekeeping/wage">
-                <input type="hidden" name="return_p" value="{escape(actor, quote=True)}">
-                <input type="hidden" name="month" value="{escape(month, quote=True)}">
-                <input type="hidden" name="person" value="{escape(person, quote=True)}">
-                <div class="form-group">
-                  <label>{tr("housekeeping.hourly_wage")}</label>
-                  <input name="hourly_wage" inputmode="decimal" value="{item['hourly_wage']:.2f}">
-                </div>
-                <div class="form-group">
-                  <label>{tr("housekeeping.valid_from")}</label>
-                  <input type="date" name="valid_from" value="{date.today().isoformat()}" required>
-                </div>
-                <div class="form-group">
-                  <label>{tr("housekeeping.valid_to")}</label>
-                  <input type="date" name="valid_to">
-                </div>
-                <button class="btn btn-ghost btn-sm" type="submit">{tr("housekeeping.add_rate")}</button>
-              </form>
-              {_wage_history(base, person, actor, month)}
-            </div>
-          </details>
-          <div class="work-entry-list">{_entries_for_person(base, person, actor, month)}</div>
-        </section>"""
-
-    entry_card = ""
-    if helpers:
-        entry_card = f"""
-        <details class="card housekeeping-foldout">
-          <summary class="housekeeping-foldout-head">
-            <span>
-              <strong>{tr("housekeeping.record_worktime")}</strong>
-              <small>{tr("housekeeping.record_worktime_hint")}</small>
-            </span>
-            <span class="details-caret">▾</span>
-          </summary>
-          <div class="housekeeping-foldout-body">
-            {_entry_form(base, helpers, actor, month)}
-          </div>
-        </details>"""
-
-    if not helpers:
-        helper_cards = """
-        <div class="card">
-          <h3>{tr("housekeeping.no_housekeepers")}</h3>
-          <p class="muted" style="margin-top:0.25rem">
-            {tr("housekeeping.no_housekeepers_hint")}
-          </p>
-        </div>"""
-
-    content = f"""
-    <div class="hero-card page-hero">
-      <div>
-        <div class="hero-eyebrow">{tr("housekeeping.housekeepers")}</div>
-        <div class="hero-title">{tr("housekeeping.work_times")}</div>
-        <div class="muted">{tr("housekeeping.monthly_overview")}</div>
-      </div>
-      <div class="page-hero-actions">
-        <span class="badge ok">{escape(month)}</span>
-      </div>
-    </div>
-    <div class="housekeeping-summary-grid">
-      <div class="today-stat"><div class="today-value">{_hours(summary['total_hours'])}</div><div class="today-label">{tr("housekeeping.hours")}</div></div>
-      <div class="today-stat"><div class="today-value">{_money(summary['total_cost'])}</div><div class="today-label">{tr("housekeeping.total_cost")}</div></div>
-      <div class="today-stat"><div class="today-value">{len(helpers)}</div><div class="today-label">{tr("housekeeping.housekeepers")}</div></div>
-    </div>
-    {_month_nav(base, month, actor)}
-    {_monthly_cards(summary, base, month)}
-    {entry_card}
-    <div class="admin-stack">{helper_cards}</div>
-    {_quick_time_script()}"""
+    content = dashboard_content(base, actor, month, helpers, summary)
     return render(content, request, page="home", person=actor)
 
 
@@ -213,57 +100,7 @@ async def housekeeping_log(request: Request, month: str = "", p: str = ""):
     }
     billing = get_housekeeping_billing(actor, month)
     read_only = billing.get("status") == "paid" and not _can_manage(actor)
-    entries = _entries_for_person(base, actor, actor, month, read_only=read_only)
-    psuffix = person_suffix(actor)
-    entry_form = (
-        f'<div class="housekeeping-warning">{tr("housekeeping.paid_readonly")}</div>'
-        if read_only else
-        f"""
-    <details class="card housekeeping-foldout">
-      <summary class="housekeeping-foldout-head">
-        <span>
-          <strong>{tr("housekeeping.record_time")}</strong>
-          <small>{tr("housekeeping.record_time_month")}</small>
-        </span>
-        <span class="details-caret">▾</span>
-      </summary>
-      <div class="housekeeping-foldout-body">
-        {_entry_form(base, [actor], actor, month, force_person=actor)}
-      </div>
-    </details>"""
-    )
-    content = f"""
-    <div class="hero-card page-hero">
-      <div>
-        <div class="hero-eyebrow">{tr("housekeeping.worktime")}</div>
-        <div class="hero-title">{escape(actor)}</div>
-        <div class="muted">{tr("housekeeping.captured_state")} {escape(month)}</div>
-      </div>
-      <div class="page-hero-actions">
-        {_status_badge(billing.get("status", "open"))}
-        <a class="btn btn-ghost btn-sm" href="{base}{psuffix}">{tr("nav.home")}</a>
-      </div>
-    </div>
-    <div class="housekeeping-summary-grid">
-      <div class="today-stat"><div class="today-value">{_hours(item['hours'])}</div><div class="today-label">{tr("housekeeping.hours")}</div></div>
-      <div class="today-stat"><div class="today-value">{_money(item['cost'])}</div><div class="today-label">{tr("housekeeping.earned")}</div></div>
-      <div class="today-stat"><div class="today-value">{_money(item['hourly_wage'])}</div><div class="today-label">{tr("housekeeping.current_rate")}</div></div>
-    </div>
-    <form class="month-filter" method="get" action="{base}housekeeping/log">
-      <input type="hidden" name="p" value="{escape(actor, quote=True)}">
-      <label>{tr("housekeeping.month")}</label>
-      <input type="month" name="month" value="{escape(month, quote=True)}">
-      <button class="btn btn-ghost btn-sm" type="submit">{tr("housekeeping.show")}</button>
-    </form>
-    {entry_form}
-    <div class="card card-flush">
-      <div class="score-activity-head">
-        <h3>{tr("housekeeping.captured_times")}</h3>
-        <div class="muted">{tr("housekeeping.can_correct")}</div>
-      </div>
-      {entries}
-    </div>
-    {_quick_time_script()}"""
+    content = log_content(base, actor, month, item, billing, read_only)
     return render(content, request, page="home", person=actor)
 
 
