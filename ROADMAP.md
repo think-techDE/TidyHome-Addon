@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-10 · Aktuelle Version: 1.3.62
+Stand: 2026-05-11 · Aktuelle Version: 1.3.63
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -35,6 +35,7 @@ Die Codebasis ist inzwischen modularisiert:
 - `task_ui.py` enthält UI-Helfer für Wochenleiste, Aufgaben-Historie und Vorlagenformulare
 - `task_actions.py` enthält Aufgabenaktionen ohne eigenes UI, z. B. initiale Notizen und Fotos
 - `task_forms.py` enthält den Renderer für Aufgabenformulare
+- `settings_ui.py`, `settings_exports.py` und `settings_admin_ui.py` trennen Personen-Einstellungen, Export-Responses und Admin-Seitenaufbau
 - `ui_cards.py` enthält Foto- und Notizkarten
 - `ui_helpers.py` enthält generische Request-, Datums- und UI-Helfer
 - `ui_icons.py` enthält OpenMoji-/SVG-Icon-Daten und Icon-Renderer
@@ -52,6 +53,14 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.63
+
+- Personen-Einstellungs-Karten aus `routes/settings.py` in `settings_ui.py` ausgelagert
+- CSV-/JSON-Export-Responses in `settings_exports.py` gebündelt
+- Admin-Seitenaufbau aus `routes/settings.py` in `settings_admin_ui.py` ausgelagert
+- `routes/settings.py` bleibt für Routen, Rechteprüfung, Formularauswertung und Redirects zuständig
+- Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
 
 ### v1.3.62
 

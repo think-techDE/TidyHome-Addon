@@ -1,3 +1,11 @@
+## 1.3.63
+
+- Technik: Personen-Einstellungs-Karten aus `routes/settings.py` in `settings_ui.py` ausgelagert
+- Technik: CSV-/JSON-Export-Responses in `settings_exports.py` gebündelt
+- Technik: Admin-Seitenaufbau aus `routes/settings.py` in `settings_admin_ui.py` ausgelagert
+- Technik: `routes/settings.py` bleibt für Routen, Rechteprüfung, Formularauswertung und Redirects zuständig
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.62
 
 - Technik: Aufgabenformular-Renderer aus `routes/tasks.py` in `task_forms.py` ausgelagert
