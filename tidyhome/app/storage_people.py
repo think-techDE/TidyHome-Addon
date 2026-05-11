@@ -157,22 +157,13 @@ def score_export_rows() -> list[dict]:
 
 
 def filter_tasks_by_role(tasks: list, person: str, admins: set[str]) -> list:
-    """Filtert Aufgaben nach Rolle der Person.
-    Standardansichten sind persönlich; Admin-Rechte werden in expliziten
-    Gruppierungsansichten ausgewertet.
-    Kind mit Berechtigung: eigene + andere Kinder.
-    Sonst: nur eigene."""
-    if not person:
-        return tasks
-    cfg = get_person_settings(person)
-    role = cfg.get("role", "member")
-    if role == "child" and cfg.get("can_see_children"):
-        child_persons = list_people_by_role("child")
-        return [t for t in tasks
-                if person in t.assigned_to
-                or any(p in child_persons for p in t.assigned_to)]
-    # member / housekeeper / child ohne Berechtigung
-    return [t for t in tasks if person in t.assigned_to]
+    """Kompatibilitaets-Wrapper fuer alte Imports.
+
+    Neue Routen nutzen `access.visible_tasks_for_person` direkt.
+    """
+    from access import visible_tasks_for_person
+
+    return visible_tasks_for_person(tasks, person, admins)
 
 
 def get_person_stats(person: str) -> dict:

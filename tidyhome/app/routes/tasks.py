@@ -5,6 +5,8 @@ from urllib.parse import quote
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from access import (can_group_tasks_by_person, filter_hidden_rooms,
+                    task_group_people, visible_tasks_for_person)
 from ha_client import get_areas, get_persons
 from i18n import tr
 from models import Task
@@ -14,9 +16,8 @@ from render import (_base, _icon, _task_icon, format_date_de, interval_label,
                     person_suffix, render, resolve_person, task_row)
 from storage import (add_comment, add_photo, create_task, create_task_from_template,
                      delete_photo, delete_task, delete_task_template,
-                     edit_task, filter_tasks_by_role,
-                     get_admins, get_person_settings, get_task, get_vacation_mode,
-                     is_vacation_mode_active, list_people_by_role,
+                     edit_task, get_admins, get_task, get_vacation_mode,
+                     is_vacation_mode_active,
                      list_task_history, list_task_templates, list_tasks, mark_done,
                      pause_task, reactivate_task, save_task_template, snooze_task,
                      update_task_template)
@@ -42,11 +43,7 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     tasks = list_tasks(room=room, assigned_to=person,
                        overdue_only=(overdue == "1"), effort=effort or None)
 
-    # Hidden rooms
-    if p:
-        hidden = set(get_person_settings(p).get("hidden_rooms", []))
-        if hidden:
-            tasks = [t for t in tasks if t.room not in hidden]
+    tasks = filter_hidden_rooms(tasks, p)
 
     areas = await get_areas()
     psuffix = f"&p={p}" if p else ""
@@ -64,18 +61,10 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
     filters += '</div>'
 
     # Grouped view for parent/admin + room filter
-    cfg_p = get_person_settings(p) if p else {}
-    role_p = cfg_p.get("role", "member")
-    show_grouped = room and p and (p in admins or role_p == "parent")
-
-    if show_grouped and role_p == "parent" and p not in admins:
-        child_persons = list_people_by_role("child")
-        tasks = [
-            t for t in tasks
-            if p in t.assigned_to or any(pn in child_persons for pn in t.assigned_to)
-        ]
-    elif not show_grouped:
-        tasks = filter_tasks_by_role(tasks, p, admins)
+    show_grouped = bool(room and can_group_tasks_by_person(p, admins))
+    tasks = visible_tasks_for_person(
+        tasks, p, admins, include_managed=show_grouped
+    )
 
     vacation_active = is_vacation_mode_active(p)
     vacation_until = get_vacation_mode(p).get("until", "") if vacation_active else ""
@@ -104,11 +93,8 @@ async def tasks_list(request: Request, room: str = None, person: str = None,
         from collections import defaultdict
         grouped: dict[str, list[Task]] = defaultdict(list)
         for t in tasks:
-            if t.assigned_to:
-                for pn in t.assigned_to:
-                    grouped[pn].append(t)
-            else:
-                grouped["— Nicht zugeordnet —"].append(t)
+            for person_name in task_group_people(t, p, admins):
+                grouped[person_name].append(t)
         for person_name, ptasks in sorted(grouped.items()):
             rows += (
                 f'<div style="padding:0.5rem 1.25rem;font-size:0.72rem;font-weight:700;'
@@ -302,12 +288,8 @@ async def task_template_delete(template_id: str, request: Request, p: str = ""):
 async def tasks_history(request: Request, p: str = ""):
     p = resolve_person(request, p)
     admins = get_admins()
-    tasks = list_task_history()
-    if p:
-        hidden = set(get_person_settings(p).get("hidden_rooms", []))
-        if hidden:
-            tasks = [t for t in tasks if t.room not in hidden]
-    tasks = filter_tasks_by_role(tasks, p, admins)
+    tasks = filter_hidden_rooms(list_task_history(), p)
+    tasks = visible_tasks_for_person(tasks, p, admins)
     rows = "".join(_task_history_row(t, p) for t in tasks)
     if not rows:
         rows = (

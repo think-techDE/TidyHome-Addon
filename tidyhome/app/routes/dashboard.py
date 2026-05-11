@@ -3,12 +3,14 @@ from datetime import date
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
+from access import (can_group_tasks_by_person, filter_hidden_rooms,
+                    hidden_rooms_for_person, is_housekeeper,
+                    visible_projects_for_person, visible_tasks_for_person)
 from ha_client import get_areas
 from i18n import tr
 from render import (_base, _icon, _ring_chart, _room_icon,
                     person_suffix, render, resolve_person, task_row)
-from storage import (filter_tasks_by_role, get_admins, get_person_settings,
-                     get_housekeeping_month_summary, get_room_icons,
+from storage import (get_admins, get_housekeeping_month_summary, get_room_icons,
                      is_vacation_mode_active, list_projects, list_steps,
                      list_tasks)
 
@@ -47,24 +49,16 @@ async def dashboard(request: Request, p: str = ""):
     admins = set(get_admins())
 
     # Hidden rooms for active person
-    hidden_rooms: set[str] = set()
-    if p:
-        hidden_rooms = set(get_person_settings(p).get("hidden_rooms", []))
+    hidden_rooms = hidden_rooms_for_person(p)
     visible_areas = [r for r in areas if r not in hidden_rooms]
 
     # Role detection for foreign-room logic
-    is_admin = p in admins
-    cfg = get_person_settings(p) if p else {}
-    is_parent = cfg.get("role") == "parent"
-    is_housekeeper = cfg.get("role") == "housekeeper"
-    show_foreign = is_admin or is_parent
-    is_self_housekeeper = bool(is_housekeeper and p and (not ha_user or ha_user == p))
+    show_foreign = can_group_tasks_by_person(p, admins)
+    is_self_housekeeper = bool(is_housekeeper(p) and p and (not ha_user or ha_user == p))
 
     # Own tasks (role-filtered = only assigned to current person)
-    own_tasks_raw = list_tasks()
-    if hidden_rooms:
-        own_tasks_raw = [t for t in own_tasks_raw if t.room not in hidden_rooms]
-    own_tasks = filter_tasks_by_role(own_tasks_raw, p, admins)
+    own_tasks_raw = filter_hidden_rooms(list_tasks(), p)
+    own_tasks = visible_tasks_for_person(own_tasks_raw, p, admins)
     vacation_active = is_vacation_mode_active(p)
     due_relevant_tasks = [
         t for t in own_tasks
@@ -72,18 +66,8 @@ async def dashboard(request: Request, p: str = ""):
     ]
 
     # Own projects (filtered to current person)
-    own_projects_raw = list_projects()
-    if hidden_rooms:
-        own_projects_raw = [pr for pr in own_projects_raw if pr.room not in hidden_rooms]
-    if p:
-        own_projects = [
-            pr for pr in own_projects_raw
-            if pr.assigned_to == p
-            or any((s.assigned_to or pr.assigned_to or "") == p
-                   for s in list_steps(pr.id))
-        ]
-    else:
-        own_projects = own_projects_raw
+    own_projects_raw = filter_hidden_rooms(list_projects(), p)
+    own_projects = visible_projects_for_person(own_projects_raw, p, list_steps, admins)
 
     # For ring-chart stats use own_tasks
     all_tasks = due_relevant_tasks
@@ -191,14 +175,18 @@ async def dashboard(request: Request, p: str = ""):
 
     # Räume mit nur fremden Aufgaben/Projekten (nur für Admin/Elternteil)
     foreign_room_list: list[str] = []
+    managed_tasks = own_tasks
+    managed_projects = own_projects
     if show_foreign and p:
-        all_tasks_full = own_tasks_raw          # bereits hidden-rooms-gefiltert, ungefiltert nach Person
-        all_proj_full  = own_projects_raw
+        managed_tasks = visible_tasks_for_person(
+            own_tasks_raw, p, admins, include_managed=True
+        )
+        managed_projects = visible_projects_for_person(
+            own_projects_raw, p, list_steps, admins, include_managed=True
+        )
         foreign_rooms_set = (
-            {t.room for t in all_tasks_full if p not in t.assigned_to}
-            | {pr.room for pr in all_proj_full if pr.assigned_to != p
-               and not any((s.assigned_to or pr.assigned_to or "") == p
-                           for s in list_steps(pr.id))}
+            {t.room for t in managed_tasks}
+            | {pr.room for pr in managed_projects}
         ) - own_rooms_set
         foreign_room_list = [r for r in visible_areas if r in foreign_rooms_set]
 
@@ -245,7 +233,7 @@ async def dashboard(request: Request, p: str = ""):
         if foreign_room_list:
             # Für fremde Räume alle Tasks/Projekte dieser Räume anzeigen (nicht nur eigene)
             rows = "".join(
-                _render_room_row(r, own_tasks_raw, own_projects_raw, muted=True)
+                _render_room_row(r, managed_tasks, managed_projects, muted=True)
                 for r in foreign_room_list
             )
             room_block_parts.append(

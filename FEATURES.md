@@ -1,6 +1,6 @@
 # TidyHome - Features
 
-Stand: 2026-05-11 · Version 1.3.63
+Stand: 2026-05-11 · Version 1.3.64
 
 Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 
@@ -122,6 +122,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Admin-Rolle in der UI verwalten
 - [x] Rollen: Elternteil, Kind, Haushaltshilfe und Mitglied
 - [x] Rollenbasierte Sichtbarkeit für Aufgaben und Raumansichten
+- [x] Zentrale Sichtbarkeitsregeln für Dashboard, Aufgaben, Projekte und Haushaltshilfen
 - [x] Räume pro Person individuell ausblendbar
 - [x] Persönliche Einstellungen auf `/settings`
 - [x] Admin-Bereich für Personen, Rollen, Räume und Geräte
@@ -183,6 +184,7 @@ Status: `[x]` umgesetzt · `[ ]` geplant · `[idee]` Idee
 - [x] Initiale Aufgabenaktionen aus der Aufgabenroute in ein eigenes Helfermodul ausgelagert
 - [x] Aufgabenformular-Renderer aus der Aufgabenroute in ein eigenes Modul ausgelagert
 - [x] Personen-Einstellungs-UI, Admin-UI und Export-Responses aus der Settings-Route ausgelagert
+- [x] Rollen-, Sichtbarkeits- und Haushaltshilfe-Zugriffsregeln in `access.py` zentralisiert
 
 ---
 

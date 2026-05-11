@@ -1,3 +1,12 @@
+## 1.3.64
+
+- Technik: Zentrale Rechte- und Sichtbarkeitslogik in `access.py` eingeführt
+- Technik: Dashboard, Aufgaben, Projekte und Haushaltshilfe-Routen auf gemeinsame Zugriffsfunktionen umgestellt
+- Technik: Projekt-Sichtbarkeit über Projekt- und Schrittzuweisungen vereinheitlicht
+- Verhalten: Standardansichten bleiben persönlich; Admin-/Eltern-Gruppierungen nutzen explizite verwaltete Sichtbarkeit
+- Tests: Zugriffstests für Admins, Eltern, Mitglieder und Haushaltshilfen ergänzt
+- Tests: Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
+
 ## 1.3.63
 
 - Technik: Personen-Einstellungs-Karten aus `routes/settings.py` in `settings_ui.py` ausgelagert

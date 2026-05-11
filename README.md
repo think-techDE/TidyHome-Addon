@@ -2,7 +2,7 @@
 
 > Haushalt ruhig organisieren, fair verteilen und motivierend erledigen - direkt in Home Assistant.
 
-![Version](https://img.shields.io/badge/version-1.3.63-b5738a)
+![Version](https://img.shields.io/badge/version-1.3.64-b5738a)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-41bdf5)
 
 TidyHome ist ein Home-Assistant-Add-on für wiederkehrende Haushaltsaufgaben, gemeinsame Ordnungsprojekte, Punkte und persönliche Erinnerungen. Die App läuft über Home Assistant Ingress und ist für die schnelle Nutzung auf Smartphone, Tablet und Dashboard gedacht.
@@ -181,6 +181,7 @@ TidyHome soll sich wie ein ruhiges Werkzeug im Home-Assistant-Umfeld anfühlen: 
 - Admins können Personen, Rollen, Räume und Geräte verwalten
 - Raum-Icons im Admin-Bereich per visueller Auswahl konfigurierbar
 - Rollenbasierte Sichtbarkeit für Elternteil, Kind, Haushaltshilfe und Mitglied
+- Zentrale Zugriffslogik hält Dashboard, Aufgaben, Projekte und Haushaltshilfen konsistent
 - Räume können pro Person individuell ausgeblendet werden
 - Personenmenü mit klar getrennten Bereichen für Ansicht, Einstellungen und Verwaltung
 
@@ -228,7 +229,7 @@ Admin- und Geräteeinstellungen können anschließend direkt in der TidyHome-Obe
 Weitere lokale Prüfung:
 
 ```powershell
-.\.venv\Scripts\python.exe -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\storage.py tidyhome\app\storage_runtime.py tidyhome\app\storage_app.py tidyhome\app\storage_tasks.py tidyhome\app\storage_projects.py tidyhome\app\storage_people.py tidyhome\app\storage_housekeeping.py tidyhome\app\task_actions.py tidyhome\app\task_forms.py tidyhome\app\settings_ui.py tidyhome\app\settings_exports.py tidyhome\app\settings_admin_ui.py tidyhome\app\housekeeping_format.py tidyhome\app\housekeeping_exports.py tidyhome\app\housekeeping_ui.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
+.\.venv\Scripts\python.exe -m py_compile tidyhome\app\main.py tidyhome\app\access.py tidyhome\app\render.py tidyhome\app\storage.py tidyhome\app\storage_runtime.py tidyhome\app\storage_app.py tidyhome\app\storage_tasks.py tidyhome\app\storage_projects.py tidyhome\app\storage_people.py tidyhome\app\storage_housekeeping.py tidyhome\app\task_actions.py tidyhome\app\task_forms.py tidyhome\app\settings_ui.py tidyhome\app\settings_exports.py tidyhome\app\settings_admin_ui.py tidyhome\app\housekeeping_format.py tidyhome\app\housekeeping_exports.py tidyhome\app\housekeeping_ui.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
 git diff --check
 ```
 
@@ -241,6 +242,7 @@ tidyhome/
   app/
     main.py          # App-Setup, Router, Startup
     config.py        # Konfiguration und Logger
+    access.py        # Rollen-, Sichtbarkeits- und Zugriffsregeln
     render.py        # HTML-Layout, Navigation und Render-Helfer
     reminders.py     # Manuelle Erinnerungen
     task_actions.py  # Aufgabenaktionen ohne eigenes UI

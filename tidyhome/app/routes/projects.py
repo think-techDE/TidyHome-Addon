@@ -3,6 +3,10 @@ from urllib.parse import quote
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from access import (can_group_projects_by_person, can_view_project,
+                    filter_hidden_rooms, project_people, project_step_assignee,
+                    project_steps_for_person, visible_project_steps,
+                    visible_projects_for_person)
 from ha_client import get_areas, get_persons
 from i18n import tr
 from models import Project, Step
@@ -11,7 +15,7 @@ from render import (_base, _icon, _icon_chooser, _selected,
                     comments_card, photos_card, project_row, project_step_reminder_form,
                     project_step_row, render, resolve_person)
 from storage import (add_comment, add_photo, add_step, assign_step, complete_step, create_project,
-                     delete_photo, delete_project, delete_step, get_admins, get_person_settings, get_step,
+                     delete_photo, delete_project, delete_step, get_admins, get_step,
                      get_project, list_projects, list_steps, update_project)
 from uploads import selected_photo_upload
 
@@ -22,32 +26,6 @@ def _p_suffix(person: str = "", separator: str = "?") -> str:
     return f"{separator}p={quote(person)}" if person else ""
 
 
-def _step_assignee(step: Step, project: Project) -> str:
-    return step.assigned_to or project.assigned_to or ""
-
-
-def _can_see_project(project: Project, steps: list[Step], person: str, admins: list[str]) -> bool:
-    if not person:
-        return True
-    return project.assigned_to == person or any(_step_assignee(s, project) == person for s in steps)
-
-
-def _visible_steps(project: Project, steps: list[Step], person: str, admins: list[str]) -> list[Step]:
-    if not person:
-        return steps
-    return [s for s in steps if _step_assignee(s, project) == person]
-
-
-def _steps_for_person(project: Project, steps: list[Step], person: str) -> list[Step]:
-    return [s for s in steps if _step_assignee(s, project) == person]
-
-
-def _project_people(project: Project, steps: list[Step]) -> list[str]:
-    people = {project.assigned_to} if project.assigned_to else set()
-    people.update(_step_assignee(s, project) for s in steps if _step_assignee(s, project))
-    return sorted(people) or ["— Nicht zugeordnet —"]
-
-
 @router.get("", response_class=HTMLResponse)
 async def projects_list(request: Request, room: str = None, show: str = "active",
                         scope: str = "mine", p: str = ""):
@@ -56,17 +34,14 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
     areas = await get_areas()
     all_projects = list_projects(room=room)
 
-    grouped_by_person = p in admins and scope == "people"
+    grouped_by_person = can_group_projects_by_person(p, admins) and scope == "people"
 
     if p:
-        hidden = set(get_person_settings(p).get("hidden_rooms", []))
-        if hidden:
-            all_projects = [pr for pr in all_projects if pr.room not in hidden]
+        all_projects = filter_hidden_rooms(all_projects, p)
         if not grouped_by_person:
-            all_projects = [
-                pr for pr in all_projects
-                if _can_see_project(pr, list_steps(pr.id), p, admins)
-            ]
+            all_projects = visible_projects_for_person(
+                all_projects, p, list_steps, admins
+            )
 
     active_projects = [pr for pr in all_projects if not pr.completed]
     done_projects   = [pr for pr in all_projects if pr.completed]
@@ -77,7 +52,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
 
     filters = '<div class="filters">'
     filters += f'<a class="filter-btn {"active" if show == "active" and not room and not grouped_by_person else ""}" href="projects{("?p="+p) if p else ""}">{tr("menu.my_view")}</a>'
-    if p in admins:
+    if can_group_projects_by_person(p, admins):
         filters += f'<a class="filter-btn {"active" if grouped_by_person else ""}" href="projects?scope=people{psuffix}">Nach Personen</a>'
     filters += f'<a class="filter-btn {"active" if show == "done" else ""}" href="projects?show=done{scope_suffix}{psuffix}">{tr("status.done")} ({len(done_projects)})</a>'
     for r in areas:
@@ -102,8 +77,8 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
             grouped: dict[str, list[str]] = defaultdict(list)
             for proj in projects:
                 steps = list_steps(proj.id)
-                for person_name in _project_people(proj, steps):
-                    visible = _steps_for_person(proj, steps, person_name)
+                for person_name in project_people(proj, steps):
+                    visible = project_steps_for_person(proj, steps, person_name)
                     if not visible and proj.assigned_to == person_name:
                         visible = steps
                     grouped[person_name].append(
@@ -125,7 +100,7 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
             for proj in projects:
                 steps = list_steps(proj.id)
                 rows += project_row(
-                    proj, _visible_steps(proj, steps, p, admins), steps,
+                    proj, visible_project_steps(proj, steps, p, admins), steps,
                     person=p, grouped_by_person=grouped_by_person
                 )
 
@@ -134,7 +109,10 @@ async def projects_list(request: Request, room: str = None, show: str = "active"
     done_step_count = 0
     for pr in active_projects:
         pr_steps = list_steps(pr.id)
-        visible = pr_steps if grouped_by_person else _visible_steps(pr, pr_steps, p, admins)
+        visible = (
+            pr_steps if grouped_by_person
+            else visible_project_steps(pr, pr_steps, p, admins)
+        )
         d, total = pr.progress(visible)
         visible_step_count += total
         done_step_count += d
@@ -230,10 +208,13 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
         raise HTTPException(404)
     base = _base(request)
     all_steps = list_steps(project_id)
-    grouped_by_person = p in admins and scope == "people"
-    if not grouped_by_person and not _can_see_project(proj, all_steps, p, admins):
+    grouped_by_person = can_group_projects_by_person(p, admins) and scope == "people"
+    if not grouped_by_person and not can_view_project(proj, all_steps, p, admins):
         raise HTTPException(404)
-    steps = all_steps if grouped_by_person else _visible_steps(proj, all_steps, p, admins)
+    steps = (
+        all_steps if grouped_by_person
+        else visible_project_steps(proj, all_steps, p, admins)
+    )
     done, total = proj.progress(steps)
     pct = int(done / total * 100) if total else 0
     persons = await get_persons()
@@ -248,7 +229,7 @@ async def project_detail(project_id: str, request: Request, scope: str = "mine",
     fill_cls = "green" if pct == 100 else ""
     step_rows = ""
     for s in steps:
-        assignee = _step_assignee(s, proj)
+        assignee = project_step_assignee(s, proj)
         step_person_names = list(person_names)
         if assignee and assignee not in step_person_names:
             step_person_names.insert(0, assignee)
@@ -436,7 +417,7 @@ async def step_remind_form(project_id: str, step_id: str, request: Request, p: s
     if not proj or not step or step.project_id != project_id:
         raise HTTPException(404)
 
-    assignee = _step_assignee(step, proj)
+    assignee = project_step_assignee(step, proj)
     if not assignee or assignee == p:
         msg = quote("Keine andere Person für diesen Schritt")
         sep = "&" if p else "?"
@@ -458,7 +439,7 @@ async def step_remind_send(project_id: str, step_id: str, request: Request,
         raise HTTPException(404)
 
     sender = resolve_person(request, return_p)
-    assignee = _step_assignee(step, proj)
+    assignee = project_step_assignee(step, proj)
     sent = False
     if assignee and assignee != sender:
         sent = await send_project_step_reminder(proj, step, assignee, message, sender=sender)

@@ -17,6 +17,7 @@ Technik:
 
 - `tidyhome/config.yaml`: Add-on-Metadaten und veröffentlichte Version
 - `tidyhome/app/main.py`: FastAPI-App, Router, Healthcheck, interne Version
+- `tidyhome/app/access.py`: Rollen-, Sichtbarkeits- und Zugriffsregeln für Aufgaben, Projekte und Haushaltshilfen
 - `tidyhome/app/models.py`: Pydantic-Modelle für Aufgaben, Projekte, Schritte
 - `tidyhome/app/storage.py`: kompatible Fassade für TinyDB-Zugriff und Geschäftslogik
 - `tidyhome/app/storage_runtime.py`: TinyDB-Instanz, Datenpfade und Limits
@@ -66,7 +67,7 @@ Technik:
 Basisprüfung:
 
 ```powershell
-& "C:\Users\Danny\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe" -m py_compile tidyhome\app\main.py tidyhome\app\render.py tidyhome\app\storage.py tidyhome\app\storage_runtime.py tidyhome\app\storage_app.py tidyhome\app\storage_tasks.py tidyhome\app\storage_projects.py tidyhome\app\storage_people.py tidyhome\app\storage_housekeeping.py tidyhome\app\task_actions.py tidyhome\app\task_forms.py tidyhome\app\settings_ui.py tidyhome\app\settings_exports.py tidyhome\app\settings_admin_ui.py tidyhome\app\housekeeping_format.py tidyhome\app\housekeeping_exports.py tidyhome\app\housekeeping_ui.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
+& "C:\Users\Danny\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe" -m py_compile tidyhome\app\main.py tidyhome\app\access.py tidyhome\app\render.py tidyhome\app\storage.py tidyhome\app\storage_runtime.py tidyhome\app\storage_app.py tidyhome\app\storage_tasks.py tidyhome\app\storage_projects.py tidyhome\app\storage_people.py tidyhome\app\storage_housekeeping.py tidyhome\app\task_actions.py tidyhome\app\task_forms.py tidyhome\app\settings_ui.py tidyhome\app\settings_exports.py tidyhome\app\settings_admin_ui.py tidyhome\app\housekeeping_format.py tidyhome\app\housekeeping_exports.py tidyhome\app\housekeeping_ui.py tidyhome\app\routes\dashboard.py tidyhome\app\routes\housekeeping.py tidyhome\app\routes\tasks.py tidyhome\app\routes\projects.py tidyhome\app\routes\settings.py tidyhome\app\routes\scores.py
 git diff --check
 ```
 
@@ -85,6 +86,7 @@ Bei Icon-Änderungen zusätzlich sicherstellen, dass alle referenzierten SVGs un
 
 ## Sichtbarkeit und Rollen
 
+- Neue oder geänderte Sichtbarkeitslogik zuerst in `tidyhome/app/access.py` pflegen und testen.
 - Standardansichten zeigen die Aufgaben und Projektanteile der aktuellen Person.
 - Admins sehen auf dem Dashboard ebenfalls primär eigene Aufgaben.
 - Admins können Raumansichten und Projektgruppen nach Personen prüfen.

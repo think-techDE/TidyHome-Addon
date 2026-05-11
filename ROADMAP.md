@@ -1,6 +1,6 @@
 # TidyHome - Roadmap
 
-Stand: 2026-05-11 · Aktuelle Version: 1.3.63
+Stand: 2026-05-11 · Aktuelle Version: 1.3.64
 
 Diese Roadmap trennt den aktuellen Stand von den nächsten sinnvollen Ausbauschritten. Historische Phasen sind zusammengefasst, damit die nächsten Entscheidungen schneller sichtbar sind.
 
@@ -29,6 +29,7 @@ TidyHome ist aktuell ein nutzbares Home-Assistant-Add-on für:
 Die Codebasis ist inzwischen modularisiert:
 
 - `main.py` enthält App-Setup, Router und Healthcheck
+- `access.py` enthält Rollen-, Sichtbarkeits- und Zugriffsregeln für Aufgaben, Projekte und Haushaltshilfen
 - `routes/` enthält Dashboard, Aufgaben, Projekte, Punkte und Einstellungen
 - `render.py` enthält Layout, Navigation und gemeinsame Render-Helfer
 - `housekeeping_format.py`, `housekeeping_exports.py` und `housekeeping_ui.py` enthalten Formatierung, Abrechnungsexporte und UI-Bausteine für Haushaltshilfen
@@ -53,6 +54,15 @@ Die Codebasis ist inzwischen modularisiert:
 ---
 
 ## Zuletzt erledigt
+
+### v1.3.64
+
+- Zentrale Rechte- und Sichtbarkeitslogik in `access.py` eingeführt
+- Dashboard, Aufgaben, Projekte und Haushaltshilfe-Routen auf zentrale Regeln umgestellt
+- Standardansichten bleiben für Admins, Eltern und Haushaltshilfen persönlich; verwaltete Ansichten nutzen explizite Gruppierungslogik
+- Projekt-Sichtbarkeit über Projekt- und Schrittzuweisungen vereinheitlicht
+- Zugriffstests für Admin-, Eltern-, Kind-/Mitglied- und Haushaltshilfe-Szenarien ergänzt
+- Syntaxprüfung und vollständige Unit-Test-Suite erneut validiert
 
 ### v1.3.63
 

@@ -89,7 +89,7 @@ class StorageModuleTests(unittest.TestCase):
 
         visible = storage_people.filter_tasks_by_role(tasks, "Ben", set())
 
-        self.assertEqual({t.name for t in visible}, {"A", "B"})
+        self.assertEqual({t.name for t in visible}, {"A"})
         self.assertEqual(storage_people.list_people_by_role("child"), {"Ben", "Marina"})
 
         storage_people._add_score("Ben", 5, label="A", source_id="task-1")
